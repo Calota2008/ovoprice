@@ -1,0 +1,74 @@
+# Test cap-coadă (Playwright, Python). Pornește `npx vite --port 5199 --host 127.0.0.1`, apoi: python3 tests/e2e_pasii_3_5.py <folder_capturi>
+import re, sys
+from playwright.sync_api import sync_playwright
+S=sys.argv[1]
+errs=[]; fails=[]
+def check(name, cond):
+    print(('PASS ' if cond else 'FAIL ')+name)
+    if not cond: fails.append(name)
+with sync_playwright() as p:
+    b=p.chromium.launch()
+    ctx=b.new_context(viewport={'width':430,'height':900}, permissions=['clipboard-read','clipboard-write'])
+    pg=ctx.new_page()
+    pg.on('console', lambda m: errs.append(m.text) if m.type=='error' and 'ERR_TUNNEL' not in m.text else None)
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(800)
+    check('home: demo banner', pg.get_by_text('Date demonstrative.').first.is_visible())
+    check('home: no fake tiktok toast', pg.get_by_text('Link detected on clipboard').count()==0)
+    # --- link tab
+    pg.get_by_text('Paste Link').first.click(); pg.wait_for_timeout(300)
+    inp=pg.get_by_placeholder(re.compile('Lipește linkul'))
+    inp.fill('https://www.tiktok.com/@a/video/1'); pg.get_by_text('Analizează linkul').click()
+    check('social link rejected', pg.get_by_text('Link de rețea socială').is_visible())
+    inp.fill('https://evilmediamarkt.de/x'); pg.get_by_text('Analizează linkul').click()
+    check('lookalike domain rejected', pg.get_by_text('Magazin neacceptat').is_visible())
+    inp.fill('https://www.mediamarkt.de/de/product/_dyson-v15-detect-absolute-gelb-2982247.html'); pg.get_by_text('Analizează linkul').click()
+    pg.wait_for_timeout(600)
+    check('result: recognized', pg.get_by_text('Link de produs recunoscut').is_visible())
+    check('result: article id', pg.get_by_text('2982247').first.is_visible())
+    check('result: catalog match offered', pg.get_by_text('Posibil produs din catalog').is_visible())
+    pg.screenshot(path=f'{S}/shot_link_result.png', full_page=True)
+    pg.get_by_text('Compară prețurile pentru acest produs').click(); pg.wait_for_timeout(500)
+    check('compare: Dyson offers screen', pg.get_by_text('Dyson V15 Detect Absolute').first.is_visible() and pg.get_by_text('oferte de exemplu').first.is_visible())
+    # --- home clipboard paste (otto link, no catalog match)
+    pg.get_by_role('button', name=re.compile('Home|Start', re.I)).first.click() if pg.get_by_role('button', name=re.compile('Home|Start', re.I)).count() else pg.goto('http://127.0.0.1:5199/')
+    pg.wait_for_timeout(500)
+    pg.evaluate("navigator.clipboard.writeText('https://www.otto.de/p/bosch-akkuschrauber-S0X0O0P9/')")
+    pg.get_by_text('Lipește și analizează').click(); pg.wait_for_timeout(600)
+    check('paste: otto recognized, id', pg.get_by_text('S0X0O0P9').first.is_visible())
+    check('paste: honest no-price notice', pg.get_by_text('Prețul nu a fost citit din link').is_visible())
+    pg.screenshot(path=f'{S}/shot_paste_nomatch.png', full_page=True)
+    # --- paste invalid -> modal with error
+    pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(500)
+    pg.evaluate("navigator.clipboard.writeText('https://amzn.to/abc')")
+    pg.get_by_text('Lipește și analizează').click(); pg.wait_for_timeout(400)
+    check('paste short link -> modal error', pg.get_by_text('Link scurtat').is_visible())
+    pg.screenshot(path=f'{S}/shot_paste_short.png')
+    pg.keyboard.press('Escape')
+    # --- barcode manual
+    pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(500)
+    pg.get_by_text('Barcode').first.click(); pg.wait_for_timeout(300)
+    ean=pg.get_by_placeholder(re.compile('EAN'))
+    ean.fill('4548736132581'); pg.get_by_role('button', name=re.compile('^Caută')).click()
+    check('ean bad checksum', pg.get_by_text('Cifra de control nu se potrivește').is_visible())
+    ean.fill('4006381333931'); pg.get_by_role('button', name=re.compile('^Caută')).click(); pg.wait_for_timeout(400)
+    check('ean unknown -> not found', pg.get_by_text('Produs negăsit').is_visible())
+    pg.get_by_text('Scanează alt cod').click()
+    pg.get_by_placeholder(re.compile('EAN')).fill('4548736132580'); pg.get_by_role('button', name=re.compile('^Caută')).click(); pg.wait_for_timeout(600)
+    check('ean sony -> product page', pg.get_by_text('Sony WH-1000XM5').first.is_visible())
+    # --- search
+    pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(500)
+    pg.get_by_role('button', name=re.compile('Search|Caut', re.I)).first.click() if pg.get_by_role('button', name=re.compile('Search|Caut', re.I)).count() else None
+    pg.wait_for_timeout(400)
+    sb=pg.get_by_placeholder(re.compile('Produs, model'))
+    if sb.count():
+        sb.fill('xm5'); pg.wait_for_timeout(700)
+        check('search xm5', pg.get_by_text('Sony WH-1000XM5').first.is_visible())
+        sb.fill('zzzz'); pg.wait_for_timeout(700)
+        check('search empty state', pg.get_by_text('Niciun rezultat').is_visible())
+    else:
+        check('search screen reachable', False)
+    check('no console errors', not errs)
+    if errs: print('ERRORS:', errs[:5])
+    b.close()
+print('FAILED:', fails if fails else 'none')
