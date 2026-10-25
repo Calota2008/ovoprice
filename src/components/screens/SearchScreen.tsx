@@ -15,14 +15,16 @@ import { t } from '../../i18n';
 interface SearchScreenProps {
   onOpenProduct: (product: Product) => void;
   onOpenVisualMatcher: (tab?: 'link' | 'photo' | 'barcode') => void;
+  /** Text to search for when the screen opens (for example from voice search). */
+  initialQuery?: string;
 }
 
 const fmt = (n: number) => n.toFixed(2).replace('.', ',');
 const savingsPct = (p: Product) => (p.msrp && p.msrp > p.bestPrice ? ((p.msrp - p.bestPrice) / p.msrp) * 100 : 0);
 
-export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpenVisualMatcher }) => {
-  const [query, setQuery] = useState('');
-  const [debounced, setDebounced] = useState('');
+export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpenVisualMatcher, initialQuery }) => {
+  const [query, setQuery] = useState(initialQuery ?? '');
+  const [debounced, setDebounced] = useState((initialQuery ?? '').trim());
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +35,11 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
 
   const { data: popular } = usePriceData<PopularSearchItem[]>(() => priceProvider.getPopularSearches(), [], []);
 
+  // Phones and tablets: open the keyboard right away. On a computer the field is
+  // not focused automatically, and not when we arrive with a spoken search.
   useEffect(() => {
-    inputRef.current?.focus();
+    const touch = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    if (touch && !initialQuery) inputRef.current?.focus();
   }, []);
 
   // Debounce typing

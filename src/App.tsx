@@ -62,6 +62,11 @@ export default function App() {
       ?.setAttribute('content', t("Search for a product, compare merchants' offers and buy from the store you choose."));
   }, [language]);
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
+  const [spokenQuery, setSpokenQuery] = useState('');
+  // A spoken search only seeds the Search screen it opens; forget it afterwards.
+  useEffect(() => {
+    if (activeScreen !== 'search') setSpokenQuery('');
+  }, [activeScreen]);
   const [screenHistory, setScreenHistory] = useState<ActiveScreen[]>(['home']);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isVisualMatcherOpen, setIsVisualMatcherOpen] = useState(false);
@@ -417,7 +422,14 @@ export default function App() {
         <main className="flex-1 px-4 pt-3 pb-4">
           {activeScreen === 'home' && (
             <HomeScreen
-              onSearchFocus={() => navigateTo('search')}
+              onSearchFocus={() => {
+                setSpokenQuery('');
+                navigateTo('search');
+              }}
+              onVoiceSearch={(text) => {
+                setSpokenQuery(text);
+                navigateTo('search');
+              }}
               onOpenVisualMatcher={(tab) => handleOpenVisualMatcher(tab || 'link')}
               onPasteLink={handlePasteLink}
               onSelectPopularItem={(item: PopularSearchItem) => {
@@ -435,6 +447,7 @@ export default function App() {
 
           {activeScreen === 'search' && (
             <SearchScreen
+              initialQuery={spokenQuery}
               onOpenProduct={(product) => {
                 setSelectedProduct(product);
                 setActiveOffer(null);

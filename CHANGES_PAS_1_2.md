@@ -125,3 +125,10 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - Tests: `tests/unit_i18n.ts` (every key used in code has DE + RO, no unused/duplicate entries, matching `{placeholders}`), `tests/e2e_i18n_settings.py` (44 checks: switch, persistence, browser detection, invalid storage, country in sign-up, Settings page, mobile + desktop). Old e2e expectations updated.
 - German and Romanian texts were written without native-speaker review: have them proofread before launch (German uses the informal "du").
 - Not translated on purpose: the hidden dev toolbar (`?devnav=1`), brand/retailer names, German retailer search terms, product titles in the demo catalog.
+
+## Voice search and keyboard on Search
+- The microphone on Home now works (it was only an icon before). Tap it, say the product name; the Search screen opens with the spoken text and its results. Tap again to stop. Uses the browser's speech recognition (`src/utils/voiceSearch.ts`): Chrome, Edge, Safari. Where it is missing (e.g. Firefox) or blocked, a clear message is shown instead.
+- Recognition language follows the app language: English (en-GB), German (de-DE, or de-AT when the country is Austria), Romanian (ro-RO). The first use asks the browser for microphone permission. Speech is processed by the browser/OS vendor's service, not by OvoPrice; nothing is stored.
+- The Home search box still opens the separate Search screen. On phones and tablets (touch devices) the keyboard opens at once; on a computer the field is not focused automatically. After a spoken search the field is not focused either (the results are the point).
+- A spoken query only seeds the Search screen it opens; opening Search later from the bottom bar starts empty.
+- Tests: `tests/unit_voice.ts` (8 checks), `tests/e2e_voice_search.py` (26 checks, with a fake speech recogniser: 3 languages, Austria, denied/silent/unsupported, cancel, no stale text, keyboard on phone/tablet/computer). `e2e_pasii_3_5.py` updated (it clicked the first button named "Search", which is now the microphone).

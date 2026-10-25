@@ -58,7 +58,7 @@ with sync_playwright() as p:
     check('ean sony -> product page', pg.get_by_text('Sony WH-1000XM5').first.is_visible())
     # --- search
     pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(500)
-    pg.get_by_role('button', name=re.compile('Search', re.I)).first.click() if pg.get_by_role('button', name=re.compile('Search', re.I)).count() else None
+    pg.get_by_role('button', name='Search', exact=True).first.click()
     pg.wait_for_timeout(400)
     sb=pg.get_by_placeholder(re.compile('Product, model'))
     if sb.count():

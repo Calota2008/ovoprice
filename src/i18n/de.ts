@@ -672,4 +672,12 @@ export const de: Record<string, string> = {
   "Save product": "Produkt speichern",
   "Edit price alert": "Preisalarm bearbeiten",
   "Set price alert": "Preisalarm setzen",
+  "This browser can't recognise speech. Try Chrome, Edge or Safari, or type your search.": "Dieser Browser kann keine Sprache erkennen. Probiere Chrome, Edge oder Safari oder tippe deine Suche.",
+  "Microphone access was denied. Allow the microphone in your browser settings or type your search.": "Der Mikrofonzugriff wurde verweigert. Erlaube das Mikrofon in den Browsereinstellungen oder tippe deine Suche.",
+  "No microphone was found on this device.": "Auf diesem Gerät wurde kein Mikrofon gefunden.",
+  "Speech recognition needs an internet connection. Try again or type your search.": "Die Spracherkennung braucht eine Internetverbindung. Versuche es erneut oder tippe deine Suche.",
+  "We didn't hear anything. Tap the microphone and say the product name.": "Wir haben nichts gehört. Tippe auf das Mikrofon und nenne den Produktnamen.",
+  "Speech recognition failed. Try again or type your search.": "Die Spracherkennung ist fehlgeschlagen. Versuche es erneut oder tippe deine Suche.",
+  "Stop listening": "Zuhören beenden",
+  "Listening… say the product name.": "Ich höre zu… Nenne den Produktnamen.",
 };

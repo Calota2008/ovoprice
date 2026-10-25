@@ -672,4 +672,12 @@ export const ro: Record<string, string> = {
   "Save product": "Salvează produsul",
   "Edit price alert": "Editează alerta de preț",
   "Set price alert": "Setează alerta de preț",
+  "This browser can't recognise speech. Try Chrome, Edge or Safari, or type your search.": "Acest browser nu poate recunoaște vocea. Încearcă Chrome, Edge sau Safari sau scrie căutarea.",
+  "Microphone access was denied. Allow the microphone in your browser settings or type your search.": "Accesul la microfon a fost refuzat. Permite microfonul din setările browserului sau scrie căutarea.",
+  "No microphone was found on this device.": "Nu s-a găsit niciun microfon pe acest dispozitiv.",
+  "Speech recognition needs an internet connection. Try again or type your search.": "Recunoașterea vocală are nevoie de internet. Încearcă din nou sau scrie căutarea.",
+  "We didn't hear anything. Tap the microphone and say the product name.": "Nu am auzit nimic. Apasă pe microfon și spune numele produsului.",
+  "Speech recognition failed. Try again or type your search.": "Recunoașterea vocală a eșuat. Încearcă din nou sau scrie căutarea.",
+  "Stop listening": "Oprește ascultarea",
+  "Listening… say the product name.": "Ascult… spune numele produsului.",
 };

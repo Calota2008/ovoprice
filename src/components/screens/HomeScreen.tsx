@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Search, Mic, Camera, Link2, Barcode, CheckCircle2, Sparkles, Clipboard, Coins, ChevronRight } from 'lucide-react';
 import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
 import { PopularSearchItem } from '../../types';
 import { DemoBadge } from '../DemoBadge';
 
-import { t } from '../../i18n';
+import { t, useLanguage } from '../../i18n';
+import { useCountry } from '../../i18n/country';
+import {
+  recognitionLang,
+  startVoiceSearch,
+  VoiceProblem,
+  VoiceSession,
+} from '../../utils/voiceSearch';
+
 interface HomeScreenProps {
   onSearchFocus: () => void;
+  /** Called with the spoken text; the app opens the Search screen with it. */
+  onVoiceSearch: (text: string) => void;
   onOpenVisualMatcher: (tab?: 'link' | 'photo' | 'barcode') => void;
   /** Receives the clipboard text (read when the button is pressed). */
   onPasteLink: (text: string) => void;
@@ -17,12 +27,56 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
   onSearchFocus,
+  onVoiceSearch,
   onOpenVisualMatcher,
   onPasteLink,
   onSelectPopularItem,
   onOpenReels,
 }) => {
   const [pasteError, setPasteError] = useState<string | null>(null);
+  const language = useLanguage();
+  const country = useCountry();
+  const [listening, setListening] = useState(false);
+  const [voiceProblem, setVoiceProblem] = useState<VoiceProblem | null>(null);
+  const voiceSession = useRef<VoiceSession | null>(null);
+
+  // Stop the microphone when leaving the screen.
+  useEffect(() => () => voiceSession.current?.cancel(), []);
+
+  const handleMic = (e: React.MouseEvent) => {
+    e.stopPropagation(); // the box itself opens Search; the mic only listens
+    if (listening) {
+      voiceSession.current?.cancel();
+      return;
+    }
+    setVoiceProblem(null);
+    setListening(true);
+    voiceSession.current = startVoiceSearch(recognitionLang(language, country), {
+      onResult: (text) => onVoiceSearch(text),
+      onProblem: (p) => setVoiceProblem(p),
+      onEnd: () => {
+        voiceSession.current = null;
+        setListening(false);
+      },
+    });
+  };
+
+  const voiceMessage = (p: VoiceProblem): string => {
+    switch (p) {
+      case 'unsupported':
+        return t("This browser can't recognise speech. Try Chrome, Edge or Safari, or type your search.");
+      case 'denied':
+        return t('Microphone access was denied. Allow the microphone in your browser settings or type your search.');
+      case 'no-microphone':
+        return t('No microphone was found on this device.');
+      case 'network':
+        return t('Speech recognition needs an internet connection. Try again or type your search.');
+      case 'no-speech':
+        return t("We didn't hear anything. Tap the microphone and say the product name.");
+      default:
+        return t('Speech recognition failed. Try again or type your search.');
+    }
+  };
 
   const handlePaste = async () => {
     setPasteError(null);
@@ -74,12 +128,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
         <button
           type="button"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-          aria-label={t("Voice search")}
+          onClick={handleMic}
+          aria-pressed={listening}
+          className={`w-8 h-8 -mr-1 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+            listening ? 'bg-rose-100 text-rose-600 animate-pulse' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+          }`}
+          aria-label={listening ? t('Stop listening') : t('Voice search')}
         >
           <Mic className="w-4 h-4" />
         </button>
       </div>
+      {listening && (
+        <p role="status" className="-mt-2 text-xs font-medium text-rose-700">
+          {t('Listening… say the product name.')}
+        </p>
+      )}
+      {!listening && voiceProblem && (
+        <p role="alert" className="-mt-2 text-xs font-medium text-amber-800">
+          {voiceMessage(voiceProblem)}
+        </p>
+      )}
 
       {/* Scan / Find Product Hero Banner */}
       <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
