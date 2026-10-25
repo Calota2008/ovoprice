@@ -4,6 +4,7 @@ import { usePriceData } from '../../services/usePriceData';
 import { ReelItem, StoreOffer } from '../../types';
 import { DemoBadge } from '../DemoBadge';
 import { AddReelModal } from '../AddReelModal';
+import { ReelCompareSheet } from '../ReelCompareSheet';
 import { useUserReels } from '../../services/useUserReels';
 import { isSafeHttpUrl } from '../../utils/url';
 import { trackEvent } from '../../utils/analytics';
@@ -81,6 +82,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [videoStatus, setVideoStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [showAddReel, setShowAddReel] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -189,6 +191,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     setIsPaused(false);
     setVideoStatus('loading');
     setConfirmDelete(false);
+    setShowCompare(false);
     if (currentReel?.productId) trackEvent('reel_viewed', { productId: currentReel.productId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentReel?.id]);
@@ -205,14 +208,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (showAddReel) return;
+      if (showAddReel || showCompare) return;
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
       if (e.key === 'ArrowDown') goNext();
       if (e.key === 'ArrowUp') goPrev();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [goNext, goPrev, showAddReel]);
+  }, [goNext, goPrev, showAddReel, showCompare]);
 
   const changeFilter = (next: ReelFilter) => {
     setFilter(next);
@@ -252,6 +255,12 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   const handleCompare = () => {
     if (!currentReel?.productId || !hasOffers) return;
     trackEvent('compare_prices_clicked', { productId: currentReel.productId });
+    setShowCompare(true);
+  };
+
+  const handleSeeAllOffers = () => {
+    if (!currentReel?.productId) return;
+    setShowCompare(false);
     onCompareOffers(currentReel.productId);
   };
 
@@ -400,6 +409,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       {header}
       {filterBar}
       {children}
+      {showCompare && product && hasOffers && (
+        <ReelCompareSheet
+          product={product}
+          onClose={() => setShowCompare(false)}
+          onBuy={onBuyOffer}
+          onSeeAll={handleSeeAllOffers}
+        />
+      )}
       {showAddReel && <AddReelModal onClose={() => setShowAddReel(false)} onSubmit={handleAddReel} />}
       {toastMessage && (
         <div

@@ -59,7 +59,12 @@ with sync_playwright() as p:
         for _ in range(i):
             pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(120)
         title_ok = pg.get_by_role('heading', name=re.compile(key)).first.is_visible()
-        pg.get_by_role('button', name='Compare Prices').click(); pg.wait_for_timeout(700)
+        pg.get_by_role('button', name='Compare Prices').click(); pg.wait_for_timeout(400)
+        sheet = pg.get_by_role('dialog')
+        check(f'compare sheet opens for {key} with <=3 offers', sheet.is_visible() and 1 <= sheet.get_by_role('button', name=re.compile('^Buy at')).count() <= 3 and key in sheet.get_attribute('aria-label'))
+        prices = [float(t.replace('.', '').replace(',', '.').replace('€', '').strip()) for t in sheet.locator('li span.tnum').all_inner_texts()]
+        check(f'sheet offers sorted by total price: {key}', prices == sorted(prices) and len(prices) >= 1)
+        pg.get_by_role('button', name=re.compile('^See (all|full)')).click(); pg.wait_for_timeout(700)
         body = pg.inner_text('body')
         others = [k for k, _ in PRODUCTS if k != key and k in body]
         check(f'compare opens exact product: {key}', title_ok and key in body and not others)
@@ -71,6 +76,30 @@ with sync_playwright() as p:
         pg.get_by_role('button', name='View Details').click(); pg.wait_for_timeout(600)
         body = pg.inner_text('body')
         check(f'details open exact product: {key}', key in body and not [k for k, _ in PRODUCTS if k != key and k in body])
+
+    # Compare sheet behaviour (stays on the feed)
+    open_reels(pg)
+    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)   # Sony
+    pg.get_by_role('button', name='Compare Prices').click(); pg.wait_for_timeout(300)
+    check('sheet shows DEMO + disclaimer', pg.get_by_role('dialog').get_by_text('DEMO').first.is_visible() and pg.get_by_text(re.compile('Demo prices are examples')).is_visible())
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(200)
+    check('arrow keys do not change reel while sheet is open', pg.get_by_text('2 of 5').is_visible())
+    pg.get_by_role('dialog').get_by_role('button', name=re.compile('^Buy at')).first.click(); pg.wait_for_timeout(300)
+    link = pg.get_by_role('link', name=re.compile('Proceed to'))
+    check('Buy from sheet -> hand-over with valid https link', link.is_visible() and link.get_attribute('href').startswith('https://'))
+    pg.get_by_role('button', name='Stay on OvoPrice').click(); pg.wait_for_timeout(200)
+    check('feed + sheet still there after hand-over closed', pg.get_by_role('dialog').is_visible() and pg.get_by_text('2 of 5').is_visible())
+    pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
+    check('Escape closes the sheet', pg.get_by_role('dialog').count() == 0)
+    pg.get_by_role('button', name='Compare Prices').click(); pg.wait_for_timeout(300)
+    pg.get_by_label('Close comparison').click(); pg.wait_for_timeout(200)
+    check('close button closes the sheet', pg.get_by_role('dialog').count() == 0)
+    pg.get_by_role('button', name='Compare Prices').click(); pg.wait_for_timeout(300)
+    pg.get_by_role('dialog').locator('xpath=..').click(position={'x': 12, 'y': 12}); pg.wait_for_timeout(200)
+    check('backdrop click closes the sheet', pg.get_by_role('dialog').count() == 0)
+    pg.get_by_role('button', name='Compare Prices').click(); pg.wait_for_timeout(300)
+    pg.get_by_role('button', name=re.compile('^See (all|full)')).click(); pg.wait_for_timeout(600)
+    check('See all -> full comparison of the same product', 'Sony' in pg.inner_text('body') and 'Dyson' not in pg.inner_text('body'))
 
     # Save / persist / filters
     open_reels(pg)
