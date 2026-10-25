@@ -103,3 +103,11 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - Kept as-is on purpose: German retailer search terms (OTTO/IKEA/MediaMarkt queries) and demo catalog product data (e.g. German subtitle/colour of one product).
 - Added `role="dialog"` + `aria-modal` to the scanner modal. Old e2e tests updated to the English strings.
 - No language selector / translation system (per the Reels prompt: interface stays in English).
+
+## Account UI (no backend)
+- `src/services/authProvider.ts`: single access point for accounts (`isConnected: false`, `signInWithGoogle`, `signInWithEmail`, `signOut`). It never pretends a user is signed in; swap it for Firebase Auth / Supabase / own API when the backend exists.
+- `src/components/AuthSheet.tsx`: bottom sheet (centered on desktop) opened from the profile icon: "Continue with Google", passwordless email code, sign-in / create-account modes, "Continue as guest". Honest notice that accounts are not switched on; email format validated; Esc/backdrop/X close; `role="dialog"`.
+- Header profile popover: "Sign in" and "Create an account" buttons.
+- `src/components/AuthNudge.tsx`: dismissible one-line invitation on Saved and Alerts for guests (dismissal kept in localStorage).
+- Nothing is stored or sent: no email is collected. No phone sign-in (SMS cost/abuse); add later only if needed.
+- Test: `tests/e2e_auth_ui.py` (24 checks).
