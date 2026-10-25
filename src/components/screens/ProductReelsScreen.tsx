@@ -25,6 +25,8 @@ import {
   AlertTriangle,
   Plus,
   Trash2,
+  Bell,
+  BellRing,
   ExternalLink,
 } from 'lucide-react';
 
@@ -43,6 +45,10 @@ interface ProductReelsScreenProps {
   onCompareOffers: (productId: string) => void;
   /** Opens the merchant hand-over for a catalog offer. */
   onBuyOffer: (offer: StoreOffer) => void;
+  /** Opens the price-alert screen for the product. */
+  onSetAlert: (productId: string) => void;
+  /** Products that already have a price alert. */
+  alertProductIds?: string[];
   savedProductIds: string[];
   /** Toggles the saved state of the product. Persistence is handled by the app. */
   onToggleSave: (productId: string) => void;
@@ -67,6 +73,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   onOpenProduct,
   onCompareOffers,
   onBuyOffer,
+  onSetAlert,
+  alertProductIds = [],
   savedProductIds = [],
   onToggleSave,
   saveError = false,
@@ -128,6 +136,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   const hasOffers = !!product && product.offers.length > 0;
   const isCurrentSaved = currentReel ? isSaved(currentReel.productId) : false;
   const isMatched = !!currentReel?.productId;
+  const hasAlert = !!currentReel?.productId && alertProductIds.includes(currentReel.productId);
   const hasAffiliateLinks =
     (!!product && product.offers.some((o) => o.isAffiliate === true)) ||
     (!isMatched && currentReel?.isAffiliate === true && isSafeHttpUrl(currentReel?.buyUrl));
@@ -244,6 +253,11 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     onToggleSave(currentReel.productId);
     trackEvent(isCurrentSaved ? 'product_unsaved' : 'product_saved', { productId: currentReel.productId });
     showToast(isCurrentSaved ? 'Removed from Saved' : 'Saved');
+  };
+
+  const handleSetAlert = () => {
+    if (!currentReel?.productId) return;
+    onSetAlert(currentReel.productId);
   };
 
   const handleDetails = () => {
@@ -566,7 +580,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
         {/* Save (needs a catalog product, so it can be kept in the Saved list) */}
         {isMatched && (
-        <div className="absolute right-3.5 bottom-6 z-20 flex flex-col items-center gap-1">
+        <div className="absolute right-3.5 bottom-6 z-20 flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-1">
           <button
             onClick={handleToggleSave}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-md border ${
@@ -580,6 +595,21 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             <Bookmark className="w-4 h-4 fill-current" />
           </button>
           <span className="text-[10px] font-bold text-slate-300">{isCurrentSaved ? 'Saved' : 'Save'}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={handleSetAlert}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-md border ${
+                hasAlert
+                  ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                  : 'bg-slate-900/85 text-slate-200 hover:text-cyan-400 border-slate-700 hover:border-cyan-500/50'
+              }`}
+              aria-label={hasAlert ? 'Edit price alert' : 'Set price alert'}
+            >
+              {hasAlert ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+            </button>
+            <span className="text-[10px] font-bold text-slate-300">{hasAlert ? 'Alert on' : 'Alert'}</span>
+          </div>
         </div>
         )}
 

@@ -43,7 +43,7 @@ export interface PriceProvider {
 /* Implementarea demo                                                  */
 /* ------------------------------------------------------------------ */
 
-const NOT_AVAILABLE = 'Verifică la comerciant';
+const NOT_AVAILABLE = 'Check with the merchant';
 
 /** URL-uri de căutare reale la magazine (în loc de linkuri de produs inventate). */
 function storeSearchUrl(storeDomain: string, query: string): string {

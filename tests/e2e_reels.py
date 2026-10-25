@@ -101,6 +101,21 @@ with sync_playwright() as p:
     pg.get_by_role('button', name=re.compile('^See (all|full)')).click(); pg.wait_for_timeout(600)
     check('See all -> full comparison of the same product', 'Sony' in pg.inner_text('body') and 'Dyson' not in pg.inner_text('body'))
 
+    # Price alert from a Reel
+    open_reels(pg)
+    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)   # Sony
+    check('bell shows "Set price alert" before any alert', pg.get_by_role('button', name='Set price alert').is_visible())
+    pg.get_by_role('button', name='Set price alert').click(); pg.wait_for_timeout(600)
+    check('alert screen opens for the reel product (Sony)', pg.get_by_text(re.compile('target price', re.I)).first.is_visible() and 'Sony' in pg.inner_text('body') and 'Dyson' not in pg.inner_text('body'))
+    pg.get_by_role('button', name=re.compile('^Set price alert')).click(); pg.wait_for_timeout(1300)
+    check('alert created -> Alerts screen lists Sony', 'Sony' in pg.inner_text('body'))
+    pg.get_by_role('button', name=re.compile('Home')).click(); pg.wait_for_timeout(300)
+    pg.get_by_role('button', name=re.compile('Discover Reels')).click(); pg.wait_for_timeout(700)
+    check('back in Reels on the same reel, bell shows alert on', pg.get_by_text('2 of 5').is_visible() and pg.get_by_role('button', name='Edit price alert').is_visible())
+    pg.get_by_label('Previous Reel').click(); pg.wait_for_timeout(150)
+    check('other reel (Dyson) has no alert', pg.get_by_role('button', name='Set price alert').is_visible())
+    pg.evaluate("localStorage.removeItem('ovoprice_alerts_v1')")
+
     # Save / persist / filters
     open_reels(pg)
     pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)      # Sony

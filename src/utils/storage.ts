@@ -16,7 +16,7 @@ export function saveJson(key: string, value: unknown): boolean {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (err) {
-    console.error(`Nu am putut salva "${key}"`, err);
+    console.error(`Could not save "${key}"`, err);
     return false;
   }
 }

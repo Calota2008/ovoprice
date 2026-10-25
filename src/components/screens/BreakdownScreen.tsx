@@ -39,7 +39,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
       <div className="flex items-center justify-between text-xs py-1 px-1">
         <div className="flex items-center gap-1.5 text-emerald-800 font-bold tracking-tight">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <span>{offer.isBestPrice ? 'Cel mai mic preț din exemplu' : 'Ofertă de exemplu'}</span>
+          <span>{offer.isBestPrice ? 'Lowest price in the demo' : 'Demo offer'}</span>
         </div>
         <div className="flex items-center gap-1 text-slate-400 text-[11px]">
           <DemoBadge />
@@ -135,7 +135,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
               <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-3">
                 <TrendingDown className="w-3.5 h-3.5" />
                 <span>
-                  {savingVsAvg.toFixed(2).replace('.', ',')} € sub media ofertelor din exemplu (
+                  {savingVsAvg.toFixed(2).replace('.', ',')} € below the average of the demo offers (
                   {avgTotal.toFixed(2).replace('.', ',')} €)
                 </span>
               </div>
@@ -145,7 +145,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
               {product.lowestPriceInDays ? (
                 <span className="text-slate-600 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>Cel mai mic preț din ultimele {product.lowestPriceInDays} zile</span>
+                  <span>Lowest price in the last {product.lowestPriceInDays} days</span>
                 </span>
               ) : (
                 <span />
@@ -241,7 +241,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
             Merchant & Manufacturer Policy
           </span>
           <span className="text-[11px] text-slate-500">
-            Garanție: {offer.warranty}
+            Warranty: {offer.warranty}
           </span>
         </div>
       </div>
@@ -251,7 +251,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
         <div className="max-w-md mx-auto space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">
-              PREȚ FINAL LA {offer.storeName.toUpperCase()}
+              FINAL PRICE AT {offer.storeName.toUpperCase()}
             </span>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
               ⚡ INSTANT REDIRECT
@@ -275,7 +275,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           <p className="text-[10px] text-slate-500 flex items-start gap-1 leading-tight pt-1">
             <Info className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
             <span>
-              Cumperi direct de la {offer.storeName}. OvoPrice nu procesează plăți și nu preia comenzi. Verifică prețul final și livrarea pe site-ul comerciantului.
+              You buy directly from {offer.storeName}. OvoPrice does not process payments or take orders. Check the final price and delivery on the merchant's website.
             </span>
           </p>
         </div>

@@ -93,10 +93,10 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold text-slate-900 leading-tight truncate">
-              Produs din catalogul demo
+              Demo catalog product
             </p>
             <p className="text-[11px] text-emerald-800 font-medium">
-              Date demonstrative, nu oferte reale
+              Demo data, not real offers
             </p>
           </div>
         </div>
@@ -209,10 +209,10 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="flex items-center justify-between text-xs mb-3 pb-2 border-b border-emerald-100">
           <span className="font-semibold text-slate-700 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            {product.storesCount} Händler im Demo-Vergleich
+            {product.storesCount} stores in the demo comparison
           </span>
           <span className="text-emerald-800 text-[11px] font-medium">
-            Simulierte Angebote
+            Simulated offers
           </span>
         </div>
 
@@ -246,15 +246,15 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="grid grid-cols-3 gap-1 pt-3 border-t border-emerald-100 text-[11px] text-slate-700 font-medium">
           <div className="flex items-center gap-1.5">
             <Truck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span className="leading-tight">Kostenlos lieferbar</span>
+            <span className="leading-tight">Free delivery</span>
           </div>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span className="leading-tight">Händlerangaben</span>
+            <span className="leading-tight">Merchant details</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span className="leading-tight">Händlerschutz</span>
+            <span className="leading-tight">Merchant protection</span>
           </div>
         </div>
       </div>
@@ -262,7 +262,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
       {/* Demo separation notice */}
       <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-center">
         <p className="text-[11px] text-slate-500 leading-relaxed">
-          <span className="font-bold text-slate-700">Date demonstrative:</span> specificațiile, codurile EAN și prețurile sunt exemple pentru evaluarea interfeței, nu oferte reale.
+          <span className="font-bold text-slate-700">Demo data:</span> specifications, EAN codes and prices are examples for evaluating the interface, not real offers.
         </p>
       </div>
 
@@ -274,7 +274,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             className="py-3 px-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <Bell className="w-4 h-4" />
-            <span>Alertă de preț</span>
+            <span>Price alert</span>
           </button>
         )}
         {onToggleSave && (
@@ -288,7 +288,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             }`}
           >
             <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-emerald-600 text-emerald-600' : ''}`} />
-            <span>{isSaved ? 'Salvat' : 'Salvează'}</span>
+            <span>{isSaved ? 'Saved' : 'Save'}</span>
           </button>
         )}
       </div>
@@ -298,7 +298,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         onClick={onCompareOffers}
         className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer"
       >
-        <span>Angebote vergleichen ({product.storesCount})</span>
+        <span>Compare offers ({product.storesCount})</span>
         <ArrowRight className="w-4 h-4" />
       </button>
 

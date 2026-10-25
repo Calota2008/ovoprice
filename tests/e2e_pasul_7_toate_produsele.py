@@ -10,8 +10,8 @@ with sync_playwright() as p:
         ctx=b.new_context(viewport={'width':430,'height':900}); pg=ctx.new_page(); errs=[]
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto(U); pg.wait_for_timeout(500)
-        pg.get_by_text('Barcode').first.click(); pg.get_by_placeholder(re.compile('EAN')).fill(code)
-        pg.get_by_role('button', name=re.compile('^Caută')).click(); pg.wait_for_timeout(500)
+        pg.get_by_role('button', name=re.compile('Barcode')).first.click(); pg.get_by_placeholder(re.compile('EAN')).fill(code)
+        pg.get_by_role('dialog').get_by_role('button', name=re.compile('^Search$')).click(); pg.wait_for_timeout(500)
         bad=[]
         for sc in screens:
             pg.select_option('select', sc); pg.wait_for_timeout(250)

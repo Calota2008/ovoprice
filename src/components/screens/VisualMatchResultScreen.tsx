@@ -488,7 +488,7 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
               <span>Link analizat</span>
             </div>
             <span className="text-[11px] font-mono text-emerald-800 font-semibold">
-              doar adresa, fără cereri către magazin
+              address only, no requests to the store
             </span>
           </div>
 
@@ -503,7 +503,7 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 font-bold text-slate-900 text-base">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <span>Link de produs recunoscut</span>
+              <span>Product link recognized</span>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold uppercase tracking-wider">
               {retailerDisplayName}
@@ -536,24 +536,24 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
             <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2">
               <p className="text-[11px] font-bold text-emerald-900 flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                Posibil produs din catalog (potrivire după numele din link)
+                Possible catalog product (matched by the name in the link)
               </p>
               <div className="flex items-center gap-3">
                 <img src={matched.image} alt={matched.title} className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-900 truncate">{matched.title}</p>
                   <p className="text-[11px] text-slate-600 flex items-center gap-1.5">
-                    de la {matched.bestPrice.toFixed(2).replace('.', ',')} € <DemoBadge />
+                    from {matched.bestPrice.toFixed(2).replace('.', ',')} € <DemoBadge />
                   </p>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-500">Verifică dacă este același model înainte să compari prețurile.</p>
+              <p className="text-[10px] text-slate-500">Check that it is the same model before comparing prices.</p>
               {onOpenProduct && (
                 <button
                   onClick={() => onOpenProduct(matched)}
                   className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg cursor-pointer"
                 >
-                  Compară prețurile pentru acest produs
+                  Compare prices for this product
                 </button>
               )}
             </div>
@@ -561,11 +561,11 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
             <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-amber-950">
                 <Info className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Prețul nu a fost citit din link</span>
+                <span>The price was not read from the link</span>
               </div>
               <p className="text-[11px] leading-relaxed">
-                Am recunoscut magazinul, dar nu am găsit produsul în catalogul OvoPrice și nu citim prețuri live de pe pagina magazinului.
-                {recognizedRetailerLink.slugGuess ? ' Poți căuta produsul după numele din link.' : ''} Prețul actual și stocul se văd pe site-ul magazinului.
+                We recognized the store, but did not find the product in the OvoPrice catalog and we do not read live prices from the store page.
+                {recognizedRetailerLink.slugGuess ? ' You can search for the product by the name in the link.' : ''} The current price and stock are shown on the store's website.
               </p>
               {recognizedRetailerLink.slugGuess && onOpenVisualMatcher && (
                 <p className="text-[11px] font-mono text-amber-900 break-words">„{recognizedRetailerLink.slugGuess}”</p>
@@ -593,7 +593,7 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
             className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <Scan className="w-3.5 h-3.5 text-slate-500" />
-            <span>Analizează alt link</span>
+            <span>Analyze another link</span>
           </button>
         </div>
 
@@ -601,11 +601,11 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
         <div className="flex items-center justify-center gap-6 text-[11px] text-slate-500 pt-2 font-medium">
           <div className="flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Linkul rămâne neschimbat</span>
+            <span>The link is left unchanged</span>
           </div>
           <div className="flex items-center gap-1">
             <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-            <span>Se deschide în filă nouă</span>
+            <span>Opens in a new tab</span>
           </div>
         </div>
       </div>
@@ -1217,12 +1217,12 @@ export const VisualMatchResultScreen: React.FC<VisualMatchResultScreenProps> = (
   // Nothing to show (no link and no photo analysis yet)
   return (
     <div className="pb-8 pt-10 text-center space-y-3">
-      <p className="text-sm text-slate-600">Nu ai analizat încă niciun link sau nicio poză.</p>
+      <p className="text-sm text-slate-600">You haven't analyzed any link or photo yet.</p>
       <button
         onClick={() => onOpenVisualMatcher?.('link')}
         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
       >
-        Analizează un link
+        Analyze a link
       </button>
     </div>
   );

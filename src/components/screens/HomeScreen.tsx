@@ -21,7 +21,7 @@ import { DemoBadge } from '../DemoBadge';
 interface HomeScreenProps {
   onSearchFocus: () => void;
   onOpenVisualMatcher: (tab?: 'link' | 'photo' | 'barcode') => void;
-  /** Primește textul din clipboard (citit la apăsarea butonului). */
+  /** Receives the clipboard text (read when the button is pressed). */
   onPasteLink: (text: string) => void;
   onSelectPopularItem: (item: PopularSearchItem) => void;
   onOpenReels?: () => void;
@@ -41,12 +41,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     try {
       const text = await navigator.clipboard.readText();
       if (!text.trim()) {
-        setPasteError('Clipboardul este gol. Copiază mai întâi linkul unui produs.');
+        setPasteError('The clipboard is empty. Copy a product link first.');
         return;
       }
       onPasteLink(text);
     } catch {
-      setPasteError('Nu pot citi clipboardul (permisiune refuzată). Deschide „Lipește link” din scanner și lipește manual.');
+      setPasteError('Cannot read the clipboard (permission denied). Open "Paste link" in the scanner and paste manually.');
       onOpenVisualMatcher('link');
     }
   };
@@ -111,7 +111,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
 
           <p className="text-xs text-emerald-100/90 leading-relaxed max-w-[280px] mb-3.5">
-            Ai un link de magazin, o poză sau un cod de bare? Identifică produsul.
+            Have a store link, a photo or a barcode? Identify the product.
           </p>
 
           {/* 3 Integrated Entry Points */}
@@ -208,9 +208,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="flex items-center justify-between text-xs py-1.5 px-3 bg-amber-50 rounded-lg border border-amber-200">
           <div className="flex items-center gap-2">
             <DemoBadge />
-            <span className="text-amber-900 font-medium text-[11px]">Catalog de exemplu</span>
+            <span className="text-amber-900 font-medium text-[11px]">Example catalog</span>
           </div>
-          <span className="text-amber-800 text-[11px]">fără prețuri reale</span>
+          <span className="text-amber-800 text-[11px]">no real prices</span>
         </div>
       )}
 
@@ -218,11 +218,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-bold text-slate-900">Popular searches</h3>
-          <DemoBadge label="Exemple" />
+          <DemoBadge label="Example" />
         </div>
 
         <div className="space-y-2">
-          {popularLoading && <p className="text-xs text-slate-500 px-1">Se încarcă…</p>}
+          {popularLoading && <p className="text-xs text-slate-500 px-1">Loading…</p>}
           {popularSearches.map((item) => (
             <div
               key={item.id}
@@ -284,7 +284,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <Clipboard className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-slate-100 truncate">Ai copiat un link de produs?</p>
+            <p className="text-xs font-bold text-slate-100 truncate">Copied a product link?</p>
             <p className="text-[11px] text-slate-400 truncate">MediaMarkt, OTTO, Amazon, eBay</p>
           </div>
         </div>
@@ -292,7 +292,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           onClick={handlePaste}
           className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold text-[11px] rounded-md transition-colors cursor-pointer shrink-0"
         >
-          Lipește și analizează
+          Paste and analyze
         </button>
       </div>
       {pasteError && <p className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">{pasteError}</p>}

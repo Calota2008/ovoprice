@@ -29,7 +29,7 @@ export function usePriceData<T>(
           setState((s) => ({
             ...s,
             loading: false,
-            error: err instanceof Error ? err.message : 'Datele nu au putut fi încărcate.',
+            error: err instanceof Error ? err.message : 'The data could not be loaded.',
           }));
         }
       });

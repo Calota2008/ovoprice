@@ -76,7 +76,7 @@ const RETAILERS: RetailerConfig[] = [
     key: 'ebay',
     name: 'eBay Germany',
     domains: ['ebay.de'],
-    idLabel: 'Număr articol',
+    idLabel: 'Item number',
     extract: (url) => {
       const m = url.pathname.match(/\/itm\/(?:([^/]+)\/)?(\d{9,14})/);
       return m ? { id: m[2], slug: m[1] ? safeDecode(m[1]) : '' } : { id: null, slug: '' };
@@ -101,10 +101,10 @@ export function slugToText(slug: string): string {
 export function parseProductLink(raw: string): ParsedLink {
   let text = raw.trim();
   if (!text) {
-    return { ok: false, kind: 'malformed', title: 'Link lipsă', message: 'Lipește linkul unui produs pentru a-l analiza.' };
+    return { ok: false, kind: 'malformed', title: 'Missing link', message: 'Paste a product link to analyze it.' };
   }
   if (/\s/.test(text)) {
-    return { ok: false, kind: 'malformed', title: 'Link invalid', message: 'Linkul nu trebuie să conțină spații. Copiază adresa completă din browser.' };
+    return { ok: false, kind: 'malformed', title: 'Invalid link', message: 'The link must not contain spaces. Copy the full address from your browser.' };
   }
   // Acceptăm "www.otto.de/..." fără schemă
   if (!/^[a-z][a-z0-9+.-]*:/i.test(text) && text.includes('.')) text = `https://${text}`;
@@ -113,13 +113,13 @@ export function parseProductLink(raw: string): ParsedLink {
   try {
     url = new URL(text);
   } catch {
-    return { ok: false, kind: 'malformed', title: 'Link invalid', message: 'Introdu o adresă web completă, de exemplu https://www.otto.de/p/…' };
+    return { ok: false, kind: 'malformed', title: 'Invalid link', message: 'Enter a complete web address, for example https://www.otto.de/p/…' };
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    return { ok: false, kind: 'malformed', title: 'Protocol neacceptat', message: 'Sunt acceptate doar linkuri http și https.' };
+    return { ok: false, kind: 'malformed', title: 'Unsupported protocol', message: 'Only http and https links are supported.' };
   }
   if (url.username || url.password) {
-    return { ok: false, kind: 'malformed', title: 'Link nesigur', message: 'Linkul conține date de autentificare și nu poate fi analizat.' };
+    return { ok: false, kind: 'malformed', title: 'Unsafe link', message: 'The link contains login credentials and cannot be analyzed.' };
   }
 
   const host = url.hostname.toLowerCase();
@@ -129,16 +129,16 @@ export function parseProductLink(raw: string): ParsedLink {
       ok: false,
       kind: 'short',
       title: 'Link scurtat',
-      message: 'Linkurile scurtate nu pot fi deschise de aplicație. Deschide-l în browser și copiază adresa completă a produsului.',
+      message: 'Shortened links cannot be opened by the app. Open it in your browser and copy the full product address.',
     };
   }
   if (SOCIAL.some((d) => hostMatches(host, d))) {
     return {
       ok: false,
       kind: 'social',
-      title: 'Link de rețea socială',
+      title: 'Social media link',
       message:
-        'Încă nu putem citi produsul dintr-un video sau o postare. Caută produsul după nume, cu o poză sau scanându-i codul de bare.',
+        'We cannot read the product from a video or a post yet. Search by name, with a photo, or scan its barcode.',
     };
   }
 
@@ -148,7 +148,7 @@ export function parseProductLink(raw: string): ParsedLink {
       ok: false,
       kind: 'unsupported',
       title: 'Magazin neacceptat',
-      message: `Domeniul „${url.hostname}” nu este acceptat încă. Acceptăm: MediaMarkt, OTTO, Amazon.de/.at și eBay.de.`,
+      message: `The domain “${url.hostname}” is not supported yet. Supported: MediaMarkt, OTTO, Amazon.de/.at and eBay.de.`,
     };
   }
 

@@ -66,13 +66,13 @@ export const Header: React.FC<HeaderProps> = ({
                   OP
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900 text-sm">Vizitator</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Fără cont — datele rămân pe acest dispozitiv</p>
+                  <p className="font-semibold text-slate-900 text-sm">Visitor</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">No account — your data stays on this device</p>
                 </div>
               </div>
 
               <div className="pt-2.5 text-[11px] text-slate-500 leading-relaxed">
-                Alertele și produsele salvate sunt păstrate local în browser. Conturile și notificările reale vor fi disponibile într-o versiune viitoare.
+                Alerts and saved products are kept locally in your browser. Accounts and real notifications will be available in a future version.
               </div>
             </div>
           </>

@@ -18,6 +18,14 @@ import { ExternalRedirectModal } from './components/ExternalRedirectModal';
 import { DemoBanner } from './components/DemoBadge';
 import { parseProductLink } from './utils/retailerLinks';
 import { loadJson, saveJson } from './utils/storage';
+import {
+  COLLECTIONS_KEY,
+  Collection,
+  newCollectionId,
+  pruneCollections,
+  toggleInCollection,
+  validateCollections,
+} from './utils/collections';
 import { buildAlert, evaluateAlert, refreshSaved, savedFromProduct, validateAlerts, validateSaved } from './utils/alerts';
 import { priceProvider } from './services/priceProvider';
 import {
@@ -50,6 +58,7 @@ export default function App() {
   const [selectedOfferForRedirect, setSelectedOfferForRedirect] = useState<StoreOffer | null>(null);
   const [activeOffer, setActiveOffer] = useState<StoreOffer | null>(null);
   const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => loadJson(ALERTS_STORAGE_KEY, validateAlerts, []));
+  const [collections, setCollections] = useState<Collection[]>(() => loadJson(COLLECTIONS_KEY, validateCollections, []));
   const [reelsView, setReelsView] = useState<ReelsView | undefined>(undefined);
   const [savedStorageFailed, setSavedStorageFailed] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedProductItem[]>(() => loadJson(SAVED_STORAGE_KEY, validateSaved, []));
@@ -93,6 +102,15 @@ export default function App() {
 
   useEffect(() => {
     setSavedStorageFailed(!saveJson(SAVED_STORAGE_KEY, savedItems));
+  }, [savedItems]);
+
+  useEffect(() => {
+    saveJson(COLLECTIONS_KEY, collections);
+  }, [collections]);
+
+  // A product that is no longer saved leaves its collections.
+  useEffect(() => {
+    setCollections((prev) => pruneCollections(prev, savedItems.map((i) => i.productId ?? i.id)));
   }, [savedItems]);
 
   useEffect(() => {
@@ -162,7 +180,7 @@ export default function App() {
 
   const handleOpenProduct = async (
     productId?: string,
-    target: 'product-overview' | 'offers-comparison' = 'product-overview'
+    target: 'product-overview' | 'offers-comparison' | 'set-alert' = 'product-overview'
   ) => {
     try {
       const product = productId
@@ -449,6 +467,7 @@ export default function App() {
           {activeScreen === 'set-alert' && selectedProduct && (
             <SetPriceAlertScreen
               product={selectedProduct}
+              initialTargetPrice={alerts.find((a) => a.productId === selectedProduct.id)?.targetPrice}
               onConfirmAlert={handleConfirmAlert}
               onSaveToWatchlist={handleSaveToWatchlist}
             />
@@ -457,12 +476,12 @@ export default function App() {
           {!selectedProduct &&
             ['offers-comparison', 'breakdown', 'price-history', 'set-alert'].includes(activeScreen) && (
               <div className="pt-10 text-center space-y-3">
-                <p className="text-sm text-slate-600">Niciun produs selectat. Caută sau scanează un produs ca să vezi detaliile.</p>
+                <p className="text-sm text-slate-600">No product selected. Search for or scan a product to see its details.</p>
                 <button
                   onClick={() => navigateTo('home')}
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
                 >
-                  Înapoi la start
+                  Back to home
                 </button>
               </div>
             )}
@@ -483,6 +502,15 @@ export default function App() {
               onQuickAlert={() => navigateTo('alerts')}
               onRemoveSavedItem={handleRemoveSavedItem}
               onDiscover={() => navigateTo('product-reels')}
+              collections={collections}
+              onCreateCollection={(name) =>
+                setCollections((prev) => [...prev, { id: newCollectionId(), name, productIds: [] }])
+              }
+              onRenameCollection={(id, name) =>
+                setCollections((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
+              }
+              onDeleteCollection={(id) => setCollections((prev) => prev.filter((c) => c.id !== id))}
+              onToggleInCollection={(cid, pid) => setCollections((prev) => toggleInCollection(prev, cid, pid))}
             />
           )}
 
@@ -507,6 +535,8 @@ export default function App() {
               onOpenProduct={(productId) => handleOpenProduct(productId)}
               onCompareOffers={(productId) => handleOpenProduct(productId, 'offers-comparison')}
               onBuyOffer={(offer) => setSelectedOfferForRedirect(offer)}
+              onSetAlert={(productId) => handleOpenProduct(productId, 'set-alert')}
+              alertProductIds={alerts.map((a) => a.productId)}
               savedProductIds={savedItems.map((item) => item.productId || item.id)}
               onToggleSave={handleToggleSaveById}
               saveError={savedStorageFailed}

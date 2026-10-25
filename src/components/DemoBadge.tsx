@@ -2,7 +2,7 @@ import React from 'react';
 import { FlaskConical } from 'lucide-react';
 import { priceProvider } from '../services/priceProvider';
 
-/** Etichetă mică "DEMO". Apare doar cât timp sursa de date este demonstrativă. */
+/** Small "DEMO" label. Shown only while the data source is a demo. */
 export const DemoBadge: React.FC<{ className?: string; label?: string }> = ({
   className = '',
   label = 'DEMO',
@@ -11,7 +11,7 @@ export const DemoBadge: React.FC<{ className?: string; label?: string }> = ({
   return (
     <span
       className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-bold tracking-wider uppercase ${className}`}
-      title="Date demonstrative, nu sunt prețuri reale"
+      title="Demo data, not real prices"
     >
       <FlaskConical className="w-2.5 h-2.5" />
       {label}
@@ -19,7 +19,7 @@ export const DemoBadge: React.FC<{ className?: string; label?: string }> = ({
   );
 };
 
-/** Banner global: spune clar că prețurile și ofertele nu sunt reale. */
+/** Global banner: states clearly that prices and offers are not real. */
 export const DemoBanner: React.FC = () => {
   if (!priceProvider.isDemo) return null;
   return (
@@ -29,19 +29,19 @@ export const DemoBanner: React.FC = () => {
     >
       <FlaskConical className="w-3.5 h-3.5 mt-0.5 shrink-0" />
       <span>
-        <strong>Date demonstrative.</strong> Prețurile, ofertele, istoricul și alertele de aici sunt exemple, nu oferte reale. Verifică
-        mereu prețul final pe site-ul comerciantului.
+        <strong>Demo data.</strong> Prices, offers, history and alerts here are examples, not real offers. Always check
+        the final price on the merchant's website.
       </span>
     </div>
   );
 };
 
-/** Notă de subsol pentru ecrane cu prețuri. */
+/** Footnote for screens with prices. */
 export const DemoFootnote: React.FC<{ className?: string }> = ({ className = '' }) => {
   if (!priceProvider.isDemo) return null;
   return (
     <p className={`text-[10px] text-amber-800/80 text-center ${className}`}>
-      Date demonstrative · nu reprezintă oferte reale
+      Demo data · not real offers
     </p>
   );
 };

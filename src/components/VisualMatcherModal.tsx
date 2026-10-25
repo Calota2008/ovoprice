@@ -22,11 +22,11 @@ import { digitsOnly, explainInvalidGtin, isValidGtin, normalizeGtin } from '../u
 import { DemoBadge } from './DemoBadge';
 
 const CAMERA_MESSAGES: Record<CameraProblem, string> = {
-  denied: 'Accesul la cameră a fost refuzat. Permite camera din setările browserului sau introdu codul manual.',
-  'no-camera': 'Nu am găsit nicio cameră pe acest dispozitiv. Introdu codul manual.',
-  insecure: 'Camera funcționează doar pe o conexiune sigură (HTTPS sau localhost). Introdu codul manual.',
-  unsupported: 'Acest browser nu permite accesul la cameră. Introdu codul manual.',
-  failed: 'Camera nu a putut fi pornită. Încearcă din nou sau introdu codul manual.',
+  denied: 'Camera access was denied. Allow the camera in your browser settings or enter the code manually.',
+  'no-camera': 'No camera was found on this device. Enter the code manually.',
+  insecure: 'The camera only works on a secure connection (HTTPS or localhost). Enter the code manually.',
+  unsupported: 'This browser does not allow camera access. Enter the code manually.',
+  failed: 'The camera could not be started. Try again or enter the code manually.',
 };
 
 interface VisualMatcherModalProps {
@@ -36,7 +36,7 @@ interface VisualMatcherModalProps {
   onPhotoAnalysisComplete?: (result: VisualAnalysisResult) => void;
   onBarcodeProduct?: (product: Product) => void;
   initialTab?: 'link' | 'photo' | 'barcode';
-  /** Text deja lipit (ex. din Home): se pre-completează și se validează. */
+  /** Text already pasted (e.g. from Home): prefilled and validated. */
   initialUrl?: string;
 }
 
@@ -125,7 +125,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
       }
     } catch (err) {
       console.error('EAN lookup failed', err);
-      setLookupError('Căutarea nu a reușit. Verifică conexiunea și încearcă din nou.');
+      setLookupError('The search failed. Check your connection and try again.');
     } finally {
       setLookingUpEan(false);
     }
@@ -136,10 +136,10 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
     if (problem) {
       setManualEanError(
         problem === 'empty'
-          ? 'Introdu codul de sub codul de bare.'
+          ? 'Enter the number printed under the barcode.'
           : problem === 'length'
-            ? 'Un cod de bare are 8, 12, 13 sau 14 cifre.'
-            : 'Cifra de control nu se potrivește. Verifică dacă ai scris corect codul.'
+            ? 'A barcode has 8, 12, 13 or 14 digits.'
+            : 'The check digit does not match. Check that you typed the code correctly.'
       );
       return;
     }
@@ -159,9 +159,9 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
       return;
     }
 
-    // Singura așteptare reală: potrivirea cu catalogul prin provider.
+    // The only real wait: matching against the catalog through the provider.
     setScanning(true);
-    setScanStep('Se analizează linkul…');
+    setScanStep('Analyzing the link…');
     let matchedProduct: Product | null = null;
     try {
       matchedProduct = await priceProvider.matchProductFromLink(parsed.link);
@@ -279,7 +279,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div role="dialog" aria-modal="true" aria-label="Scan or find product" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 relative animate-in slide-in-from-bottom-4 duration-200">
         <button
           onClick={onClose}
@@ -300,7 +300,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
           Product Identification
         </h2>
         <p className="text-xs text-slate-500 mb-4">
-          Recunoaște linkuri de produs, fotografii și coduri de bare.
+          Recognizes product links, photos and barcodes.
         </p>
 
         {/* 3 Portal Tabs */}
@@ -366,7 +366,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Link de produs (MediaMarkt, OTTO, Amazon, eBay)
+                    Product link (MediaMarkt, OTTO, Amazon, eBay)
                   </label>
                   <div className="relative">
                     <input
@@ -376,7 +376,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                         setInputUrl(e.target.value);
                         if (urlError) setUrlError(null);
                       }}
-                      placeholder="Lipește linkul, ex. https://www.otto.de/p/…"
+                      placeholder="Paste the link, e.g. https://www.otto.de/p/…"
                       className={`w-full text-xs py-2.5 pl-3 pr-8 bg-slate-50 border rounded-lg focus:outline-none text-slate-900 ${
                         urlError
                           ? 'border-rose-400 focus:border-rose-500'
@@ -422,9 +422,9 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                 )}
 
                 <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs text-slate-600">
-                  <p className="font-semibold text-slate-800 text-[11px]">Magazine acceptate:</p>
+                  <p className="font-semibold text-slate-800 text-[11px]">Supported stores:</p>
                   <p className="text-[10px] text-slate-500">
-                    MediaMarkt • OTTO • Amazon.de / .at • eBay.de. Linkurile din TikTok, Instagram sau YouTube nu pot fi citite încă.
+                    MediaMarkt • OTTO • Amazon.de / .at • eBay.de. Links from TikTok, Instagram or YouTube cannot be read yet.
                   </p>
                 </div>
 
@@ -432,7 +432,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                   onClick={handleAnalyzeLinkSubmit}
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
                 >
-                  <span>Analizează linkul</span>
+                  <span>Analyze link</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -592,10 +592,10 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                     <div className="flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                       <div className="text-xs text-amber-900">
-                        <p className="font-bold">Produs negăsit</p>
+                        <p className="font-bold">Product not found</p>
                         <p className="mt-0.5">
-                          Codul <span className="font-mono">{notFoundEan}</span> nu există în catalogul OvoPrice
-                          {priceProvider.isDemo ? ' (catalog demonstrativ cu doar câteva produse)' : ''}.
+                          The code <span className="font-mono">{notFoundEan}</span> is not in the OvoPrice catalog
+                          {priceProvider.isDemo ? ' (demo catalog with only a few products)' : ''}.
                         </p>
                       </div>
                     </div>
@@ -606,7 +606,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                         rel="noopener noreferrer"
                         className="flex-1 py-2 text-center bg-white border border-amber-300 text-amber-900 text-xs font-semibold rounded-lg"
                       >
-                        Caută codul pe Google
+                        Search the code on Google
                       </a>
                       <button
                         onClick={() => {
@@ -615,7 +615,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                         }}
                         className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
                       >
-                        Scanează alt cod
+                        Scan another code
                       </button>
                     </div>
                   </div>
@@ -631,13 +631,13 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           }}
                         />
                         <p className="text-[11px] text-slate-500 text-center">
-                          Încadrează codul de bare în chenar. Scanarea pornește automat.
+                          Fit the barcode inside the frame. Scanning starts automatically.
                         </p>
                         <button
                           onClick={() => setCameraOn(false)}
                           className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg cursor-pointer"
                         >
-                          Oprește camera
+                          Stop camera
                         </button>
                       </div>
                     ) : (
@@ -650,7 +650,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                         className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Camera className="w-4 h-4" />
-                        <span>Scanează cu camera</span>
+                        <span>Scan with camera</span>
                       </button>
                     )}
 
@@ -669,7 +669,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
 
                     <div className="flex items-center gap-2 text-[11px] text-slate-400">
                       <span className="flex-1 h-px bg-slate-200" />
-                      <span>sau introdu codul manual</span>
+                      <span>or enter the code manually</span>
                       <span className="flex-1 h-px bg-slate-200" />
                     </div>
 
@@ -687,8 +687,8 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleManualEanSubmit();
                           }}
-                          placeholder="EAN, ex. 4548736132580"
-                          aria-label="Cod de bare EAN"
+                          placeholder="EAN, e.g. 4548736132580"
+                          aria-label="EAN barcode"
                           className="flex-1 min-w-0 px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
                         />
                         <button
@@ -696,7 +696,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           disabled={!manualEan}
                           className="px-3 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-semibold rounded-lg flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
                         >
-                          <span>Caută</span>
+                          <span>Search</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -713,7 +713,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                     {priceProvider.isDemo && (
                       <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-start gap-1.5">
                         <DemoBadge />
-                        <span>Catalog demonstrativ: sunt recunoscute doar 5 produse (ex. 4548736132580 pentru Sony WH-1000XM5).</span>
+                        <span>Demo catalog: only 5 products are recognized (e.g. 4548736132580 for Sony WH-1000XM5).</span>
                       </p>
                     )}
                   </>

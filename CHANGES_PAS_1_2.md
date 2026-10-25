@@ -58,3 +58,48 @@
 - Adăugat `ErrorBoundary`.
 - Teste: `tests/e2e_pasul_7_toate_produsele.py` (toate ecranele × 5 produse + bara ascunsă implicit).
 - Rămas: limba interfeței (mix RO/EN/DE), backend (rate limiting `/api/analyze-image`, verificare model Gemini).
+
+## Modul Reels (finalizare, doar frontend)
+Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" deschidea ultimul produs selectat (nu cel din Reel); prețul redus, prețul original, „-30%" și „14 magazine" erau inventate și hardcodate; butoanele Share/More erau simulate; poziția în feed se pierdea la revenire.
+- `types.ts`: `ReelItem` simplificat (`productId`, `videoUrl?`, `creatorLabel`); `StoreOffer.isAffiliate?` (doar linkuri confirmate).
+- `mockData.ts`: `demoReels` fără prețuri/reduceri/magazine/creatori inventați; prețul și ofertele vin din produs, prin `priceProvider`.
+- `ProductReelsScreen.tsx`: redat un singur video (doar reel-ul curent e montat), play/pauză la tap, mute doar când există video, stări loading/eroare video, navigare prin butoane, tastatură și swipe; filtre For You / Categories / Saved Products; Compare Prices (dezactivat fără oferte), View Details, Save/Saved; stări „Product not found", „No offers available yet", „No reels available yet"; mențiune de afiliere doar dacă o ofertă are `isAffiliate`.
+- `App.tsx`: `handleOpenProduct(id, target)` deschide produsul exact; salvarea din Reels folosește același mecanism ca ecranul Saved; poziția din feed se păstrează; avertizare dacă salvarea locală eșuează.
+- `ExternalRedirectModal.tsx`: buton de cumpărare doar pentru URL http(s) valid; mențiune de afiliere condiționată.
+- `utils/analytics.ts` (evenimente locale, fără stocare/trimitere), `utils/url.ts`.
+- `HomeScreen.tsx`: cardul Reels este buton; „REELCART" → „REELS".
+- Teste: `tests/e2e_reels.py` (40 verificări), `tests/e2e_reels_video.py` (necesită clip temporar).
+- Backend nemodificat (`server.ts` neatins).
+
+## Reels: Add Reel (local, doar pe dispozitivul utilizatorului) + Compare și Buy
+- Buton „+" în antetul Reels → formular `AddReelModal`: video (MP4/WebM, max 40 MB și 90 s) sau poză (JPG/PNG/WebP, redimensionată la max 1280 px), nume produs, descriere, categorie, specificații (max 8 rânduri), potrivire cu catalogul prin cod de bare (validare GS1 existentă), link de cumpărare https opțional și bifă „affiliate link".
+- Stocare: metadate în localStorage (`ovoprice_user_reels_v1`), fișierele în IndexedDB (`utils/mediaStore.ts`). Nimic nu este trimis în exterior sau publicat; Reel-ul este marcat „Your Reel · this device only". Limită 10 reel-uri; ștergere cu confirmare în doi pași; intrările corupte, fără media sau cu linkuri nesigure sunt ignorate.
+- Buy: produs potrivit cu catalogul → cea mai bună ofertă cu link valid, prin ecranul existent de predare către comerciant; produs nepotrivit → link-ul creatorului (doar https, `noopener`), fără link → buton dezactivat. Compare rămâne dezactivat fără produs din catalog („Not matched to a catalog product…"). Save/View Details apar doar pentru produse din catalog.
+- Chip-uri cu specificații (ale creatorului sau Brand/Model/Color din catalog). Mențiunea de afiliere apare doar când linkul e marcat afiliat.
+- Fișiere noi: `AddReelModal.tsx`, `services/useUserReels.ts`, `utils/userReels.ts`, `utils/mediaStore.ts`, `tests/e2e_add_reel.py` (45 verificări). `server.ts` neatins.
+- Nu există publicare publică, conturi, moderare sau raportare (necesită backend).
+
+## Reels: panou Compare peste feed
+- „Compare Prices" deschide acum un panou (`ReelCompareSheet.tsx`) cu primele 3 oferte, sortate după prețul total, fără să părăsești feed-ul. Fiecare rând are „Buy" către ecranul existent de predare către comerciant (link https valid, altfel dezactivat). „See all N offers" duce la comparația completă a aceluiași produs.
+- Diferențele „+X € vs lowest" sunt calculate din datele ofertelor; panoul arată DEMO și o notă că prețurile demo nu sunt oferte reale.
+- Se închide cu X, Escape sau click pe fundal; la schimbarea Reel-ului se închide; săgețile nu schimbă Reel-ul cât timp e deschis.
+- Teste: extinse în `tests/e2e_reels.py`. Backend neatins.
+
+## Price alert from a Reel
+- Bell button on the Reels right rail (only for Reels matched to a catalog product): opens the price-alert screen for that product; an existing alert pre-fills its target (`BellRing`, "Edit price alert").
+- `SetPriceAlertScreen`: confirm timer is cleaned up on unmount, double clicks ignored.
+
+## Saved collections (local)
+- New `src/utils/collections.ts` (validation, name rules, toggle, prune) and `localStorage` key `ovoprice_collections_v1`. Corrupt data falls back to an empty list.
+- Saved screen: tabs `All` + one per collection with counts, "New collection", rename, two-step delete (products stay saved), per-product "Collections" checklist, "In: …" label. Limits: 10 collections, 30 characters, unique names (case-insensitive).
+- A product removed from Saved is removed from all collections automatically.
+- Tests: `tests/e2e_collections.py` (16 checks) and `tests/unit_collections_similar.ts` (8 checks).
+
+## Similar products (helper only)
+- `src/utils/similar.ts` → `findSimilar(catalog, product)`: same category, other products, never invented. NOT shown in the UI yet: the 5-product demo catalog has one product per category, so the list would always be empty. Wire it in when the catalog grows.
+
+## Language: UI unified in English
+- All user-facing Romanian/German text translated (Home, Search, scanner modal, link results, offers, breakdown, price history, set-alert, alerts, saved, header, demo badges, errors, link-validation messages). `<html lang="en">`; dates use en-GB.
+- Kept as-is on purpose: German retailer search terms (OTTO/IKEA/MediaMarkt queries) and demo catalog product data (e.g. German subtitle/colour of one product).
+- Added `role="dialog"` + `aria-modal` to the scanner modal. Old e2e tests updated to the English strings.
+- No language selector / translation system (per the Reels prompt: interface stays in English).

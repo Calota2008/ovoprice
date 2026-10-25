@@ -76,7 +76,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 mb-0.5">
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 uppercase">
-              ISTORIC PREȚ
+              PRICE HISTORY
             </span>
             <DemoBadge />
             <span className="text-[10px] text-slate-400 font-mono">
@@ -136,7 +136,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
             {fmt(average)} €
           </span>
           <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
-            medie în exemplu
+            demo average
           </span>
         </div>
       </div>
@@ -145,8 +145,8 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Evoluția prețului</h3>
-            <p className="text-[11px] text-slate-500">Istoric de exemplu, nu prețuri reale</p>
+            <h3 className="text-sm font-bold text-slate-900">Price trend</h3>
+            <p className="text-[11px] text-slate-500">Example history, not real prices</p>
           </div>
 
           <DemoBadge />
@@ -155,7 +155,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         {/* Pill status */}
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-md text-[11px] font-medium text-emerald-800 mb-4 border border-emerald-100">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>Acum <strong>{Math.abs(pctVsAvg).toFixed(0)}% {pctVsAvg <= 0 ? 'sub' : 'peste'}</strong> media din exemplu</span>
+          <span>Now <strong>{Math.abs(pctVsAvg).toFixed(0)}% {pctVsAvg <= 0 ? 'below' : 'above'}</strong> the demo average</span>
         </div>
 
         {/* SVG Interactive Trend Chart */}
@@ -234,11 +234,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-            <span>Minim în exemplu</span>
+            <span>Demo minimum</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3.5 h-0.5 bg-blue-600 rounded-full" />
-            <span>Medie mobilă</span>
+            <span>Moving average</span>
           </div>
         </div>
       </div>
@@ -251,11 +251,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="text-sm font-bold text-slate-900">Față de istoric</h4>
+              <h4 className="text-sm font-bold text-slate-900">Versus history</h4>
               <DemoBadge />
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Prețul curent este cu <strong>{pctAboveLow.toFixed(0)}% peste minimul</strong> din istoricul de exemplu ({fmt(lowest)} €). Nu este o recomandare de cumpărare.
+              The current price is <strong>{pctAboveLow.toFixed(0)}% above the minimum</strong> of the example history ({fmt(lowest)} €). This is not a purchase recommendation.
             </p>
           </div>
         </div>
@@ -270,7 +270,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
             </div>
             <div>
               <h4 className="text-sm font-bold text-slate-900">Target Price Alert</h4>
-              <p className="text-[11px] text-slate-500">Setează un preț țintă</p>
+              <p className="text-[11px] text-slate-500">Set a target price</p>
             </div>
           </div>
 
@@ -279,7 +279,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         {/* Dynamic Price Display */}
         <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
           <div className="flex justify-between items-center text-xs mb-2">
-            <span className="text-slate-600 font-medium">Anunță-mă când prețul scade la:</span>
+            <span className="text-slate-600 font-medium">Let me know when the price drops to:</span>
             <span className="text-xl font-extrabold text-emerald-800 tnum">
               {sliderTarget.toFixed(2).replace('.', ',')} €
             </span>

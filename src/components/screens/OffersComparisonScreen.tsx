@@ -81,7 +81,7 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
             {product.title}
           </h2>
           <p className="text-xs text-slate-500">
-            {product.category} · {product.offers.length} oferte de exemplu
+            {product.category} · {product.offers.length} demo offers
           </p>
         </div>
       </div>
@@ -124,11 +124,11 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
         <div className="flex items-center justify-between -mx-4 -mt-4 mb-3 bg-emerald-100/90 border-b border-emerald-200 px-4 py-2">
           <div className="flex items-center gap-1.5 text-emerald-800 text-xs font-bold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-            <span>Cel mai mic preț din exemplu</span>
+            <span>Lowest price in the demo</span>
           </div>
           {maxSaving > 0 && (
             <span className="text-emerald-700 font-bold text-xs">
-              Diferență față de cel mai scump: {maxSaving.toFixed(2).replace('.', ',')} €
+              Difference vs. the most expensive: {maxSaving.toFixed(2).replace('.', ',')} €
             </span>
           )}
         </div>
@@ -187,7 +187,7 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
         {/* Delivery Guarantee */}
         <div className="flex items-center gap-2 text-xs text-emerald-800 bg-white/80 p-2.5 rounded-lg border border-emerald-200 mb-3 font-medium">
           <Zap className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Livrare: {winnerOffer.deliveryEstimate}{winnerOffer.deliveryGuarantee ? ` · ${winnerOffer.deliveryGuarantee}` : ''}</span>
+          <span>Delivery: {winnerOffer.deliveryEstimate}{winnerOffer.deliveryGuarantee ? ` · ${winnerOffer.deliveryGuarantee}` : ''}</span>
         </div>
 
         {/* Buy at Amazon button */}
@@ -214,10 +214,10 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              ISTORIC PREȚ <DemoBadge className="ml-1" />
+              PRICE HISTORY <DemoBadge className="ml-1" />
             </span>
             <span className="text-xs font-bold text-slate-900 tnum">
-              Minim în istoric: {historicLow.toFixed(2).replace('.', ',')} €
+              Historical low: {historicLow.toFixed(2).replace('.', ',')} €
             </span>
           </div>
           {sparkPath && (
@@ -234,7 +234,7 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-bold text-slate-900">
-            Alte oferte
+            Other offers
           </h3>
           <span className="text-[11px] text-slate-500">
             Sorted by Total Landed Price

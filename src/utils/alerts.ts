@@ -20,11 +20,11 @@ export function buildAlert(product: Product, targetPrice: number, now: Date = ne
     image: product.image,
     targetPrice,
     currentPrice: product.bestPrice,
-    previousPrice: product.bestPrice, // prețul la creare
+    previousPrice: product.bestPrice, // price at creation
     dropAmount: 0,
     status: 'WATCHING',
     createdAt: now.toISOString(),
-    timestamp: `Creată ${now.toLocaleDateString('ro-RO')}`,
+    timestamp: `Created ${now.toLocaleDateString('en-GB')}`,
     shippingNote: best?.shippingText ?? '',
     isUnread: false,
   };
@@ -56,8 +56,8 @@ export function evaluateAlert(alert: PriceAlertItem, product: Product, isNew = f
     status,
     isUnread: isNew ? false : becameReached ? true : alert.isUnread,
     matchDetails: reached
-      ? `Ținta de ${fmt(alert.targetPrice)} € este atinsă (preț actual ${fmt(current)} €).`
-      : `Te anunțăm la ${fmt(alert.targetPrice)} € sau mai puțin. Preț actual: ${fmt(current)} €.`,
+      ? `Your target of ${fmt(alert.targetPrice)} € has been reached (current price ${fmt(current)} €).`
+      : `Tracking until ${fmt(alert.targetPrice)} € or less. Current price: ${fmt(current)} €.`,
   };
 }
 

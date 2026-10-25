@@ -32,7 +32,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onDetected, onCa
 
     const finish = (code: string) => {
       if (done || stopped) return;
-      if (!isValidGtin(code)) return; // citire greșită: continuăm să scanăm
+      if (!isValidGtin(code)) return; // misread: keep scanning
       done = true;
       handlers.current.onDetected(code.replace(/\D/g, ''));
     };
@@ -130,7 +130,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onDetected, onCa
       {!ready && (
         <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-xs gap-2">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Se pornește camera…</span>
+          <span>Starting camera…</span>
         </div>
       )}
       {ready && (
