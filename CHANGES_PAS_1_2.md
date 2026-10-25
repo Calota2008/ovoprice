@@ -132,3 +132,10 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - The Home search box still opens the separate Search screen. On phones and tablets (touch devices) the keyboard opens at once; on a computer the field is not focused automatically. After a spoken search the field is not focused either (the results are the point).
 - A spoken query only seeds the Search screen it opens; opening Search later from the bottom bar starts empty.
 - Tests: `tests/unit_voice.ts` (8 checks), `tests/e2e_voice_search.py` (26 checks, with a fake speech recogniser: 3 languages, Austria, denied/silent/unsupported, cancel, no stale text, keyboard on phone/tablet/computer). `e2e_pasii_3_5.py` updated (it clicked the first button named "Search", which is now the microphone).
+
+## Signed-in state in the UI (local test account)
+- `authProvider` now has `subscribe()` and a `useAuthUser()` hook (`src/services/useAuthUser.ts`), so every screen reacts when the user changes. The real provider is still "no backend": nobody can sign in by accident.
+- Signed-in screens: header avatar with initials, profile menu with name, e-mail, "Account settings" and "Sign out"; Account settings card with name/e-mail and "Sign out"; guest-only invitations (nudges, sign-in buttons) disappear.
+- To check these screens before the backend exists there is a LOCAL TEST ACCOUNT: open the app once with `?previewAccount=1` (development only, kept for the browser session, `?previewAccount=0` switches it off). Any valid e-mail or "Continue with Google" signs in as a test user, labelled **TEST ACCOUNT** everywhere, nothing is sent or stored on a server. Production builds do not contain this code (checked in the build output).
+- Sign-up country still goes through `signInWithEmail(email, { mode, country })` and is saved locally.
+- Test: `tests/e2e_account_state.py` (mobile + desktop, 17 checks each).

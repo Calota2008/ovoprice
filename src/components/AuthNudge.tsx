@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Cloud, X } from 'lucide-react';
-import { authProvider } from '../services/authProvider';
+import { useAuthUser } from '../services/useAuthUser';
 
 import { t } from '../i18n';
 const KEY = 'ovoprice_auth_nudge_dismissed_v1';
@@ -15,7 +15,8 @@ const read = (): boolean => {
 /** Quiet one-line invitation shown to guests next to things they saved. Dismissible, never blocks. */
 export const AuthNudge: React.FC<{ onOpenAuth: () => void; message: string }> = ({ onOpenAuth, message }) => {
   const [dismissed, setDismissed] = useState(read);
-  if (dismissed || authProvider.getUser()) return null;
+  const user = useAuthUser();
+  if (dismissed || user) return null;
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white pl-3 pr-1.5 py-2">
       <Cloud className="w-4 h-4 text-emerald-700 shrink-0" />

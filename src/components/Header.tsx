@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, User, Settings } from 'lucide-react';
+import { ArrowLeft, User, Settings, LogOut } from 'lucide-react';
 import { OvoPriceLogo } from './OvoPriceLogo';
+import { authProvider } from '../services/authProvider';
+import { useAuthUser, userInitials } from '../services/useAuthUser';
 
 import { t } from '../i18n';
 interface HeaderProps {
@@ -23,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const user = useAuthUser();
 
   return (
     <header className="sticky top-0 z-40 bg-[#faf8ff]/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between gap-3 max-w-md mx-auto w-full transition-colors">
@@ -55,7 +58,11 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label={t("User Profile")}
           title={t("Account & Hub Settings")}
         >
-          <User className="w-4 h-4 text-emerald-50" />
+          {user ? (
+            <span className="text-[11px] font-bold text-white">{userInitials(user)}</span>
+          ) : (
+            <User className="w-4 h-4 text-emerald-50" />
+          )}
         </button>
 
         {/* Profile Popover */}
@@ -68,18 +75,27 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="absolute right-0 top-10 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50 text-xs text-slate-600 animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
                 <div className="w-10 h-10 rounded-full bg-[#08142e] text-white flex items-center justify-center font-bold text-sm">
-                  OP
+                  {user ? userInitials(user) : 'OP'}
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">{t("Visitor")}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{t("No account — your data stays on this device")}</p>
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-900 text-sm truncate">{user ? user.name : t("Visitor")}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                    {user ? user.email : t("No account — your data stays on this device")}
+                  </p>
                 </div>
               </div>
 
-              <div className="pt-2.5 text-[11px] text-slate-500 leading-relaxed">
-                {t("Alerts and saved products are kept locally in your browser. Sign in to sync them across devices.")}
-              </div>
-              {onOpenAuth && (
+              {user && authProvider.isPreview && (
+                <p className="mt-2.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5 text-[11px] font-medium text-amber-900">
+                  <span className="font-bold">{t('TEST ACCOUNT')}</span> · {t('Test account: nothing is sent or stored on a server.')}
+                </p>
+              )}
+              {!user && (
+                <div className="pt-2.5 text-[11px] text-slate-500 leading-relaxed">
+                  {t("Alerts and saved products are kept locally in your browser. Sign in to sync them across devices.")}
+                </div>
+              )}
+              {!user && onOpenAuth && (
                 <div className="pt-3 flex flex-col gap-2">
                   <button
                     onClick={() => {
@@ -111,6 +127,18 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Settings className="w-4 h-4 text-slate-500" />
                   {t('Account settings')}
+                </button>
+              )}
+              {user && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    void authProvider.signOut();
+                  }}
+                  className="mt-2.5 w-full flex items-center gap-2 text-[13px] font-semibold text-slate-700 hover:text-rose-700 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-slate-500" />
+                  {t('Sign out')}
                 </button>
               )}
             </div>

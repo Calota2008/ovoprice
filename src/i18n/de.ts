@@ -680,4 +680,7 @@ export const de: Record<string, string> = {
   "Speech recognition failed. Try again or type your search.": "Die Spracherkennung ist fehlgeschlagen. Versuche es erneut oder tippe deine Suche.",
   "Stop listening": "Zuhören beenden",
   "Listening… say the product name.": "Ich höre zu… Nenne den Produktnamen.",
+  "Sign out": "Abmelden",
+  "TEST ACCOUNT": "TESTKONTO",
+  "Test account: nothing is sent or stored on a server.": "Testkonto: Es wird nichts an einen Server gesendet oder dort gespeichert.",
 };

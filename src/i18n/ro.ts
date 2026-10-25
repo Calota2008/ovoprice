@@ -680,4 +680,7 @@ export const ro: Record<string, string> = {
   "Speech recognition failed. Try again or type your search.": "Recunoașterea vocală a eșuat. Încearcă din nou sau scrie căutarea.",
   "Stop listening": "Oprește ascultarea",
   "Listening… say the product name.": "Ascult… spune numele produsului.",
+  "Sign out": "Deconectare",
+  "TEST ACCOUNT": "CONT DE TEST",
+  "Test account: nothing is sent or stored on a server.": "Cont de test: nu se trimite și nu se stochează nimic pe un server.",
 };

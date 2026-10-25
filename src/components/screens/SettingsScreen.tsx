@@ -3,6 +3,7 @@ import { Check, Globe2, MapPin, UserRound } from 'lucide-react';
 import { LANGUAGES, setLanguage, t, useLanguage } from '../../i18n';
 import { COUNTRIES, countryName, setCountry, useCountry } from '../../i18n/country';
 import { authProvider } from '../../services/authProvider';
+import { useAuthUser, userInitials } from '../../services/useAuthUser';
 
 interface SettingsScreenProps {
   onOpenAuth: (mode: 'sign-in' | 'create') => void;
@@ -57,7 +58,7 @@ const Section: React.FC<{ icon: React.ElementType; title: string; note?: string;
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) => {
   const lang = useLanguage();
   const country = useCountry();
-  const user = authProvider.getUser();
+  const user = useAuthUser();
 
   return (
     <div className="pb-8 space-y-6">
@@ -69,10 +70,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
       <Section icon={UserRound} title={t('Account')}>
         <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
           {user ? (
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-              <p className="text-xs text-slate-500">{user.email}</p>
-            </div>
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#08142e] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                  {userInitials(user)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                </div>
+              </div>
+              {authProvider.isPreview && (
+                <p className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[11px] font-medium text-amber-900">
+                  <span className="font-bold">{t('TEST ACCOUNT')}</span> · {t('Test account: nothing is sent or stored on a server.')}
+                </p>
+              )}
+              <button
+                onClick={() => void authProvider.signOut()}
+                className="w-full h-10 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-[13px] font-semibold cursor-pointer"
+              >
+                {t('Sign out')}
+              </button>
+            </>
           ) : (
             <>
               <div>
