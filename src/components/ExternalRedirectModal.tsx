@@ -1,6 +1,8 @@
 import React from 'react';
 import { ExternalLink, ShieldCheck, CheckCircle2, X } from 'lucide-react';
 import { StoreOffer } from '../types';
+import { isSafeHttpUrl } from '../utils/url';
+import { trackEvent } from '../utils/analytics';
 
 interface ExternalRedirectModalProps {
   offer: StoreOffer | null;
@@ -12,6 +14,7 @@ export const ExternalRedirectModal: React.FC<ExternalRedirectModalProps> = ({
   onClose,
 }) => {
   if (!offer) return null;
+  const hasValidLink = isSafeHttpUrl(offer.affiliateUrl);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -61,16 +64,33 @@ export const ExternalRedirectModal: React.FC<ExternalRedirectModalProps> = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <a
-            href={offer.affiliateUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={onClose}
-            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
-          >
-            <span>Proceed to {offer.storeName}</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
+          {hasValidLink ? (
+            <a
+              href={offer.affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackEvent('offer_opened', { storeDomain: offer.storeDomain });
+                onClose();
+              }}
+              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
+            >
+              <span>Proceed to {offer.storeName}</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          ) : (
+            <div
+              role="alert"
+              className="w-full py-3 px-4 bg-slate-100 text-slate-500 font-semibold text-sm rounded-lg text-center"
+            >
+              No valid link available for this offer yet.
+            </div>
+          )}
+          {offer.isAffiliate === true && (
+            <p className="text-[10px] leading-snug text-slate-500">
+              Some links may be affiliate links. OvoPrice may earn a commission from qualifying purchases at no additional cost to you.
+            </p>
+          )}
           <button
             onClick={onClose}
             className="w-full py-2.5 text-xs text-slate-600 font-medium hover:text-slate-900 transition-colors"

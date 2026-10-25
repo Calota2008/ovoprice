@@ -11,7 +11,7 @@ import { SetPriceAlertScreen } from './components/screens/SetPriceAlertScreen';
 import { AlertsScreen } from './components/screens/AlertsScreen';
 import { SavedScreen } from './components/screens/SavedScreen';
 import { VisualMatchResultScreen } from './components/screens/VisualMatchResultScreen';
-import { ProductReelsScreen } from './components/screens/ProductReelsScreen';
+import { ProductReelsScreen, ReelsView } from './components/screens/ProductReelsScreen';
 import { VisualMatcherModal } from './components/VisualMatcherModal';
 import { ExternalRedirectModal } from './components/ExternalRedirectModal';
 
@@ -28,7 +28,6 @@ import {
   RecognizedRetailerLink,
   VisualAnalysisResult,
   Product,
-  ReelItem,
   PopularSearchItem,
 } from './types';
 import { Smartphone, Monitor, Compass, Sparkles } from 'lucide-react';
@@ -51,6 +50,8 @@ export default function App() {
   const [selectedOfferForRedirect, setSelectedOfferForRedirect] = useState<StoreOffer | null>(null);
   const [activeOffer, setActiveOffer] = useState<StoreOffer | null>(null);
   const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => loadJson(ALERTS_STORAGE_KEY, validateAlerts, []));
+  const [reelsView, setReelsView] = useState<ReelsView | undefined>(undefined);
+  const [savedStorageFailed, setSavedStorageFailed] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedProductItem[]>(() => loadJson(SAVED_STORAGE_KEY, validateSaved, []));
   const [deviceFrameMode, setDeviceFrameMode] = useState<'mobile' | 'expanded'>('mobile');
 
@@ -91,7 +92,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    saveJson(SAVED_STORAGE_KEY, savedItems);
+    setSavedStorageFailed(!saveJson(SAVED_STORAGE_KEY, savedItems));
   }, [savedItems]);
 
   useEffect(() => {
@@ -109,32 +110,6 @@ export default function App() {
       }),
     [savedItems, alerts]
   );
-
-  const handleToggleSaveReel = (reel: ReelItem) => {
-    setSavedItems((prev) => {
-      const isAlreadySaved = prev.some(
-        (item) => item.productId === reel.id || item.id === reel.id || item.id === `save-${reel.id}`
-      );
-      if (isAlreadySaved) {
-        return prev.filter(
-          (item) => item.productId !== reel.id && item.id !== reel.id && item.id !== `save-${reel.id}`
-        );
-      } else {
-        const newSavedItem: SavedProductItem = {
-          id: `save-${reel.id}`,
-          productId: reel.id,
-          title: reel.title,
-          storeName: reel.merchant,
-          image: reel.image,
-          currentPrice: reel.bestPrice,
-          savedPrice: reel.bestPrice,
-          statusText: reel.tagline,
-          deliveryNote: reel.shippingNote,
-        };
-        return [newSavedItem, ...prev];
-      }
-    });
-  };
 
   const handleRemoveSavedItem = (id: string) => {
     setSavedItems((prev) => prev.filter((item) => item.id !== id));
@@ -185,7 +160,10 @@ export default function App() {
     }
   };
 
-  const handleOpenProduct = async (productId?: string) => {
+  const handleOpenProduct = async (
+    productId?: string,
+    target: 'product-overview' | 'offers-comparison' = 'product-overview'
+  ) => {
     try {
       const product = productId
         ? await priceProvider.getProductById(productId)
@@ -196,7 +174,8 @@ export default function App() {
       console.error('Failed to load product', err);
       setSelectedProduct(null);
     }
-    navigateTo('product-overview');
+    setActiveOffer(null);
+    navigateTo(target);
   };
 
   // Header title resolution
@@ -233,7 +212,7 @@ export default function App() {
     { id: 'product-overview', label: 'Product Details Overview', imageNumber: 'Image 3' },
     { id: 'breakdown', label: 'Landed Cost Breakdown', imageNumber: 'Image 5' },
     { id: 'home', label: 'Home / Discovery', imageNumber: 'Image 7' },
-    { id: 'product-reels', label: 'Discover Reels (ReelCart)', imageNumber: 'Reels' },
+    { id: 'product-reels', label: 'Reels', imageNumber: 'Reels' },
     { id: 'set-alert', label: 'Set Price Radar', imageNumber: 'Image 9' },
     { id: 'price-history', label: 'Price History Chart', imageNumber: 'Image 11' },
     { id: 'search', label: 'Search & Variations', imageNumber: 'Image 13' },
@@ -280,6 +259,16 @@ export default function App() {
         ? prev.filter((i) => (i.productId ?? i.id) !== product.id && i.id !== `save-${product.id}`)
         : [savedFromProduct(product), ...prev]
     );
+  };
+
+  // Used by Reels: resolves the catalog product by id so the saved entry matches the Saved screen.
+  const handleToggleSaveById = async (productId: string) => {
+    try {
+      const product = await priceProvider.getProductById(productId);
+      if (product) handleToggleSaveProduct(product);
+    } catch (err) {
+      console.error('Failed to save product', err);
+    }
   };
 
   const handleSaveToWatchlist = () => {
@@ -516,9 +505,12 @@ export default function App() {
             <ProductReelsScreen
               onBack={handleBack}
               onOpenProduct={(productId) => handleOpenProduct(productId)}
-              onCompareOffers={() => navigateTo('offers-comparison')}
+              onCompareOffers={(productId) => handleOpenProduct(productId, 'offers-comparison')}
               savedProductIds={savedItems.map((item) => item.productId || item.id)}
-              onToggleSave={handleToggleSaveReel}
+              onToggleSave={handleToggleSaveById}
+              saveError={savedStorageFailed}
+              initialView={reelsView}
+              onViewChange={setReelsView}
             />
           )}
         </main>

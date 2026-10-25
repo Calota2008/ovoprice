@@ -41,6 +41,8 @@ export interface StoreOffer {
   returnPolicy: string;
   warranty: string;
   affiliateUrl: string;
+  /** True only when the link is a confirmed affiliate link. Never set for demo data. */
+  isAffiliate?: boolean;
 }
 
 export interface PriceHistoryPoint {
@@ -155,20 +157,15 @@ export interface RelatedModelItem {
 }
 
 export interface ReelItem {
+  /** Stable key for the feed. */
   id: string;
+  /** Catalog product this reel is about. Prices/offers always come from the product, never from the reel. */
+  productId: string;
   title: string;
   subtitle: string;
   category: string;
-  merchant: string;
-  merchantDomain: string;
-  bestPrice: number;
-  originalPrice: number;
-  savingsAmount: number;
-  savingsPercent: number;
   image: string;
-  storesCount: number;
-  shippingNote: string;
-  verifiedMerchant: boolean;
-  reelCreator: string;
-  tagline: string;
+  /** Optional vertical video. Without it the reel shows the product image (demo preview). */
+  videoUrl?: string;
+  creatorLabel: string;
 }

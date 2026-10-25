@@ -173,10 +173,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </div>
 
-      {/* Discover Reels Entry Point (ReelCart Style) */}
-      <div
+      {/* Discover Reels entry point */}
+      <button
+        type="button"
         onClick={onOpenReels}
-        className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl p-3 border border-slate-800 hover:border-cyan-500/50 transition-all flex items-center justify-between shadow-xs cursor-pointer group"
+        className="w-full text-left bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl p-3 border border-slate-800 hover:border-cyan-500/50 transition-all flex items-center justify-between shadow-xs cursor-pointer group"
       >
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shrink-0">
@@ -188,7 +189,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 Discover Reels
               </span>
               <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                REELCART
+                REELS
               </span>
             </div>
             <p className="text-[11px] text-slate-400 truncate">
@@ -200,7 +201,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <span className="text-xs font-semibold hidden xs:inline">Watch</span>
           <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </div>
-      </div>
+      </button>
 
       {/* Data source indicator (no fake "live" feed) */}
       {priceProvider.isDemo && (
