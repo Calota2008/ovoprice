@@ -1,0 +1,6 @@
+{
+  "name": "OvoPrice - Compară prețuri",
+  "description": "Caută un produs, compară ofertele comercianților și cumpără de la magazinul ales.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
