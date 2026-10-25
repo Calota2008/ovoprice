@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Header } from './components/Header';
+import { AuthSheet, AuthMode } from './components/AuthSheet';
 import { BottomNav } from './components/BottomNav';
 import { HomeScreen } from './components/screens/HomeScreen';
 import { SearchScreen } from './components/screens/SearchScreen';
@@ -59,6 +60,7 @@ export default function App() {
   const [activeOffer, setActiveOffer] = useState<StoreOffer | null>(null);
   const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => loadJson(ALERTS_STORAGE_KEY, validateAlerts, []));
   const [collections, setCollections] = useState<Collection[]>(() => loadJson(COLLECTIONS_KEY, validateCollections, []));
+  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [reelsView, setReelsView] = useState<ReelsView | undefined>(undefined);
   const [savedStorageFailed, setSavedStorageFailed] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedProductItem[]>(() => loadJson(SAVED_STORAGE_KEY, validateSaved, []));
@@ -384,6 +386,7 @@ export default function App() {
       >
         {/* App Header */}
         <Header
+          onOpenAuth={(mode) => setAuthMode(mode)}
           title={getHeaderTitle()}
           showBack={showBackButton}
           onBack={handleBack}
@@ -492,6 +495,7 @@ export default function App() {
               onSelectAlert={handleSelectAlert}
               onRemoveAlert={handleRemoveAlert}
               onCreateAlert={handleCreateAlertFromList}
+              onOpenAuth={() => setAuthMode('sign-in')}
             />
           )}
 
@@ -502,6 +506,7 @@ export default function App() {
               onQuickAlert={() => navigateTo('alerts')}
               onRemoveSavedItem={handleRemoveSavedItem}
               onDiscover={() => navigateTo('product-reels')}
+              onOpenAuth={() => setAuthMode('sign-in')}
               collections={collections}
               onCreateCollection={(name) =>
                 setCollections((prev) => [...prev, { id: newCollectionId(), name, productIds: [] }])
@@ -545,6 +550,8 @@ export default function App() {
             />
           )}
         </main>
+
+        {authMode && <AuthSheet mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} />}
 
         {/* Global Bottom Navigation (Visible on primary tabs and can be accessed anywhere) */}
         {!['breakdown'].includes(activeScreen) && (

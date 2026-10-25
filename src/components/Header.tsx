@@ -8,6 +8,7 @@ interface HeaderProps {
   onBack?: () => void;
   unreadAlertsCount?: number;
   onOpenAlerts?: () => void;
+  onOpenAuth?: (mode: 'sign-in' | 'create') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onBack,
   unreadAlertsCount = 0,
   onOpenAlerts,
+  onOpenAuth,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -72,8 +74,30 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="pt-2.5 text-[11px] text-slate-500 leading-relaxed">
-                Alerts and saved products are kept locally in your browser. Accounts and real notifications will be available in a future version.
+                Alerts and saved products are kept locally in your browser. Sign in to sync them across devices.
               </div>
+              {onOpenAuth && (
+                <div className="pt-3 flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onOpenAuth('sign-in');
+                    }}
+                    className="h-10 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[13px] font-semibold cursor-pointer"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onOpenAuth('create');
+                    }}
+                    className="h-9 rounded-lg text-[13px] font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Create an account
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

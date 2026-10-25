@@ -3,11 +3,14 @@ import { Activity, Bell, CheckCircle2, TrendingDown, Plus, Trash2, Eye, ArrowRig
 import { PriceAlertItem } from '../../types';
 import { DemoBadge } from '../DemoBadge';
 
+import { AuthNudge } from '../AuthNudge';
+
 interface AlertsScreenProps {
   alerts: PriceAlertItem[];
   onSelectAlert: (alert: PriceAlertItem) => void;
   onRemoveAlert?: (id: string) => void;
   onCreateAlert: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const AlertsScreen: React.FC<AlertsScreenProps> = ({
@@ -15,6 +18,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
   onSelectAlert,
   onRemoveAlert,
   onCreateAlert,
+  onOpenAuth,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'UNREAD' | 'TARGET_REACHED'>('ALL');
 
@@ -37,6 +41,10 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
         </div>
         <DemoBadge className="mt-1.5" />
       </div>
+
+      {onOpenAuth && alerts.length > 0 && (
+        <AuthNudge onOpenAuth={onOpenAuth} message="Alerts only live on this device for now." />
+      )}
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">

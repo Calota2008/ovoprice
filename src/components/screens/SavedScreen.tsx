@@ -12,6 +12,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { SavedProductItem } from '../../types';
+import { AuthNudge } from '../AuthNudge';
 import {
   COLLECTION_LIMITS,
   Collection,
@@ -25,6 +26,7 @@ interface SavedScreenProps {
   onQuickAlert: () => void;
   onRemoveSavedItem?: (id: string) => void;
   onDiscover?: () => void;
+  onOpenAuth?: () => void;
   collections?: Collection[];
   onCreateCollection?: (name: string) => void;
   onRenameCollection?: (id: string, name: string) => void;
@@ -45,6 +47,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
   onQuickAlert,
   onRemoveSavedItem,
   onDiscover,
+  onOpenAuth,
   collections = [],
   onCreateCollection,
   onRenameCollection,
@@ -116,6 +119,10 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
           <span>Saved on this device · demo prices</span>
         </p>
       </div>
+
+      {onOpenAuth && items.length > 0 && (
+        <AuthNudge onOpenAuth={onOpenAuth} message="Saved on this device only." />
+      )}
 
       {/* Collections bar */}
       {canManageCollections && (
