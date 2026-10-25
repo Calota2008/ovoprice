@@ -506,6 +506,7 @@ export default function App() {
               onBack={handleBack}
               onOpenProduct={(productId) => handleOpenProduct(productId)}
               onCompareOffers={(productId) => handleOpenProduct(productId, 'offers-comparison')}
+              onBuyOffer={(offer) => setSelectedOfferForRedirect(offer)}
               savedProductIds={savedItems.map((item) => item.productId || item.id)}
               onToggleSave={handleToggleSaveById}
               saveError={savedStorageFailed}

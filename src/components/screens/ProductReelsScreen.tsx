@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
-import { ReelItem } from '../../types';
+import { ReelItem, StoreOffer } from '../../types';
 import { DemoBadge } from '../DemoBadge';
+import { AddReelModal } from '../AddReelModal';
+import { useUserReels } from '../../services/useUserReels';
+import { isSafeHttpUrl } from '../../utils/url';
 import { trackEvent } from '../../utils/analytics';
 import {
   ArrowLeft,
@@ -19,6 +22,9 @@ import {
   Play,
   VideoOff,
   AlertTriangle,
+  Plus,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react';
 
 type ReelFilter = 'for-you' | 'categories' | 'saved';
@@ -34,6 +40,8 @@ interface ProductReelsScreenProps {
   onBack: () => void;
   onOpenProduct: (productId: string) => void;
   onCompareOffers: (productId: string) => void;
+  /** Opens the merchant hand-over for a catalog offer. */
+  onBuyOffer: (offer: StoreOffer) => void;
   savedProductIds: string[];
   /** Toggles the saved state of the product. Persistence is handled by the app. */
   onToggleSave: (productId: string) => void;
@@ -57,6 +65,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   onBack,
   onOpenProduct,
   onCompareOffers,
+  onBuyOffer,
   savedProductIds = [],
   onToggleSave,
   saveError = false,
@@ -71,20 +80,29 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [videoStatus, setVideoStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [showAddReel, setShowAddReel] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartY = useRef<number | null>(null);
   const toastTimer = useRef<number | null>(null);
 
-  const { data: allReels, loading: reelsLoading, error: reelsError } = usePriceData<ReelItem[]>(
+  const { data: catalogReels, loading: catalogLoading, error: reelsError } = usePriceData<ReelItem[]>(
     () => priceProvider.getReels(),
     [],
     []
   );
+  const userReels = useUserReels();
+  const reelsLoading = catalogLoading || userReels.loading;
+  // Reels made on this device come first.
+  const allReels = useMemo(() => [...userReels.reels, ...catalogReels], [userReels.reels, catalogReels]);
 
   const categories = useMemo(() => Array.from(new Set(allReels.map((r) => r.category))), [allReels]);
 
-  const isSaved = useCallback((productId: string) => savedProductIds.includes(productId), [savedProductIds]);
+  const isSaved = useCallback(
+    (productId?: string) => !!productId && savedProductIds.includes(productId),
+    [savedProductIds]
+  );
 
   const visibleReels = useMemo(() => {
     if (filter === 'saved') return allReels.filter((r) => isSaved(r.productId));
@@ -107,7 +125,32 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   const hasOffers = !!product && product.offers.length > 0;
   const isCurrentSaved = currentReel ? isSaved(currentReel.productId) : false;
-  const hasAffiliateLinks = !!product && product.offers.some((o) => o.isAffiliate === true);
+  const isMatched = !!currentReel?.productId;
+  const hasAffiliateLinks =
+    (!!product && product.offers.some((o) => o.isAffiliate === true)) ||
+    (!isMatched && currentReel?.isAffiliate === true && isSafeHttpUrl(currentReel?.buyUrl));
+
+  // Buy: best catalog offer with a valid link, otherwise the creator's own https link.
+  const bestOffer: StoreOffer | null = useMemo(() => {
+    if (!product) return null;
+    const valid = product.offers.filter((o) => isSafeHttpUrl(o.affiliateUrl));
+    if (valid.length === 0) return null;
+    return valid.reduce((best, o) => (o.totalLandedPrice < best.totalLandedPrice ? o : best));
+  }, [product]);
+  const creatorBuyUrl = !isMatched && isSafeHttpUrl(currentReel?.buyUrl) ? currentReel?.buyUrl : undefined;
+  const creatorBuyHost = creatorBuyUrl ? new URL(creatorBuyUrl).hostname.replace(/^www\./, '') : '';
+  const canBuy = isMatched ? !!bestOffer : !!creatorBuyUrl;
+
+  // Specs: the creator's own, or basic catalog facts for catalog reels.
+  const specChips = useMemo(() => {
+    if (currentReel?.specs && currentReel.specs.length > 0) return currentReel.specs;
+    if (!product) return [];
+    return [
+      { label: 'Brand', value: product.brand },
+      { label: 'Model', value: product.model },
+      { label: 'Color', value: product.colorVariant },
+    ].filter((c) => c.value && c.value.trim());
+  }, [currentReel?.specs, product]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -124,11 +167,11 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   // Restore the previous position once the list is available.
   useEffect(() => {
-    if (!pendingReelId.current || visibleReels.length === 0) return;
+    if (!pendingReelId.current || visibleReels.length === 0 || userReels.loading) return;
     const idx = visibleReels.findIndex((r) => r.id === pendingReelId.current);
     pendingReelId.current = null;
     if (idx > 0) setCurrentIndex(idx);
-  }, [visibleReels]);
+  }, [visibleReels, userReels.loading]);
 
   useEffect(() => {
     if (pendingReelId.current) return;
@@ -145,7 +188,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   useEffect(() => {
     setIsPaused(false);
     setVideoStatus('loading');
-    if (currentReel) trackEvent('reel_viewed', { productId: currentReel.productId });
+    setConfirmDelete(false);
+    if (currentReel?.productId) trackEvent('reel_viewed', { productId: currentReel.productId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentReel?.id]);
 
@@ -161,13 +205,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
+      if (showAddReel) return;
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
       if (e.key === 'ArrowDown') goNext();
       if (e.key === 'ArrowUp') goPrev();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [goNext, goPrev]);
+  }, [goNext, goPrev, showAddReel]);
 
   const changeFilter = (next: ReelFilter) => {
     setFilter(next);
@@ -192,22 +237,53 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   };
 
   const handleToggleSave = () => {
-    if (!currentReel) return;
+    if (!currentReel?.productId) return;
     onToggleSave(currentReel.productId);
     trackEvent(isCurrentSaved ? 'product_unsaved' : 'product_saved', { productId: currentReel.productId });
     showToast(isCurrentSaved ? 'Removed from Saved' : 'Saved');
   };
 
   const handleDetails = () => {
-    if (!currentReel) return;
+    if (!currentReel?.productId) return;
     trackEvent('product_details_opened', { productId: currentReel.productId });
     onOpenProduct(currentReel.productId);
   };
 
   const handleCompare = () => {
-    if (!currentReel || !hasOffers) return;
+    if (!currentReel?.productId || !hasOffers) return;
     trackEvent('compare_prices_clicked', { productId: currentReel.productId });
     onCompareOffers(currentReel.productId);
+  };
+
+  const handleBuy = () => {
+    if (bestOffer) onBuyOffer(bestOffer);
+  };
+
+  const handleCreatorBuyClick = () => {
+    trackEvent('offer_opened', { productId: currentReel?.productId, storeDomain: creatorBuyHost });
+  };
+
+  const handleDeleteLocal = async () => {
+    if (!currentReel?.isLocal) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    await userReels.remove(currentReel.id);
+    setConfirmDelete(false);
+    showToast('Reel deleted');
+  };
+
+  const handleAddReel = async (...args: Parameters<typeof userReels.add>) => {
+    const result = await userReels.add(...args);
+    if (result.ok) {
+      setShowAddReel(false);
+      setFilter('for-you');
+      setCategory(null);
+      setCurrentIndex(0);
+      showToast('Reel added on this device');
+    }
+    return result;
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -244,21 +320,29 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         <DemoBadge />
       </div>
 
-      {currentReel?.videoUrl && videoStatus !== 'error' ? (
+      <div className="flex items-center gap-1.5">
         <button
-          onClick={() => {
-            setIsMuted((m) => !m);
-            showToast(isMuted ? 'Sound on' : 'Sound off');
-          }}
-          className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-cyan-400 transition-colors backdrop-blur-md cursor-pointer"
-          aria-label={isMuted ? 'Unmute' : 'Mute'}
-          title={isMuted ? 'Unmute' : 'Mute'}
+          onClick={() => setShowAddReel(true)}
+          className="w-8 h-8 rounded-full bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/50 flex items-center justify-center text-cyan-300 transition-colors backdrop-blur-md cursor-pointer"
+          aria-label="Add Reel"
+          title="Add Reel"
         >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+          <Plus className="w-4 h-4" />
         </button>
-      ) : (
-        <span className="w-8 h-8" aria-hidden="true" />
-      )}
+        {currentReel?.videoUrl && videoStatus !== 'error' && (
+          <button
+            onClick={() => {
+              setIsMuted((m) => !m);
+              showToast(isMuted ? 'Sound on' : 'Sound off');
+            }}
+            className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-cyan-400 transition-colors backdrop-blur-md cursor-pointer"
+            aria-label={isMuted ? 'Unmute' : 'Mute'}
+            title={isMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -316,6 +400,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       {header}
       {filterBar}
       {children}
+      {showAddReel && <AddReelModal onClose={() => setShowAddReel(false)} onSubmit={handleAddReel} />}
       {toastMessage && (
         <div
           role="status"
@@ -402,13 +487,18 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
               onError={() => setVideoStatus('error')}
               onClick={togglePlayback}
             />
-          ) : (
+          ) : currentReel.image ? (
             <img
               src={currentReel.image}
               alt={currentReel.title}
               className="max-h-[340px] sm:max-h-[380px] max-w-[85%] object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
               referrerPolicy="no-referrer"
             />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-slate-500 text-xs">
+              <VideoOff className="w-8 h-8" />
+              <span>Preview not available</span>
+            </div>
           )}
 
           {showVideo && videoStatus === 'loading' && (
@@ -427,7 +517,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           )}
 
           <div className="absolute top-2 left-4 flex flex-wrap gap-1.5 text-[10px] font-semibold">
-            {!currentReel.videoUrl && (
+            {!currentReel.videoUrl && !currentReel.isLocal && (
               <span className="bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-md text-slate-300 flex items-center gap-1">
                 <VideoOff className="w-3 h-3" /> Demo preview · no video yet
               </span>
@@ -441,9 +531,24 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
               {currentReel.creatorLabel}
             </span>
           </div>
+
+          {currentReel.isLocal && (
+            <button
+              onClick={handleDeleteLocal}
+              className={`absolute top-2 right-4 z-20 px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 border cursor-pointer ${
+                confirmDelete
+                  ? 'bg-amber-950/90 border-amber-600 text-amber-200'
+                  : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:text-amber-300'
+              }`}
+              aria-label={confirmDelete ? 'Confirm delete reel' : 'Delete reel'}
+            >
+              <Trash2 className="w-3 h-3" /> {confirmDelete ? 'Confirm delete' : 'Delete'}
+            </button>
+          )}
         </div>
 
-        {/* Save */}
+        {/* Save (needs a catalog product, so it can be kept in the Saved list) */}
+        {isMatched && (
         <div className="absolute right-3.5 bottom-6 z-20 flex flex-col items-center gap-1">
           <button
             onClick={handleToggleSave}
@@ -459,6 +564,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           </button>
           <span className="text-[10px] font-bold text-slate-300">{isCurrentSaved ? 'Saved' : 'Save'}</span>
         </div>
+        )}
 
         {/* Previous / next (only when there is more than one reel) */}
         {visibleReels.length > 1 && (
@@ -507,12 +613,31 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           <h2 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug line-clamp-1">
             {currentReel.title}
           </h2>
-          <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{currentReel.subtitle}</p>
+          {currentReel.subtitle && (
+            <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{currentReel.subtitle}</p>
+          )}
         </div>
+
+        {specChips.length > 0 && (
+          <ul className="flex flex-wrap gap-1.5" aria-label="Specifications">
+            {specChips.slice(0, 6).map((spec, i) => (
+              <li
+                key={`${spec.label}-${i}`}
+                className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700 text-[10px] text-slate-300"
+              >
+                <span className="text-slate-500">{spec.label}:</span> {spec.value}
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* Price & offers: always from the catalog product, only when available. */}
         <div className="min-h-[30px]" aria-live="polite">
-          {productLoading ? (
+          {!isMatched ? (
+            <p className="text-xs text-slate-400">
+              Not matched to a catalog product, so there is no price comparison for this Reel.
+            </p>
+          ) : productLoading ? (
             <p className="text-xs text-slate-500">Loading offers…</p>
           ) : productError ? (
             <p className="text-xs text-amber-300">Offers could not be loaded.</p>
@@ -536,24 +661,49 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+        <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             onClick={handleCompare}
-            disabled={!hasOffers}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.99] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+            disabled={!isMatched || !hasOffers}
+            className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.99] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <Layers className="w-4 h-4 stroke-[2.3]" />
             <span>Compare Prices</span>
           </button>
+
+          {!isMatched && creatorBuyUrl ? (
+            <a
+              href={creatorBuyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleCreatorBuyClick}
+              className="w-full py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="truncate">Buy at {creatorBuyHost}</span>
+            </a>
+          ) : (
+            <button
+              onClick={handleBuy}
+              disabled={!canBuy}
+              title={canBuy ? undefined : 'No valid merchant link available yet'}
+              className="w-full py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Buy</span>
+            </button>
+          )}
+        </div>
+
+        {isMatched && (
           <button
             onClick={handleDetails}
             disabled={!productLoading && !product}
-            className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-[0.99] border border-slate-700 hover:border-cyan-500/40 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <ShoppingBag className="w-4 h-4 text-cyan-400" />
             <span>View Details</span>
           </button>
-        </div>
+        )}
 
         {hasAffiliateLinks && <p className="text-[10px] leading-snug text-slate-500">{AFFILIATE_NOTE}</p>}
         {saveError && (

@@ -156,16 +156,30 @@ export interface RelatedModelItem {
   offersCount: number;
 }
 
+export interface ReelSpec {
+  label: string;
+  value: string;
+}
+
 export interface ReelItem {
   /** Stable key for the feed. */
   id: string;
   /** Catalog product this reel is about. Prices/offers always come from the product, never from the reel. */
-  productId: string;
+  productId?: string;
   title: string;
   subtitle: string;
   category: string;
-  image: string;
-  /** Optional vertical video. Without it the reel shows the product image (demo preview). */
+  /** Poster / still image. Optional for video-only reels. */
+  image?: string;
+  /** Optional vertical video. Without it the reel shows the image. */
   videoUrl?: string;
   creatorLabel: string;
+  /** Key specs entered by the creator (shown as chips). */
+  specs?: ReelSpec[];
+  /** Merchant link entered by the creator (https only). Used for Buy only when there is no catalog product. */
+  buyUrl?: string;
+  /** Creator states that buyUrl is an affiliate link. */
+  isAffiliate?: boolean;
+  /** Reel created on this device, stored locally only. */
+  isLocal?: boolean;
 }
