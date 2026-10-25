@@ -56,7 +56,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
               : 'bg-slate-100 text-slate-600 hover:text-slate-900'
           }`}
         >
-          TOATE ({alerts.length})
+          ALL ({alerts.length})
         </button>
 
         <button
@@ -67,7 +67,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
               : 'bg-slate-100 text-slate-600 hover:text-slate-900'
           }`}
         >
-          NECITITE ({unreadCount})
+          UNREAD ({unreadCount})
         </button>
 
         <button
