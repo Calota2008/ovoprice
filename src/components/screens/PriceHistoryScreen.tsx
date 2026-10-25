@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import {
-  TrendingDown,
-  ThumbsUp,
-  Bell,
-  CheckCircle2,
-  Calendar,
-  Sparkles,
-  ArrowRight,
-} from 'lucide-react';
+import { TrendingDown, ThumbsUp, Bell, CheckCircle2 } from 'lucide-react';
 import { Product } from '../../types';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 
+import { t } from '../../i18n';
 interface PriceHistoryScreenProps {
   product: Product;
   onSetAlertWithPrice: (targetPrice: number) => void;
@@ -76,7 +69,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 mb-0.5">
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 uppercase">
-              PRICE HISTORY
+              {t("PRICE HISTORY")}
             </span>
             <DemoBadge />
             <span className="text-[10px] text-slate-400 font-mono">
@@ -91,7 +84,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
             <span className="font-bold text-slate-900 tnum">
               {product.bestPrice.toFixed(2).replace('.', ',')} €
             </span>{' '}
-            {bestStore && `la ${bestStore}`}
+            {bestStore && t('at {store}', { store: bestStore })}
           </p>
         </div>
       </div>
@@ -102,13 +95,13 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
           <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Current
+            {t("Current")}
           </span>
           <span className="text-base font-bold text-slate-900 block mt-1 tnum">
             {product.bestPrice.toFixed(2).replace('.', ',')} €
           </span>
           <span className="text-[10px] font-semibold text-emerald-700 mt-0.5 block">
-            {pctVsAvg > 0 ? '+' : ''}{pctVsAvg.toFixed(0)}% vs. medie
+            {pctVsAvg > 0 ? '+' : ''}{pctVsAvg.toFixed(0)}{t("% vs. average")}
           </span>
         </div>
 
@@ -116,7 +109,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
           <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
             <TrendingDown className="w-3 h-3 text-emerald-600" />
-            Lowest
+            {t("Lowest")}
           </span>
           <span className="text-base font-bold text-slate-900 block mt-1 tnum">
             {fmt(lowest)} €
@@ -130,13 +123,13 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
           <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
             <span className="w-2.5 h-0.5 bg-blue-600 rounded-full" />
-            Average
+            {t("Average")}
           </span>
           <span className="text-base font-bold text-slate-900 block mt-1 tnum">
             {fmt(average)} €
           </span>
           <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
-            demo average
+            {t("demo average")}
           </span>
         </div>
       </div>
@@ -145,8 +138,8 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Price trend</h3>
-            <p className="text-[11px] text-slate-500">Example history, not real prices</p>
+            <h3 className="text-sm font-bold text-slate-900">{t("Price trend")}</h3>
+            <p className="text-[11px] text-slate-500">{t("Example history, not real prices")}</p>
           </div>
 
           <DemoBadge />
@@ -155,7 +148,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         {/* Pill status */}
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-md text-[11px] font-medium text-emerald-800 mb-4 border border-emerald-100">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>Now <strong>{Math.abs(pctVsAvg).toFixed(0)}% {pctVsAvg <= 0 ? 'below' : 'above'}</strong> the demo average</span>
+          <span>{t("Now")} <strong>{Math.abs(pctVsAvg).toFixed(0)}% {pctVsAvg <= 0 ? t("below") : t("above")}</strong> {t("the demo average")}</span>
         </div>
 
         {/* SVG Interactive Trend Chart */}
@@ -224,7 +217,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
           <div className="ml-8 mt-2 flex justify-between text-[10px] text-slate-400 font-medium">
             {axisLabels.map((h, i) => (
               <span key={`${h.date}-${i}`} className={i === axisLabels.length - 1 ? 'font-bold text-slate-800' : ''}>
-                {h.date}
+                {t(h.date)}
               </span>
             ))}
           </div>
@@ -234,11 +227,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-            <span>Demo minimum</span>
+            <span>{t("Demo minimum")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3.5 h-0.5 bg-blue-600 rounded-full" />
-            <span>Moving average</span>
+            <span>{t("Moving average")}</span>
           </div>
         </div>
       </div>
@@ -251,11 +244,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="text-sm font-bold text-slate-900">Versus history</h4>
+              <h4 className="text-sm font-bold text-slate-900">{t("Versus history")}</h4>
               <DemoBadge />
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              The current price is <strong>{pctAboveLow.toFixed(0)}% above the minimum</strong> of the example history ({fmt(lowest)} €). This is not a purchase recommendation.
+              {t("The current price is")} <strong>{pctAboveLow.toFixed(0)}{t("% above the minimum")}</strong> {t("of the example history (")}{fmt(lowest)} {t("€). This is not a purchase recommendation.")}
             </p>
           </div>
         </div>
@@ -269,8 +262,8 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
               <Bell className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900">Target Price Alert</h4>
-              <p className="text-[11px] text-slate-500">Set a target price</p>
+              <h4 className="text-sm font-bold text-slate-900">{t("Target Price Alert")}</h4>
+              <p className="text-[11px] text-slate-500">{t("Set a target price")}</p>
             </div>
           </div>
 
@@ -279,7 +272,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         {/* Dynamic Price Display */}
         <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
           <div className="flex justify-between items-center text-xs mb-2">
-            <span className="text-slate-600 font-medium">Let me know when the price drops to:</span>
+            <span className="text-slate-600 font-medium">{t("Let me know when the price drops to:")}</span>
             <span className="text-xl font-extrabold text-emerald-800 tnum">
               {sliderTarget.toFixed(2).replace('.', ',')} €
             </span>
@@ -310,12 +303,12 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
           {alertCreated ? (
             <>
               <CheckCircle2 className="w-4 h-4 text-white" />
-              <span>Target price alert set at {sliderTarget.toFixed(2).replace('.', ',')} €!</span>
+              <span>{t("Target price alert set at")} {sliderTarget.toFixed(2).replace('.', ',')} €!</span>
             </>
           ) : (
             <>
               <Bell className="w-4 h-4" />
-              <span>Set target price alert ({sliderTarget.toFixed(2).replace('.', ',')} €)</span>
+              <span>{t("Set target price alert (")}{sliderTarget.toFixed(2).replace('.', ',')} €)</span>
             </>
           )}
         </button>

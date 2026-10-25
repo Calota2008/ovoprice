@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Mail, Cloud, BellRing, Clapperboard, ShieldCheck } from 'lucide-react';
 import { authProvider } from '../services/authProvider';
+import { t, tr, useLanguage } from '../i18n';
+import { COUNTRIES, countryName, setCountry, useCountry } from '../i18n/country';
 
 export type AuthMode = 'sign-in' | 'create';
 
@@ -31,28 +33,30 @@ const TagMark: React.FC = () => (
 
 const COPY: Record<AuthMode, { title: string; lead: string; email: string; switchText: string; switchAction: string }> = {
   'sign-in': {
-    title: 'Welcome back',
-    lead: 'Sign in to pick up your saved products, alerts and Reels on any device.',
-    email: 'Email me a sign-in code',
-    switchText: 'New to OvoPrice?',
-    switchAction: 'Create an account',
+    title: tr('Welcome back'),
+    lead: tr('Sign in to pick up your saved products, alerts and Reels on any device.'),
+    email: tr('Email me a sign-in code'),
+    switchText: tr('New to OvoPrice?'),
+    switchAction: tr('Create an account'),
   },
   create: {
-    title: 'Keep your finds on every device',
-    lead: 'A free account syncs what you save and tracks prices while you are away.',
-    email: 'Email me a sign-up code',
-    switchText: 'Already have an account?',
-    switchAction: 'Sign in',
+    title: tr('Keep your finds on every device'),
+    lead: tr('A free account syncs what you save and tracks prices while you are away.'),
+    email: tr('Email me a sign-up code'),
+    switchText: tr('Already have an account?'),
+    switchAction: tr('Sign in'),
   },
 };
 
 const BENEFITS = [
-  { icon: Cloud, text: 'Saved products and collections, synced' },
-  { icon: BellRing, text: 'Price alerts that reach you when the app is closed' },
-  { icon: Clapperboard, text: 'Your Reels, available everywhere' },
+  { icon: Cloud, text: tr('Saved products and collections, synced') },
+  { icon: BellRing, text: tr('Price alerts that reach you when the app is closed') },
+  { icon: Clapperboard, text: tr('Your Reels, available everywhere') },
 ];
 
 export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClose }) => {
+  const lang = useLanguage();
+  const country = useCountry();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -71,13 +75,13 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
 
   const explain = (reason: string) => {
     if (reason === 'not-connected') {
-      setNotice("Accounts aren't switched on yet. Nothing was sent, and everything you save stays on this device.");
+      setNotice(t("Accounts aren't switched on yet. Nothing was sent, and everything you save stays on this device."));
       setError(null);
     } else if (reason === 'invalid-email') {
-      setError('Enter a valid email address, like name@example.com.');
+      setError(t('Enter a valid email address, like name@example.com.'));
       setNotice(null);
     } else {
-      setError('Something went wrong. Try again in a moment.');
+      setError(t('Something went wrong. Try again in a moment.'));
       setNotice(null);
     }
   };
@@ -96,6 +100,8 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
     }
   };
 
+  const options = { mode, country: mode === 'create' ? country : undefined };
+
   return (
     <div
       role="dialog"
@@ -111,31 +117,59 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
           <button
             ref={closeRef}
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('Close')}
             className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:bg-white/10 cursor-pointer focus-visible:outline-2 focus-visible:outline-emerald-400"
           >
             <X className="w-5 h-5" />
           </button>
           <TagMark />
           <h2 id="auth-title" className="mt-3 text-[22px] leading-tight font-bold tracking-tight">
-            {copy.title}
+            {t(copy.title)}
           </h2>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300 max-w-[30ch] sm:max-w-none">{copy.lead}</p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300 max-w-[30ch] sm:max-w-none">{t(copy.lead)}</p>
         </div>
 
         <div className="px-6 pt-5 pb-6 space-y-4">
+          {mode === 'create' && (
+            <fieldset>
+              <legend className="text-[13px] font-semibold text-slate-800 mb-1.5">{t('Your country')}</legend>
+              <div className="flex gap-2" role="radiogroup" aria-label={t('Your country')}>
+                {COUNTRIES.map((c) => {
+                  const active = c.code === country;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setCountry(c.code)}
+                      className={`flex-1 h-11 rounded-xl border text-[14px] font-semibold transition cursor-pointer focus-visible:outline-2 focus-visible:outline-emerald-600 ${
+                        active
+                          ? 'bg-emerald-700 border-emerald-700 text-white'
+                          : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400'
+                      }`}
+                    >
+                      {countryName(c.code, lang)}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1.5">{t('Sets the stores and prices you see. You can change it later in Account settings.')}</p>
+            </fieldset>
+          )}
+
           <button
-            onClick={() => run(() => authProvider.signInWithGoogle())}
+            onClick={() => run(() => authProvider.signInWithGoogle(options))}
             disabled={busy}
             className="w-full h-12 rounded-xl bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 active:scale-[0.99] transition flex items-center justify-center gap-3 text-[15px] font-semibold text-slate-800 cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-emerald-600"
           >
             <GoogleG />
-            Continue with Google
+            {t('Continue with Google')}
           </button>
 
           <div className="flex items-center gap-3 text-xs text-slate-400" role="separator">
             <span className="flex-1 h-px bg-slate-200" />
-            or use your email
+            {t('or use your email')}
             <span className="flex-1 h-px bg-slate-200" />
           </div>
 
@@ -143,12 +177,12 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
             noValidate
             onSubmit={(e) => {
               e.preventDefault();
-              run(() => authProvider.signInWithEmail(email));
+              run(() => authProvider.signInWithEmail(email, options));
             }}
             className="space-y-2.5"
           >
             <label htmlFor="auth-email" className="sr-only">
-              Email address
+              {t('Email address')}
             </label>
             <input
               id="auth-email"
@@ -176,7 +210,7 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
               className="w-full h-12 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] transition flex items-center justify-center gap-2 text-[15px] font-semibold text-white cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
             >
               <Mail className="w-[18px] h-[18px]" />
-              {copy.email}
+              {t(copy.email)}
             </button>
           </form>
 
@@ -193,7 +227,7 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
                   <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4" />
                   </span>
-                  {text}
+                  {t(text)}
                 </li>
               ))}
             </ul>
@@ -201,12 +235,12 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
 
           <div className="flex items-start gap-2 text-[11px] leading-relaxed text-slate-500">
             <ShieldCheck className="w-4 h-4 text-slate-400 shrink-0" />
-            <span>We never post for you. Products you saved on this device will move to your account when you sign in.</span>
+            <span>{t('We never post for you. Products you saved on this device will move to your account when you sign in.')}</span>
           </div>
 
           <div className="flex items-center justify-between pt-1 text-[13px]">
             <span className="text-slate-600">
-              {copy.switchText}{' '}
+              {t(copy.switchText)}{' '}
               <button
                 onClick={() => {
                   setError(null);
@@ -215,11 +249,11 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
                 }}
                 className="font-semibold text-emerald-800 hover:underline cursor-pointer"
               >
-                {copy.switchAction}
+                {t(copy.switchAction)}
               </button>
             </span>
             <button onClick={onClose} className="font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
-              Continue as guest
+              {t('Continue as guest')}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { RecognizedRetailerLink } from '../types';
 
+import { t, tr } from '../i18n';
 /**
  * Analiză LOCALĂ a unui link de produs. Nu face nicio cerere de rețea: citește
  * doar domeniul, ID-ul articolului și numele din adresă.
@@ -38,7 +39,7 @@ const RETAILERS: RetailerConfig[] = [
     key: 'mediamarkt',
     name: 'MediaMarkt Germany',
     domains: ['mediamarkt.de'],
-    idLabel: 'ID articol',
+    idLabel: tr('Item ID'),
     extract: (url) => {
       const seg = lastSegment(url).replace(/\.html?$/i, '');
       const m = seg.match(/^(.*?)-(\d{6,10})$/) || seg.match(/^()(\d{6,10})$/);
@@ -49,7 +50,7 @@ const RETAILERS: RetailerConfig[] = [
     key: 'otto',
     name: 'OTTO Germany',
     domains: ['otto.de'],
-    idLabel: 'ID articol',
+    idLabel: tr('Item ID'),
     extract: (url) => {
       const parts = url.pathname.split('/').filter(Boolean);
       const idx = parts.indexOf('p');
@@ -64,7 +65,7 @@ const RETAILERS: RetailerConfig[] = [
     key: 'amazon',
     name: 'Amazon',
     domains: ['amazon.de', 'amazon.at'],
-    idLabel: 'ASIN',
+    idLabel: tr('ASIN'),
     extract: (url) => {
       const m = url.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})(?:[/?]|$)/i);
       const before = url.pathname.split('/dp/')[0].split('/').filter(Boolean);
@@ -76,7 +77,7 @@ const RETAILERS: RetailerConfig[] = [
     key: 'ebay',
     name: 'eBay Germany',
     domains: ['ebay.de'],
-    idLabel: 'Item number',
+    idLabel: tr('Item number'),
     extract: (url) => {
       const m = url.pathname.match(/\/itm\/(?:([^/]+)\/)?(\d{9,14})/);
       return m ? { id: m[2], slug: m[1] ? safeDecode(m[1]) : '' } : { id: null, slug: '' };
@@ -101,10 +102,10 @@ export function slugToText(slug: string): string {
 export function parseProductLink(raw: string): ParsedLink {
   let text = raw.trim();
   if (!text) {
-    return { ok: false, kind: 'malformed', title: 'Missing link', message: 'Paste a product link to analyze it.' };
+    return { ok: false, kind: 'malformed', title: t('Missing link'), message: t('Paste a product link to analyze it.') };
   }
   if (/\s/.test(text)) {
-    return { ok: false, kind: 'malformed', title: 'Invalid link', message: 'The link must not contain spaces. Copy the full address from your browser.' };
+    return { ok: false, kind: 'malformed', title: t('Invalid link'), message: t('The link must not contain spaces. Copy the full address from your browser.') };
   }
   // Acceptăm "www.otto.de/..." fără schemă
   if (!/^[a-z][a-z0-9+.-]*:/i.test(text) && text.includes('.')) text = `https://${text}`;
@@ -113,13 +114,13 @@ export function parseProductLink(raw: string): ParsedLink {
   try {
     url = new URL(text);
   } catch {
-    return { ok: false, kind: 'malformed', title: 'Invalid link', message: 'Enter a complete web address, for example https://www.otto.de/p/…' };
+    return { ok: false, kind: 'malformed', title: t('Invalid link'), message: t('Enter a complete web address, for example https://www.otto.de/p/…') };
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    return { ok: false, kind: 'malformed', title: 'Unsupported protocol', message: 'Only http and https links are supported.' };
+    return { ok: false, kind: 'malformed', title: t('Unsupported protocol'), message: t('Only http and https links are supported.') };
   }
   if (url.username || url.password) {
-    return { ok: false, kind: 'malformed', title: 'Unsafe link', message: 'The link contains login credentials and cannot be analyzed.' };
+    return { ok: false, kind: 'malformed', title: t('Unsafe link'), message: t('The link contains login credentials and cannot be analyzed.') };
   }
 
   const host = url.hostname.toLowerCase();
@@ -128,17 +129,16 @@ export function parseProductLink(raw: string): ParsedLink {
     return {
       ok: false,
       kind: 'short',
-      title: 'Link scurtat',
-      message: 'Shortened links cannot be opened by the app. Open it in your browser and copy the full product address.',
+      title: t('Shortened link'),
+      message: t('Shortened links cannot be opened by the app. Open it in your browser and copy the full product address.'),
     };
   }
   if (SOCIAL.some((d) => hostMatches(host, d))) {
     return {
       ok: false,
       kind: 'social',
-      title: 'Social media link',
-      message:
-        'We cannot read the product from a video or a post yet. Search by name, with a photo, or scan its barcode.',
+      title: t('Social media link'),
+      message: t('We cannot read the product from a video or a post yet. Search by name, with a photo, or scan its barcode.'),
     };
   }
 
@@ -147,8 +147,8 @@ export function parseProductLink(raw: string): ParsedLink {
     return {
       ok: false,
       kind: 'unsupported',
-      title: 'Magazin neacceptat',
-      message: `The domain “${url.hostname}” is not supported yet. Supported: MediaMarkt, OTTO, Amazon.de/.at and eBay.de.`,
+      title: t('Store not supported'),
+      message: t('The domain “{host}” is not supported yet. Supported: MediaMarkt, OTTO, Amazon.de/.at and eBay.de.', { host: url.hostname }),
     };
   }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { t } from '../i18n';
 export interface AsyncState<T> {
   data: T;
   loading: boolean;
@@ -29,7 +30,7 @@ export function usePriceData<T>(
           setState((s) => ({
             ...s,
             loading: false,
-            error: err instanceof Error ? err.message : 'The data could not be loaded.',
+            error: err instanceof Error ? err.message : t('The data could not be loaded.'),
           }));
         }
       });

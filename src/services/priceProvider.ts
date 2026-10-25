@@ -20,6 +20,7 @@ import * as demo from '../data/mockData';
 import { normalizeGtin } from '../utils/ean';
 import { searchCatalog, matchBySlug } from '../utils/search';
 
+import { tr } from '../i18n';
 export interface PriceProvider {
   readonly id: 'demo' | 'live';
   /** true => toate datele sunt demonstrative și UI-ul trebuie să o spună. */
@@ -43,7 +44,7 @@ export interface PriceProvider {
 /* Implementarea demo                                                  */
 /* ------------------------------------------------------------------ */
 
-const NOT_AVAILABLE = 'Check with the merchant';
+const NOT_AVAILABLE = tr('Check with the merchant');
 
 /** URL-uri de căutare reale la magazine (în loc de linkuri de produs inventate). */
 function storeSearchUrl(storeDomain: string, query: string): string {

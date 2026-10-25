@@ -16,10 +16,11 @@ import { AuthNudge } from '../AuthNudge';
 import {
   COLLECTION_LIMITS,
   Collection,
-  NAME_MESSAGES,
   explainCollectionName,
+  nameMessage,
 } from '../../utils/collections';
 
+import { t } from '../../i18n';
 interface SavedScreenProps {
   items: SavedProductItem[];
   onSelectSavedItem: (item: SavedProductItem) => void;
@@ -86,7 +87,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
     e.preventDefault();
     const problem = explainCollectionName(nameDraft, collections, renaming ? activeCollection?.id : undefined, creating);
     if (problem) {
-      setNameError(NAME_MESSAGES[problem]);
+      setNameError(nameMessage(problem));
       return;
     }
     if (creating) onCreateCollection?.(nameDraft.trim());
@@ -99,7 +100,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
       {/* Title & tracked count */}
       <div className="pt-1">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Saved products</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("Saved products")}</h1>
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-md text-[11px] font-bold ${
               items.length > 0
@@ -109,27 +110,27 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
           >
             {items.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
             <span>
-              {items.length} {items.length === 1 ? 'product' : 'products'}
+              {items.length} {items.length === 1 ? t("product") : t("products")}
             </span>
           </span>
         </div>
 
         <p className="text-xs text-slate-500 flex items-center gap-1.5">
           <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-          <span>Saved on this device · demo prices</span>
+          <span>{t("Saved on this device · demo prices")}</span>
         </p>
       </div>
 
       {onOpenAuth && items.length > 0 && (
-        <AuthNudge onOpenAuth={onOpenAuth} message="Saved on this device only." />
+        <AuthNudge onOpenAuth={onOpenAuth} message={t("Saved on this device only.")} />
       )}
 
       {/* Collections bar */}
       {canManageCollections && (
         <div className="space-y-2">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Collections">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label={t("Collections")}>
             <button role="tab" aria-selected={activeCollectionId === null} onClick={() => selectCollection(null)} className={chipClass(activeCollectionId === null)}>
-              All ({items.length})
+              {t("All (")}{items.length})
             </button>
             {collections.map((c) => (
               <button
@@ -150,7 +151,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                 }}
                 className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-slate-400 text-slate-600 hover:bg-slate-50 flex items-center gap-1 cursor-pointer"
               >
-                <FolderPlus className="w-3.5 h-3.5" /> New collection
+                <FolderPlus className="w-3.5 h-3.5" /> {t("New collection")}
               </button>
             )}
           </div>
@@ -159,14 +160,14 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
             <form onSubmit={submitName} className="flex flex-wrap items-start gap-2" noValidate>
               <div className="flex-1 min-w-[160px]">
                 <input
-                  aria-label="Collection name"
+                  aria-label={t("Collection name")}
                   value={nameDraft}
                   maxLength={COLLECTION_LIMITS.maxNameLength}
                   onChange={(e) => {
                     setNameDraft(e.target.value);
                     setNameError(null);
                   }}
-                  placeholder="e.g. Wishlist"
+                  placeholder={t("e.g. Wishlist")}
                   autoFocus
                   className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:border-slate-500"
                 />
@@ -177,10 +178,10 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                 )}
               </div>
               <button type="submit" className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold cursor-pointer">
-                {creating ? 'Create' : 'Save name'}
+                {creating ? t("Create") : t("Save name")}
               </button>
               <button type="button" onClick={resetNameForm} className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 cursor-pointer">
-                Cancel
+                {t("Cancel")}
               </button>
             </form>
           )}
@@ -194,7 +195,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                 }}
                 className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-semibold cursor-pointer"
               >
-                <Pencil className="w-3.5 h-3.5" /> Rename
+                <Pencil className="w-3.5 h-3.5" /> {t("Rename")}
               </button>
               <button
                 onClick={() => {
@@ -209,9 +210,9 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                   confirmDelete ? 'text-red-700' : 'text-slate-600 hover:text-red-600'
                 }`}
               >
-                <Trash2 className="w-3.5 h-3.5" /> {confirmDelete ? 'Confirm delete collection' : 'Delete collection'}
+                <Trash2 className="w-3.5 h-3.5" /> {confirmDelete ? t("Confirm delete collection") : t("Delete collection")}
               </button>
-              {confirmDelete && <span className="text-slate-500">Products stay saved.</span>}
+              {confirmDelete && <span className="text-slate-500">{t("Products stay saved.")}</span>}
             </div>
           )}
         </div>
@@ -224,9 +225,9 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
             <Bookmark className="w-6 h-6 stroke-[1.7]" />
           </div>
           <div className="space-y-1.5 max-w-xs mx-auto">
-            <h2 className="text-base font-bold text-slate-900">You haven't saved any products yet</h2>
+            <h2 className="text-base font-bold text-slate-900">{t("You haven't saved any products yet")}</h2>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Save products from their detail page or from Reels to find them easily and track their price.
+              {t("Save products from their detail page or from Reels to find them easily and track their price.")}
             </p>
           </div>
           {onDiscover && (
@@ -235,7 +236,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs transition-colors cursor-pointer shadow-xs"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Discover products in Reels</span>
+              <span>{t("Discover products in Reels")}</span>
             </button>
           )}
         </div>
@@ -248,9 +249,9 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                   <TrendingDown className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-slate-900">Drops since you saved</h3>
+                  <h3 className="text-xs font-bold text-slate-900">{t("Drops since you saved")}</h3>
                   <p className="text-[11px] text-slate-600">
-                    Total difference (demo data):{' '}
+                    {t("Total difference (demo data):")}{' '}
                     <strong className="text-emerald-800 font-bold">{totalDrop.toFixed(2).replace('.', ',')} €</strong>
                   </p>
                 </div>
@@ -259,14 +260,14 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                 onClick={onQuickAlert}
                 className="px-3 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-md shadow-2xs transition-colors cursor-pointer shrink-0"
               >
-                Alerts
+                {t("Alerts")}
               </button>
             </div>
           )}
 
           {visibleItems.length === 0 && activeCollection && (
             <div className="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-500">
-              No products in this collection yet. Use "Collections" on a saved product to add it here.
+              {t("No products in this collection yet. Use \"Collections\" on a saved product to add it here.")}
             </div>
           )}
 
@@ -286,7 +287,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                   {isTargetReached && (
                     <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mb-2 border border-emerald-200 w-fit">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      <span>TARGET REACHED</span>
+                      <span>{t("TARGET REACHED")}</span>
                     </div>
                   )}
 
@@ -302,8 +303,8 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                           <button
                             onClick={() => onRemoveSavedItem(item.id)}
                             className="text-slate-400 hover:text-red-600 p-1 transition-colors cursor-pointer"
-                            aria-label="Remove from saved"
-                            title="Remove from saved"
+                            aria-label={t("Remove from saved")}
+                            title={t("Remove from saved")}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -312,7 +313,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
 
                       <p className="text-xs text-slate-500 mt-0.5">
                         <span className="font-medium text-slate-700">{item.storeName}</span>
-                        {item.statusText && <span> · {item.statusText}</span>}
+                        {item.statusText && <span> · {t(item.statusText)}</span>}
                       </p>
 
                       <div className="flex items-baseline gap-2 mt-1">
@@ -328,7 +329,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
 
                       {inCollections.length > 0 && (
                         <p className="text-[11px] text-slate-500 mt-1 truncate">
-                          In: {inCollections.map((c) => c.name).join(', ')}
+                          {t("In:")} {inCollections.map((c) => c.name).join(', ')}
                         </p>
                       )}
                     </div>
@@ -337,7 +338,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                   {openPanelFor === item.id && (
                     <div className="mt-3 rounded-lg bg-slate-50 border border-slate-200 p-3 space-y-1.5" role="group" aria-label={`Collections for ${item.title}`}>
                       {collections.length === 0 ? (
-                        <p className="text-[11px] text-slate-500">Create a collection first (New collection above).</p>
+                        <p className="text-[11px] text-slate-500">{t("Create a collection first (New collection above).")}</p>
                       ) : (
                         collections.map((c) => (
                           <label key={c.id} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
@@ -373,7 +374,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                           aria-expanded={openPanelFor === item.id}
                           className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
                         >
-                          <FolderOpen className="w-3.5 h-3.5" /> Collections
+                          <FolderOpen className="w-3.5 h-3.5" /> {t("Collections")}
                         </button>
                       )}
                     </div>
@@ -382,7 +383,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                       onClick={() => onSelectSavedItem(item)}
                       className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-semibold text-xs rounded-md flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0"
                     >
-                      <span>View product</span>
+                      <span>{t("View product")}</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
@@ -392,7 +393,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
           </div>
 
           <div className="bg-slate-100/90 rounded-xl p-3.5 border border-slate-200 text-center">
-            <p className="text-xs text-slate-600 leading-relaxed">Demo data · prices refresh when you open the app</p>
+            <p className="text-xs text-slate-600 leading-relaxed">{t("Demo data · prices refresh when you open the app")}</p>
           </div>
         </>
       )}

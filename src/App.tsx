@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Header } from './components/Header';
+import { SettingsScreen } from './components/screens/SettingsScreen';
+import { useLanguage } from './i18n';
+import { useCountry } from './i18n/country';
 import { AuthSheet, AuthMode } from './components/AuthSheet';
 import { BottomNav } from './components/BottomNav';
 import { HomeScreen } from './components/screens/HomeScreen';
@@ -39,8 +42,9 @@ import {
   Product,
   PopularSearchItem,
 } from './types';
-import { Smartphone, Monitor, Compass, Sparkles } from 'lucide-react';
+import { Smartphone, Monitor } from 'lucide-react';
 
+import { t } from './i18n';
 const SAVED_STORAGE_KEY = 'ovoprice_saved_products_v1';
 const ALERTS_STORAGE_KEY = 'ovoprice_alerts_v1';
 
@@ -48,6 +52,15 @@ const DEV_NAV =
   typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('devnav');
 
 export default function App() {
+  // Subscribing here re-renders the whole tree when language or country changes.
+  const language = useLanguage();
+  useCountry();
+  useEffect(() => {
+    document.title = t('OvoPrice - Compare prices');
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute('content', t("Search for a product, compare merchants' offers and buy from the store you choose."));
+  }, [language]);
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
   const [screenHistory, setScreenHistory] = useState<ActiveScreen[]>(['home']);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -206,11 +219,13 @@ export default function App() {
       case 'breakdown':
       case 'set-alert':
       case 'visual-result':
-        return 'Product Details';
+        return t('Product Details');
       case 'price-history':
-        return 'Price History';
+        return t('Price History');
       case 'product-reels':
-        return 'Product Reels';
+        return t('Product Reels');
+      case 'settings':
+        return t('Account settings');
       default:
         return undefined;
     }
@@ -224,6 +239,7 @@ export default function App() {
     'set-alert',
     'visual-result',
     'product-reels',
+    'settings',
   ].includes(activeScreen);
 
   // Quick jump screens for reviewer convenience
@@ -310,9 +326,9 @@ export default function App() {
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-bold text-slate-200">OvoPrice Screen Navigator</span>
+            <span className="font-bold text-slate-200">{t("OvoPrice Screen Navigator")}</span>
             <span className="text-[11px] text-slate-400 hidden sm:inline">
-              (All 10 screenshot flows fully interactive)
+              {t("(All 10 screenshot flows fully interactive)")}
             </span>
           </div>
 
@@ -320,7 +336,7 @@ export default function App() {
           <div className="flex items-center gap-1 overflow-x-auto max-w-full pb-0.5 scrollbar-none">
             <div className="flex items-center gap-1">
               <span className="text-[10px] uppercase font-bold text-slate-400 mr-1">
-                Jump to screen:
+                {t("Jump to screen:")}
               </span>
               <select
                 value={activeScreen}
@@ -353,10 +369,10 @@ export default function App() {
                     ? 'bg-emerald-600 text-white font-bold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
-                title="Mobile Phone Viewport (Matching Screenshots)"
+                title={t("Mobile Phone Viewport (Matching Screenshots)")}
               >
                 <Smartphone className="w-3 h-3" />
-                <span className="hidden md:inline">Mobile Frame</span>
+                <span className="hidden md:inline">{t("Mobile Frame")}</span>
               </button>
               <button
                 onClick={() => setDeviceFrameMode('expanded')}
@@ -365,10 +381,10 @@ export default function App() {
                     ? 'bg-emerald-600 text-white font-bold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
-                title="Expanded View"
+                title={t("Expanded View")}
               >
                 <Monitor className="w-3 h-3" />
-                <span className="hidden md:inline">Expanded</span>
+                <span className="hidden md:inline">{t("Expanded")}</span>
               </button>
             </div>
           </div>
@@ -387,6 +403,7 @@ export default function App() {
         {/* App Header */}
         <Header
           onOpenAuth={(mode) => setAuthMode(mode)}
+          onOpenSettings={() => navigateTo('settings')}
           title={getHeaderTitle()}
           showBack={showBackButton}
           onBack={handleBack}
@@ -479,12 +496,12 @@ export default function App() {
           {!selectedProduct &&
             ['offers-comparison', 'breakdown', 'price-history', 'set-alert'].includes(activeScreen) && (
               <div className="pt-10 text-center space-y-3">
-                <p className="text-sm text-slate-600">No product selected. Search for or scan a product to see its details.</p>
+                <p className="text-sm text-slate-600">{t("No product selected. Search for or scan a product to see its details.")}</p>
                 <button
                   onClick={() => navigateTo('home')}
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
                 >
-                  Back to home
+                  {t("Back to home")}
                 </button>
               </div>
             )}
@@ -549,6 +566,7 @@ export default function App() {
               onViewChange={setReelsView}
             />
           )}
+          {activeScreen === 'settings' && <SettingsScreen onOpenAuth={(mode) => setAuthMode(mode)} />}
         </main>
 
         {authMode && <AuthSheet mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} />}

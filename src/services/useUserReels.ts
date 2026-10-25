@@ -12,6 +12,7 @@ import {
   validateUserReels,
 } from '../utils/userReels';
 
+import { t, tr } from '../i18n';
 export type AddReelResult = { ok: true; id: string } | { ok: false; error: string };
 
 function toReelItem(record: UserReelRecord, url: string): ReelItem {
@@ -23,7 +24,7 @@ function toReelItem(record: UserReelRecord, url: string): ReelItem {
     category: record.category,
     image: record.mediaKind === 'image' ? url : undefined,
     videoUrl: record.mediaKind === 'video' ? url : undefined,
-    creatorLabel: 'Your Reel · this device only',
+    creatorLabel: tr('Your Reel · this device only'),
     specs: record.specs,
     buyUrl: record.buyUrl,
     isAffiliate: record.isAffiliate,
@@ -59,17 +60,17 @@ export function checkVideo(file: File): Promise<{ ok: true } | { ok: false; erro
       video.removeAttribute('src');
       resolve(result);
     };
-    const timer = window.setTimeout(() => done({ ok: false, error: 'Could not read this video. Try another file.' }), 8000);
+    const timer = window.setTimeout(() => done({ ok: false, error: t('Could not read this video. Try another file.') }), 8000);
     video.preload = 'metadata';
     video.onloadedmetadata = () => {
       window.clearTimeout(timer);
       if (video.duration > LIMITS.maxVideoSeconds)
-        done({ ok: false, error: `Videos can be at most ${LIMITS.maxVideoSeconds} seconds.` });
+        done({ ok: false, error: t('Videos can be at most {n} seconds.', { n: LIMITS.maxVideoSeconds }) });
       else done({ ok: true });
     };
     video.onerror = () => {
       window.clearTimeout(timer);
-      done({ ok: false, error: "This video format can't be played in this browser. Use MP4 or WebM." });
+      done({ ok: false, error: t("This video format can't be played in this browser. Use MP4 or WebM.") });
     };
     video.src = url;
   });
@@ -108,15 +109,15 @@ export function useUserReels() {
   const add = useCallback(
     async (input: UserReelInput, file: File): Promise<AddReelResult> => {
       const kind = mediaKindOf(file);
-      if (!kind) return { ok: false, error: 'Unsupported file type. Use MP4, WebM, JPG, PNG or WebP.' };
+      if (!kind) return { ok: false, error: t('Unsupported file type. Use MP4, WebM, JPG, PNG or WebP.') };
       const stored = loadJson<UserReelRecord[]>(USER_REELS_KEY, validateUserReels, []);
       if (stored.length >= LIMITS.maxReels)
-        return { ok: false, error: `You can keep up to ${LIMITS.maxReels} reels on this device. Delete one first.` };
+        return { ok: false, error: t('You can keep up to {n} reels on this device. Delete one first.', { n: LIMITS.maxReels }) };
 
       let blob: Blob = file;
       if (kind === 'image') {
         const prepared = await prepareImage(file);
-        if (!prepared) return { ok: false, error: 'Could not read this image. Try another file.' };
+        if (!prepared) return { ok: false, error: t('Could not read this image. Try another file.') };
         blob = prepared;
       }
 
@@ -138,11 +139,11 @@ export function useUserReels() {
         await putMedia(id, blob);
       } catch (err) {
         console.error('Could not store reel media', err);
-        return { ok: false, error: 'Could not store the file on this device (storage full or private browsing).' };
+        return { ok: false, error: t('Could not store the file on this device (storage full or private browsing).') };
       }
       if (!saveJson(USER_REELS_KEY, [record, ...stored])) {
         await deleteMedia(id);
-        return { ok: false, error: 'Could not save the reel details on this device.' };
+        return { ok: false, error: t('Could not save the reel details on this device.') };
       }
 
       const url = URL.createObjectURL(blob);

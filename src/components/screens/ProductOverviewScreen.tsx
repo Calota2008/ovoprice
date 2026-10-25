@@ -1,22 +1,8 @@
 import React from 'react';
-import {
-  CheckCircle2,
-  TrendingDown,
-  Camera,
-  Truck,
-  ShieldCheck,
-  Shield,
-  ArrowRight,
-  RefreshCw,
-  Clock,
-  Sparkles,
-  AlertCircle,
-  HelpCircle,
-  Bell,
-  Bookmark,
-} from 'lucide-react';
+import { CheckCircle2, TrendingDown, Camera, Truck, ShieldCheck, Shield, ArrowRight, RefreshCw, AlertCircle, HelpCircle, Bell, Bookmark } from 'lucide-react';
 import { Product } from '../../types';
 
+import { t } from '../../i18n';
 interface ProductOverviewScreenProps {
   product?: Product | null;
   onCompareOffers: () => void;
@@ -47,10 +33,10 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-900 leading-tight truncate">
-                DEMO PRODUCT DETAILS UNAVAILABLE
+                {t("DEMO PRODUCT DETAILS UNAVAILABLE")}
               </p>
               <p className="text-[11px] text-amber-900 font-medium">
-                No matching demo dataset found for this item
+                {t("No matching demo dataset found for this item")}
               </p>
             </div>
           </div>
@@ -65,10 +51,10 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
           </div>
           <div className="space-y-1.5 max-w-xs mx-auto">
             <h2 className="text-base font-bold text-slate-900">
-              Product Details Unavailable
+              {t("Product Details Unavailable")}
             </h2>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Detailed specifications and store offers have not been modeled for this demo item yet.
+              {t("Detailed specifications and store offers have not been modeled for this demo item yet.")}
             </p>
           </div>
           <button
@@ -76,7 +62,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs transition-colors cursor-pointer"
           >
             <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-            <span>Return to Previous Screen</span>
+            <span>{t("Return to Previous Screen")}</span>
           </button>
         </div>
       </div>
@@ -93,16 +79,16 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold text-slate-900 leading-tight truncate">
-              Demo catalog product
+              {t("Demo catalog product")}
             </p>
             <p className="text-[11px] text-emerald-800 font-medium">
-              Demo data, not real offers
+              {t("Demo data, not real offers")}
             </p>
           </div>
         </div>
 
         <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold uppercase tracking-wider shrink-0">
-          DEMO DATA
+          {t("DEMO DATA")}
         </span>
       </div>
 
@@ -112,10 +98,10 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="flex items-center justify-between text-xs mb-3 pb-2 border-b border-slate-100">
           <div className="flex items-center gap-1.5 text-blue-700 font-semibold">
             <CheckCircle2 className="w-4 h-4 text-blue-600" />
-            <span>Matched Sample (Demo)</span>
+            <span>{t("Matched Sample (Demo)")}</span>
           </div>
           <div className="text-slate-500 font-mono text-[11px]">
-            EAN: <span className="text-slate-800">{product.ean}</span> <span className="text-slate-400 font-sans text-[10px]">(Demo)</span>
+            EAN: <span className="text-slate-800">{product.ean}</span> <span className="text-slate-400 font-sans text-[10px]">{t("(Demo)")}</span>
           </div>
         </div>
 
@@ -131,7 +117,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
           {/* Original source watermark pill */}
           <div className="absolute bottom-2.5 right-2.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-medium px-2 py-1 rounded flex items-center gap-1">
             <Camera className="w-3 h-3 text-slate-300" />
-            <span>Sample source: {product.originalSource} (Demo)</span>
+            <span>{t("Sample source:")} {product.originalSource} {t("(Demo)")}</span>
           </div>
         </div>
 
@@ -139,7 +125,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="flex items-center justify-between mt-3 text-xs">
           <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Sample index updated recently</span>
+            <span>{t("Sample index updated recently")}</span>
           </div>
 
           <button
@@ -147,7 +133,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold rounded text-[11px] border border-emerald-200/80 transition-colors cursor-pointer"
           >
             <TrendingDown className="w-3 h-3 text-emerald-600" />
-            <span>30-Tage Tiefstpreis</span>
+            <span>{t("30-day lowest price")}</span>
           </button>
         </div>
       </div>
@@ -155,7 +141,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
       {/* Product Specification Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
         <p className="text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-1">
-          {product.category}
+          {t(product.category)}
         </p>
         <h2 className="text-xl font-bold text-slate-900 leading-snug">
           {product.title}
@@ -168,7 +154,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-100">
           <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-150">
             <span className="text-[10px] text-slate-400 block font-medium uppercase">
-              Hersteller
+              {t("Manufacturer")}
             </span>
             <span className="text-xs font-bold text-slate-900">
               {product.brand}
@@ -177,7 +163,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
 
           <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-150">
             <span className="text-[10px] text-slate-400 block font-medium uppercase">
-              Modellreihe
+              {t("Model series")}
             </span>
             <span className="text-xs font-bold text-slate-900">
               {product.model}
@@ -186,7 +172,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
 
           <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-150">
             <span className="text-[10px] text-slate-400 block font-medium uppercase">
-              Farbvariante
+              {t("Color variant")}
             </span>
             <span className="text-xs font-bold text-slate-900 truncate block">
               {product.colorVariant}
@@ -195,7 +181,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
 
           <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-150">
             <span className="text-[10px] text-slate-400 block font-medium uppercase">
-              EAN / Barcode
+              {t("EAN / Barcode")}
             </span>
             <span className="text-xs font-bold font-mono text-slate-900 truncate block">
               {product.ean}
@@ -209,16 +195,16 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="flex items-center justify-between text-xs mb-3 pb-2 border-b border-emerald-100">
           <span className="font-semibold text-slate-700 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            {product.storesCount} stores in the demo comparison
+            {product.storesCount} {t("stores in the demo comparison")}
           </span>
           <span className="text-emerald-800 text-[11px] font-medium">
-            Simulated offers
+            {t("Simulated offers")}
           </span>
         </div>
 
         <div className="mb-3">
           <p className="text-xs text-slate-600 font-medium">
-            Bester Endpreis im Demo-Vergleich:
+            {t("Best final price in the demo comparison:")}
           </p>
           <div className="flex items-baseline gap-2 mt-0.5">
             <span className="text-3xl font-bold text-emerald-800 tracking-tight tnum">
@@ -233,10 +219,10 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
 
           {product.savingsPercent && (
             <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1 rounded">
-              <span>-{product.savingsPercent}% ERSPARNIS</span>
+              <span>-{product.savingsPercent}{t("% OFF")}</span>
               <span className="text-emerald-100">·</span>
               <span className="font-normal">
-                Du sparst {product.savingsAmount?.toFixed(2).replace('.', ',')} €
+                {t("You save")} {product.savingsAmount?.toFixed(2).replace('.', ',')} €
               </span>
             </div>
           )}
@@ -246,15 +232,15 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <div className="grid grid-cols-3 gap-1 pt-3 border-t border-emerald-100 text-[11px] text-slate-700 font-medium">
           <div className="flex items-center gap-1.5">
             <Truck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span className="leading-tight">Free delivery</span>
+            <span className="leading-tight">{t("Free delivery")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span className="leading-tight">Merchant details</span>
+            <span className="leading-tight">{t("Merchant details")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span className="leading-tight">Merchant protection</span>
+            <span className="leading-tight">{t("Merchant protection")}</span>
           </div>
         </div>
       </div>
@@ -262,7 +248,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
       {/* Demo separation notice */}
       <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-center">
         <p className="text-[11px] text-slate-500 leading-relaxed">
-          <span className="font-bold text-slate-700">Demo data:</span> specifications, EAN codes and prices are examples for evaluating the interface, not real offers.
+          <span className="font-bold text-slate-700">{t("Demo data:")}</span> {t("specifications, EAN codes and prices are examples for evaluating the interface, not real offers.")}
         </p>
       </div>
 
@@ -274,7 +260,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             className="py-3 px-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <Bell className="w-4 h-4" />
-            <span>Price alert</span>
+            <span>{t("Price alert")}</span>
           </button>
         )}
         {onToggleSave && (
@@ -288,7 +274,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             }`}
           >
             <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-emerald-600 text-emerald-600' : ''}`} />
-            <span>{isSaved ? 'Saved' : 'Save'}</span>
+            <span>{isSaved ? t("Saved") : t("Save")}</span>
           </button>
         )}
       </div>
@@ -298,7 +284,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         onClick={onCompareOffers}
         className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer"
       >
-        <span>Compare offers ({product.storesCount})</span>
+        <span>{t("Compare offers (")}{product.storesCount})</span>
         <ArrowRight className="w-4 h-4" />
       </button>
 
@@ -308,7 +294,7 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
       >
         <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-        <span>Nicht das richtige Produkt? Verfeinern oder neu scannen</span>
+        <span>{t("Not the right product? Refine or scan again")}</span>
       </button>
     </div>
   );

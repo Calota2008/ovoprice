@@ -10,6 +10,12 @@ export interface AuthUser {
   photoUrl?: string;
 }
 
+/** `country` is only meaningful when creating an account (e.g. 'DE', 'AT'). */
+export interface AuthOptions {
+  mode?: 'sign-in' | 'create';
+  country?: string;
+}
+
 export type AuthResult =
   | { ok: true; user: AuthUser }
   | { ok: false; reason: 'not-connected' | 'invalid-email' | 'failed' };
@@ -18,9 +24,9 @@ export interface AuthProvider {
   /** False while no backend is connected. */
   isConnected: boolean;
   getUser(): AuthUser | null;
-  signInWithGoogle(): Promise<AuthResult>;
+  signInWithGoogle(options?: AuthOptions): Promise<AuthResult>;
   /** Sends a sign-in code or link to this email (passwordless). */
-  signInWithEmail(email: string): Promise<AuthResult>;
+  signInWithEmail(email: string, options?: AuthOptions): Promise<AuthResult>;
   signOut(): Promise<void>;
 }
 
@@ -31,7 +37,7 @@ export const noBackendAuthProvider: AuthProvider = {
   isConnected: false,
   getUser: () => null,
   signInWithGoogle: async () => ({ ok: false, reason: 'not-connected' }),
-  signInWithEmail: async (email) =>
+  signInWithEmail: async (email, _options) =>
     isValidEmail(email) ? { ok: false, reason: 'not-connected' } : { ok: false, reason: 'invalid-email' },
   signOut: async () => undefined,
 };

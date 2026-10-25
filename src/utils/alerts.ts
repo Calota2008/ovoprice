@@ -1,5 +1,6 @@
 import { PriceAlertItem, Product, SavedProductItem } from '../types';
 
+import { t, dateLocale } from '../i18n';
 const STATUSES = ['WATCHING', 'PRICE_DROPPED', 'TARGET_REACHED'];
 const fmt = (n: number) => n.toFixed(2).replace('.', ',');
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -24,7 +25,7 @@ export function buildAlert(product: Product, targetPrice: number, now: Date = ne
     dropAmount: 0,
     status: 'WATCHING',
     createdAt: now.toISOString(),
-    timestamp: `Created ${now.toLocaleDateString('en-GB')}`,
+    timestamp: '',
     shippingNote: best?.shippingText ?? '',
     isUnread: false,
   };
@@ -55,9 +56,7 @@ export function evaluateAlert(alert: PriceAlertItem, product: Product, isNew = f
     dropPercent: alert.previousPrice > 0 && drop > 0 ? Math.round((drop / alert.previousPrice) * 100) : undefined,
     status,
     isUnread: isNew ? false : becameReached ? true : alert.isUnread,
-    matchDetails: reached
-      ? `Your target of ${fmt(alert.targetPrice)} € has been reached (current price ${fmt(current)} €).`
-      : `Tracking until ${fmt(alert.targetPrice)} € or less. Current price: ${fmt(current)} €.`,
+    matchDetails: '',
   };
 }
 
@@ -114,4 +113,18 @@ export function validateSaved(value: unknown): SavedProductItem[] | null {
     (i): i is SavedProductItem =>
       i && typeof i.id === 'string' && typeof i.title === 'string' && typeof i.currentPrice === 'number'
   );
+}
+
+/** Texts are built when shown (not stored), so they follow the selected language. */
+export function alertTimestampText(alert: PriceAlertItem): string {
+  const d = new Date(alert.createdAt ?? '');
+  return Number.isNaN(d.getTime()) ? alert.timestamp || '' : t('Created {date}', { date: d.toLocaleDateString(dateLocale()) });
+}
+
+export function alertDetailsText(alert: PriceAlertItem): string {
+  const target = fmt(alert.targetPrice);
+  const current = fmt(alert.currentPrice);
+  return alert.status === 'TARGET_REACHED'
+    ? t('Your target of {target} € has been reached (current price {current} €).', { target, current })
+    : t('Tracking until {target} € or less. Current price: {current} €.', { target, current });
 }

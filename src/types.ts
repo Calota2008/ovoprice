@@ -104,7 +104,8 @@ export type ActiveScreen =
   | 'price-history'
   | 'set-alert'
   | 'visual-result'
-  | 'product-reels';
+  | 'product-reels'
+  | 'settings';
 
 export interface RecognizedRetailerLink {
   retailerName: string;

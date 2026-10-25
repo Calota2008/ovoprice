@@ -102,7 +102,7 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - All user-facing Romanian/German text translated (Home, Search, scanner modal, link results, offers, breakdown, price history, set-alert, alerts, saved, header, demo badges, errors, link-validation messages). `<html lang="en">`; dates use en-GB.
 - Kept as-is on purpose: German retailer search terms (OTTO/IKEA/MediaMarkt queries) and demo catalog product data (e.g. German subtitle/colour of one product).
 - Added `role="dialog"` + `aria-modal` to the scanner modal. Old e2e tests updated to the English strings.
-- No language selector / translation system (per the Reels prompt: interface stays in English).
+- (Superseded by the next section: the app now has English, German and Romanian.)
 
 ## Account UI (no backend)
 - `src/services/authProvider.ts`: single access point for accounts (`isConnected: false`, `signInWithGoogle`, `signInWithEmail`, `signOut`). It never pretends a user is signed in; swap it for Firebase Auth / Supabase / own API when the backend exists.
@@ -111,3 +111,17 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - `src/components/AuthNudge.tsx`: dismissible one-line invitation on Saved and Alerts for guests (dismissal kept in localStorage).
 - Nothing is stored or sent: no email is collected. No phone sign-in (SMS cost/abuse); add later only if needed.
 - Test: `tests/e2e_auth_ui.py` (24 checks).
+
+## Languages (EN / DE / RO), country and Account settings
+- New `src/i18n/`: `index.ts` (`t()`, `tr()`, `setLanguage`, `useLanguage`, `dateLocale`), `de.ts`, `ro.ts`, `country.ts`. The English text is the key (`t('Price alerts')`); a missing translation falls back to English, never to an empty string. Constants defined outside components use `tr('…')` and are translated with `t(…)` when rendered.
+- Language: first visit follows the browser (German / Romanian, otherwise English); the choice is stored in `localStorage` (`ovoprice_lang_v1`), sets `<html lang>`, the page title/description and date formats. Switching re-renders the whole app at once.
+- Country: Germany and Austria only, in `COUNTRIES` in `src/i18n/country.ts` (add a line there to open a new country). Stored locally (`ovoprice_country_v1`, default Germany). It is a preference for now: no store or price filtering yet (both countries use EUR). With the backend it becomes a profile attribute.
+- Create-account sheet: new "Your country" choice (create mode only). `authProvider` receives `{ mode, country }`.
+- New screen **Account settings** (`SettingsScreen.tsx`, `'settings'` in `ActiveScreen`), opened from the profile menu: account card (sign in / create), language (English, Deutsch, Română), country.
+- Demo data values shown to the user (delivery, stock, warranty, returns, badges, categories, chart dates) are translated through `t(value)`; product names/descriptions stay as data.
+- Stored data no longer contains translated text (alert timestamps/details are computed when displayed: `alertTimestampText`, `alertDetailsText`; collection errors via `nameMessage`).
+- Removed invented text in `BreakdownScreen` (hard-coded subtitle, "Direct Seller" tag) and unused imports/variables.
+- `index.html` title/description are now English (the page title follows the selected language at runtime).
+- Tests: `tests/unit_i18n.ts` (every key used in code has DE + RO, no unused/duplicate entries, matching `{placeholders}`), `tests/e2e_i18n_settings.py` (44 checks: switch, persistence, browser detection, invalid storage, country in sign-up, Settings page, mobile + desktop). Old e2e expectations updated.
+- German and Romanian texts were written without native-speaker review: have them proofread before launch (German uses the informal "du").
+- Not translated on purpose: the hidden dev toolbar (`?devnav=1`), brand/retailer names, German retailer search terms, product titles in the demo catalog.

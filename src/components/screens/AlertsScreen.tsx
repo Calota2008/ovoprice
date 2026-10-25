@@ -5,6 +5,8 @@ import { DemoBadge } from '../DemoBadge';
 
 import { AuthNudge } from '../AuthNudge';
 
+import { t } from '../../i18n';
+import { alertDetailsText, alertTimestampText } from '../../utils/alerts';
 interface AlertsScreenProps {
   alerts: PriceAlertItem[];
   onSelectAlert: (alert: PriceAlertItem) => void;
@@ -36,14 +38,14 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
       {/* Title */}
       <div className="flex items-start justify-between gap-2 pt-1">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Price alerts</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Your alerts, saved on this device</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("Price alerts")}</h1>
+          <p className="text-xs text-slate-500 mt-0.5">{t("Your alerts, saved on this device")}</p>
         </div>
         <DemoBadge className="mt-1.5" />
       </div>
 
       {onOpenAuth && alerts.length > 0 && (
-        <AuthNudge onOpenAuth={onOpenAuth} message="Alerts only live on this device for now." />
+        <AuthNudge onOpenAuth={onOpenAuth} message={t("Alerts only live on this device for now.")} />
       )}
 
       {/* Filter Tabs */}
@@ -56,7 +58,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
               : 'bg-slate-100 text-slate-600 hover:text-slate-900'
           }`}
         >
-          ALL ({alerts.length})
+          {t("ALL")} ({alerts.length})
         </button>
 
         <button
@@ -67,7 +69,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
               : 'bg-slate-100 text-slate-600 hover:text-slate-900'
           }`}
         >
-          UNREAD ({unreadCount})
+          {t("UNREAD")} ({unreadCount})
         </button>
 
         <button
@@ -79,7 +81,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
           }`}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>TARGET REACHED ({targetReachedCount})</span>
+          <span>{t("TARGET REACHED")} ({targetReachedCount})</span>
         </button>
       </div>
 
@@ -88,14 +90,14 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
           <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
             <Bell className="w-6 h-6" />
           </div>
-          <h2 className="text-base font-bold text-slate-900">You have no alerts</h2>
+          <h2 className="text-base font-bold text-slate-900">{t("You have no alerts")}</h2>
           <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
-            Pick a product, set your target price and we'll track it for you.
+            {t("Pick a product, set your target price and we'll track it for you.")}
           </p>
         </div>
       )}
       {alerts.length > 0 && filteredAlerts.length === 0 && (
-        <p className="text-xs text-slate-500 text-center py-4">No alerts in this category.</p>
+        <p className="text-xs text-slate-500 text-center py-4">{t("No alerts in this category.")}</p>
       )}
 
       {/* Alert Cards */}
@@ -118,10 +120,10 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-700 text-white text-[10px] font-bold tracking-wider uppercase">
                       <CheckCircle2 className="w-3 h-3 text-white" />
-                      Target reached
+                      {t("Target reached")}
                     </span>
                     <span className="text-[11px] text-slate-500 font-medium">
-                      · {alert.timestamp}
+                      · {alertTimestampText(alert)}
                     </span>
                   </div>
                 ) : (
@@ -129,16 +131,16 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                     {alert.status === 'PRICE_DROPPED' ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold tracking-wider uppercase border border-blue-100">
                         <TrendingDown className="w-3 h-3 text-blue-600" />
-                        Price dropped
+                        {t("Price dropped")}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold tracking-wider uppercase border border-slate-200">
                         <Eye className="w-3 h-3 text-slate-500" />
-                        Tracking
+                        {t("Tracking")}
                       </span>
                     )}
                     <span className="text-[11px] text-slate-400 font-medium">
-                      {alert.timestamp}
+                      {alertTimestampText(alert)}
                     </span>
                   </div>
                 )}
@@ -155,7 +157,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                   />
                   {alert.dropPercent && (
                     <span className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-bold px-1 py-0.5 rounded-xs tracking-tight">
-                      {isTargetReached ? `${alert.dropPercent}% OFF` : `↓ ${alert.dropAmount.toFixed(0)} €`}
+                      {isTargetReached ? t("{percent}% OFF", { percent: alert.dropPercent }) : `↓ ${alert.dropAmount.toFixed(0)} €`}
                     </span>
                   )}
                 </div>
@@ -178,8 +180,8 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                       <button
                         onClick={() => onRemoveAlert(alert.id)}
                         className="text-slate-400 hover:text-red-600 p-1 -mt-1 -mr-1 transition-colors cursor-pointer shrink-0"
-                        aria-label={`Delete alert for ${alert.title}`}
-                        title="Delete alert"
+                        aria-label={t("Delete alert for {title}", { title: alert.title })}
+                        title={t("Delete alert")}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -187,7 +189,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                   </div>
 
                   <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                    {alert.matchDetails}
+                    {alertDetailsText(alert)}
                   </p>
                 </div>
               </div>
@@ -206,7 +208,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                         </span>
                       </>
                     ) : (
-                      <span>Target: <span className="tnum font-semibold text-slate-600">{alert.targetPrice.toFixed(2).replace('.', ',')} €</span></span>
+                      <span>{t("Target:")} <span className="tnum font-semibold text-slate-600">{alert.targetPrice.toFixed(2).replace('.', ',')} €</span></span>
                     )}
                   </div>
                   <div className="flex items-baseline gap-1 mt-0.5">
@@ -214,7 +216,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                       {alert.currentPrice.toFixed(2).replace('.', ',')} €
                     </span>
                     <span className="text-[11px] text-slate-500">
-                      {alert.shippingNote}
+                      {t(alert.shippingNote)}
                     </span>
                   </div>
                 </div>
@@ -227,7 +229,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
                       : 'bg-slate-900 hover:bg-slate-800 text-white'
                   }`}
                 >
-                  <span>View offer</span>
+                  <span>{t("View offer")}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -242,11 +244,10 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
           <div className="w-7 h-7 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center">
             <Activity className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900">How it works now</h3>
+          <h3 className="text-sm font-bold text-slate-900">{t("How it works now")}</h3>
         </div>
         <p className="text-xs text-slate-600 leading-relaxed">
-          Prices in the app are examples. Alerts are only checked when you open the app and do not send
-          notifications. Automatic checks and notifications will be available once real prices are connected.
+          {t("Prices in the app are examples. Alerts are only checked when you open the app and do not send notifications. Automatic checks and notifications will be available once real prices are connected.")}
         </p>
       </div>
 
@@ -257,8 +258,8 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
             <Bell className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-slate-900">Want to track a product?</h4>
-            <p className="text-[11px] text-slate-600">Pick the product and set your target price</p>
+            <h4 className="text-xs font-bold text-slate-900">{t("Want to track a product?")}</h4>
+            <p className="text-[11px] text-slate-600">{t("Pick the product and set your target price")}</p>
           </div>
         </div>
 
@@ -267,7 +268,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({
           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 shrink-0 transition-colors cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Create</span>
+          <span>{t("Create")}</span>
         </button>
       </div>
     </div>

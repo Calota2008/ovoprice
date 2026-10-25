@@ -15,6 +15,7 @@ import {
 import { Product, StoreOffer } from '../../types';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 
+import { t } from '../../i18n';
 interface BreakdownScreenProps {
   product: Product;
   offer: StoreOffer;
@@ -39,7 +40,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
       <div className="flex items-center justify-between text-xs py-1 px-1">
         <div className="flex items-center gap-1.5 text-emerald-800 font-bold tracking-tight">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <span>{offer.isBestPrice ? 'Lowest price in the demo' : 'Demo offer'}</span>
+          <span>{offer.isBestPrice ? t("Lowest price in the demo") : t("Demo offer")}</span>
         </div>
         <div className="flex items-center gap-1 text-slate-400 text-[11px]">
           <DemoBadge />
@@ -62,16 +63,13 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
             <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 uppercase">
               {offer.storeName}
             </span>
-            <span className="text-[10px] text-emerald-700 font-medium">
-              • Direct Seller
-            </span>
           </div>
 
           <h2 className="text-sm font-bold text-slate-900 truncate">
             {product.title}
           </h2>
           <p className="text-xs text-slate-500 truncate">
-            Modell 2024 · Laser Slim Fluffy · Digital Motor
+            {product.subtitle}
           </p>
         </div>
       </div>
@@ -84,18 +82,18 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
               <span className="text-xs font-bold">€</span>
             </div>
             <h3 className="text-sm font-bold text-slate-900">
-              Price comparison breakdown
+              {t("Price comparison breakdown")}
             </h3>
           </div>
           <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold tracking-wider rounded uppercase">
-            ESTIMATED BREAKDOWN
+            {t("ESTIMATED BREAKDOWN")}
           </span>
         </div>
 
         {/* Ledger items */}
         <div className="space-y-2.5 text-xs">
           <div className="flex justify-between items-center text-slate-600">
-            <span>Base product price</span>
+            <span>{t("Base product price")}</span>
             <span className="font-semibold text-slate-900 tnum">
               {offer.basePrice.toFixed(2).replace('.', ',')} €
             </span>
@@ -103,9 +101,9 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
 
           <div className="flex justify-between items-center text-slate-600">
             <div className="flex items-center gap-2">
-              <span>Shipping cost</span>
+              <span>{t("Shipping cost")}</span>
               <span className="px-1.5 py-0.2 bg-emerald-50 text-emerald-700 text-[10px] font-semibold rounded">
-                Free delivery
+                {t("Free delivery")}
               </span>
             </div>
             <span className="font-semibold text-emerald-700 tnum">
@@ -114,9 +112,9 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           </div>
 
           <div className="flex justify-between items-center text-slate-600">
-            <span>Taxes & Surcharges</span>
+            <span>{t("Taxes & Surcharges")}</span>
             <span className="text-slate-500 text-[11px]">
-              Included (19% German VAT)
+              {t("Included (19% German VAT)")}
             </span>
           </div>
 
@@ -124,7 +122,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           <div className="mt-4 pt-3 border-t border-slate-150 bg-slate-50/80 rounded-xl p-3 border border-slate-200">
             <div className="flex justify-between items-baseline mb-1">
               <span className="text-sm font-bold text-slate-900">
-                Total Landed Price
+                {t("Total Landed Price")}
               </span>
               <span className="text-2xl font-extrabold text-emerald-800 tracking-tight tnum">
                 {offer.totalLandedPrice.toFixed(2).replace('.', ',')} €
@@ -135,7 +133,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
               <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-3">
                 <TrendingDown className="w-3.5 h-3.5" />
                 <span>
-                  {savingVsAvg.toFixed(2).replace('.', ',')} € below the average of the demo offers (
+                  {savingVsAvg.toFixed(2).replace('.', ',')} {t("€ below the average of the demo offers (")}
                   {avgTotal.toFixed(2).replace('.', ',')} €)
                 </span>
               </div>
@@ -145,7 +143,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
               {product.lowestPriceInDays ? (
                 <span className="text-slate-600 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>Lowest price in the last {product.lowestPriceInDays} days</span>
+                  <span>{t("Lowest price in the last")} {product.lowestPriceInDays} {t("days")}</span>
                 </span>
               ) : (
                 <span />
@@ -155,7 +153,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
                 onClick={onOpenHistory}
                 className="text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <span>Price history</span>
+                <span>{t("Price history")}</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -167,11 +165,11 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3.5">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <h3 className="text-sm font-bold text-slate-900">
-            Store Details
+            {t("Store Details")}
           </h3>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-100">
             <ShieldCheck className="w-3 h-3" />
-            <span>Retailer Listing</span>
+            <span>{t("Retailer Listing")}</span>
           </span>
         </div>
 
@@ -198,10 +196,10 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           <Truck className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
           <div>
             <span className="font-bold text-slate-900 block">
-              Delivery Estimate
+              {t("Delivery Estimate")}
             </span>
             <span className="text-slate-600">
-              {offer.deliveryEstimate}
+              {t(offer.deliveryEstimate)}
             </span>
           </div>
         </div>
@@ -211,10 +209,10 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           <RotateCcw className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
           <div>
             <span className="font-bold text-slate-900 block">
-              Return Information
+              {t("Return Information")}
             </span>
             <span className="text-slate-600">
-              {offer.returnPolicy}
+              {t(offer.returnPolicy)}
             </span>
           </div>
         </div>
@@ -224,10 +222,10 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           <Package className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
           <div>
             <span className="font-bold text-slate-900 block">
-              Stock Status
+              {t("Stock Status")}
             </span>
             <span className="text-slate-600">
-              {offer.stockStatus}
+              {t(offer.stockStatus)}
             </span>
           </div>
         </div>
@@ -238,10 +236,10 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
         <Shield className="w-5 h-5 text-emerald-600 shrink-0" />
         <div>
           <span className="font-bold text-slate-900 block">
-            Merchant & Manufacturer Policy
+            {t("Merchant & Manufacturer Policy")}
           </span>
           <span className="text-[11px] text-slate-500">
-            Warranty: {offer.warranty}
+            {t("Warranty:")} {t(offer.warranty)}
           </span>
         </div>
       </div>
@@ -251,10 +249,10 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
         <div className="max-w-md mx-auto space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">
-              FINAL PRICE AT {offer.storeName.toUpperCase()}
+              {t("FINAL PRICE AT")} {offer.storeName.toUpperCase()}
             </span>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              ⚡ INSTANT REDIRECT
+              {t("⚡ INSTANT REDIRECT")}
             </span>
           </div>
 
@@ -267,7 +265,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
               onClick={() => onRedirectStore(offer)}
               className="py-3 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
             >
-              <span>Go to store</span>
+              <span>{t("Go to store")}</span>
               <ExternalLink className="w-4 h-4" />
             </button>
           </div>
@@ -275,7 +273,7 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
           <p className="text-[10px] text-slate-500 flex items-start gap-1 leading-tight pt-1">
             <Info className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
             <span>
-              You buy directly from {offer.storeName}. OvoPrice does not process payments or take orders. Check the final price and delivery on the merchant's website.
+              {t("You buy directly from")} {offer.storeName}{t(". OvoPrice does not process payments or take orders. Check the final price and delivery on the merchant's website.")}
             </span>
           </p>
         </div>

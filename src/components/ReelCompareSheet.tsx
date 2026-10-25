@@ -4,6 +4,7 @@ import { Product, StoreOffer } from '../types';
 import { DemoBadge } from './DemoBadge';
 import { isSafeHttpUrl } from '../utils/url';
 
+import { t } from '../i18n';
 interface ReelCompareSheetProps {
   product: Product;
   onClose: () => void;
@@ -42,7 +43,7 @@ export const ReelCompareSheet: React.FC<ReelCompareSheetProps> = ({ product, onC
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label={`Compare prices for ${product.title}`}
+        aria-label={t('Compare prices for {title}', { title: product.title })}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-h-[85%] overflow-y-auto rounded-t-2xl bg-[#0b111b] border-t border-slate-700 p-4 space-y-3 focus:outline-none"
       >
@@ -50,10 +51,10 @@ export const ReelCompareSheet: React.FC<ReelCompareSheetProps> = ({ product, onC
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-white line-clamp-1">{product.title}</h3>
             <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
-              Lowest total prices <DemoBadge />
+              {t("Lowest total prices")} <DemoBadge />
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close comparison" className="p-1 text-slate-400 hover:text-white cursor-pointer">
+          <button onClick={onClose} aria-label={t("Close comparison")} className="p-1 text-slate-400 hover:text-white cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -72,12 +73,12 @@ export const ReelCompareSheet: React.FC<ReelCompareSheetProps> = ({ product, onC
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-white truncate">{offer.storeName}</p>
                   <p className="text-[10px] text-slate-400">
-                    {euro(offer.basePrice)} + {offer.shippingPrice === 0 ? 'free shipping' : `${euro(offer.shippingPrice)} shipping`}
+                    {euro(offer.basePrice)} + {offer.shippingPrice === 0 ? t("free shipping") : t('{price} shipping', { price: euro(offer.shippingPrice) })}
                   </p>
                   {i === 0 ? (
-                    <p className="text-[10px] font-semibold text-cyan-300 mt-0.5">Lowest total</p>
+                    <p className="text-[10px] font-semibold text-cyan-300 mt-0.5">{t("Lowest total")}</p>
                   ) : (
-                    delta > 0 && <p className="text-[10px] text-slate-500 mt-0.5">+{euro(delta)} vs lowest</p>
+                    delta > 0 && <p className="text-[10px] text-slate-500 mt-0.5">+{euro(delta)} {t("vs lowest")}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -85,11 +86,11 @@ export const ReelCompareSheet: React.FC<ReelCompareSheetProps> = ({ product, onC
                   <button
                     onClick={() => onBuy(offer)}
                     disabled={!hasLink}
-                    aria-label={`Buy at ${offer.storeName}`}
-                    title={hasLink ? undefined : 'No valid merchant link available yet'}
+                    aria-label={t('Buy at {store}', { store: offer.storeName })}
+                    title={hasLink ? undefined : t('No valid merchant link available yet')}
                     className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" /> Buy
+                    <ExternalLink className="w-3.5 h-3.5" /> {t("Buy")}
                   </button>
                 </div>
               </li>
@@ -102,11 +103,11 @@ export const ReelCompareSheet: React.FC<ReelCompareSheetProps> = ({ product, onC
           className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 cursor-pointer"
         >
           <Layers className="w-4 h-4 text-cyan-400" />
-          {sorted.length > rows.length ? `See all ${sorted.length} offers` : 'See full comparison'}
+          {sorted.length > rows.length ? t('See all {n} offers', { n: sorted.length }) : t("See full comparison")}
         </button>
 
         <p className="text-[10px] leading-snug text-slate-500">
-          Demo prices are examples, not real offers. Always check the final price at the merchant.
+          {t("Demo prices are examples, not real offers. Always check the final price at the merchant.")}
         </p>
       </div>
     </div>

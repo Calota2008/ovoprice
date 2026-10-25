@@ -21,7 +21,7 @@ with sync_playwright() as p:
     inp.fill('https://www.tiktok.com/@a/video/1'); pg.get_by_text('Analyze link').click()
     check('social link rejected', pg.get_by_text('Social media link').is_visible())
     inp.fill('https://evilmediamarkt.de/x'); pg.get_by_text('Analyze link').click()
-    check('lookalike domain rejected', pg.get_by_text('Magazin neacceptat').is_visible())
+    check('lookalike domain rejected', pg.get_by_text('Store not supported', exact=True).is_visible())
     inp.fill('https://www.mediamarkt.de/de/product/_dyson-v15-detect-absolute-gelb-2982247.html'); pg.get_by_text('Analyze link').click()
     pg.wait_for_timeout(600)
     check('result: recognized', pg.get_by_text('Product link recognized').is_visible())
@@ -42,7 +42,7 @@ with sync_playwright() as p:
     pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(500)
     pg.evaluate("navigator.clipboard.writeText('https://amzn.to/abc')")
     pg.get_by_text('Paste and analyze').click(); pg.wait_for_timeout(400)
-    check('paste short link -> modal error', pg.get_by_text('Link scurtat').is_visible())
+    check('paste short link -> modal error', pg.get_by_text('Shortened link', exact=True).is_visible())
     pg.screenshot(path=f'{S}/shot_paste_short.png')
     pg.keyboard.press('Escape')
     # --- barcode manual

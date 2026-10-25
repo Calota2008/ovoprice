@@ -13,6 +13,7 @@ import {
   validateUserReelInput,
 } from '../utils/userReels';
 
+import { t, tr } from '../i18n';
 interface AddReelModalProps {
   onClose: () => void;
   onSubmit: (input: UserReelInput, file: File) => Promise<{ ok: true; id: string } | { ok: false; error: string }>;
@@ -25,9 +26,9 @@ const errorClass = 'text-[11px] text-amber-300 mt-1';
 
 function specsFromProduct(product: Product): ReelSpec[] {
   return [
-    { label: 'Brand', value: product.brand },
-    { label: 'Model', value: product.model },
-    { label: 'Color', value: product.colorVariant },
+    { label: tr('Brand'), value: product.brand },
+    { label: tr('Model'), value: product.model },
+    { label: tr('Color'), value: product.colorVariant },
   ].filter((s) => s.value && s.value.trim());
 }
 
@@ -73,14 +74,14 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
     if (!kind) {
       setFile(null);
       setPreview(null);
-      setErrors((e) => ({ ...e, media: 'Unsupported file type. Use MP4, WebM, JPG, PNG or WebP.' }));
+      setErrors((e) => ({ ...e, media: t('Unsupported file type. Use MP4, WebM, JPG, PNG or WebP.') }));
       return;
     }
     const maxBytes = kind === 'video' ? LIMITS.maxVideoBytes : LIMITS.maxImageBytes;
     if (picked.size > maxBytes) {
       setFile(null);
       setPreview(null);
-      setErrors((e) => ({ ...e, media: `File is too large (max ${Math.round(maxBytes / 1024 / 1024)} MB).` }));
+      setErrors((e) => ({ ...e, media: t('File is too large (max {n} MB).', { n: Math.round(maxBytes / 1024 / 1024) }) }));
       return;
     }
     if (kind === 'video') {
@@ -115,10 +116,10 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
         if (!category.trim()) setCategory(product.category);
         if (specs.length === 0) setSpecs(specsFromProduct(product));
       } else {
-        setMatchNote('Not in the catalog yet. You can still add the Reel, but price comparison will not be available.');
+        setMatchNote(t('Not in the catalog yet. You can still add the Reel, but price comparison will not be available.'));
       }
     } catch {
-      setMatchNote('The catalog could not be searched right now. Try again.');
+      setMatchNote(t('The catalog could not be searched right now. Try again.'));
     } finally {
       setMatching(false);
     }
@@ -141,7 +142,7 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
       productId: matched?.id,
     };
     const found = validateUserReelInput(input);
-    if (!file) found.media = 'Choose a video or a photo.';
+    if (!file) found.media = t('Choose a video or a photo.');
     setErrors(found);
     if (Object.keys(found).length > 0 || !file) return;
     setBusy(true);
@@ -165,22 +166,22 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
         <form onSubmit={handleSubmit} noValidate className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h2 id="add-reel-title" className="text-sm font-bold">
-              Add Reel
+              {t("Add Reel")}
             </h2>
-            <button type="button" onClick={onClose} disabled={busy} aria-label="Close" className="p-1 text-slate-400 hover:text-white cursor-pointer">
+            <button type="button" onClick={onClose} disabled={busy} aria-label={t("Close")} className="p-1 text-slate-400 hover:text-white cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <p className="flex items-start gap-2 text-[11px] text-slate-400 bg-slate-900/80 border border-slate-800 rounded-lg p-2.5">
             <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-cyan-400" />
-            Your Reel is stored only on this device. It is not published to other people.
+            {t("Your Reel is stored only on this device. It is not published to other people.")}
           </p>
 
           {/* Media */}
           <div>
             <label htmlFor="reel-media" className={labelClass}>
-              Video or photo *
+              {t("Video or photo *")}
             </label>
             <label
               htmlFor="reel-media"
@@ -190,14 +191,14 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
                 preview.kind === 'video' ? (
                   <video src={preview.url} className="max-h-40 rounded-lg" muted playsInline controls={false} />
                 ) : (
-                  <img src={preview.url} alt="Selected" className="max-h-40 rounded-lg object-contain" />
+                  <img src={preview.url} alt={t("Selected")} className="max-h-40 rounded-lg object-contain" />
                 )
               ) : (
                 <>
                   <Upload className="w-5 h-5 text-cyan-400" />
-                  <span>Choose a file (MP4, WebM, JPG, PNG, WebP)</span>
+                  <span>{t("Choose a file (MP4, WebM, JPG, PNG, WebP)")}</span>
                   <span className="text-[10px] text-slate-500">
-                    Video up to {Math.round(LIMITS.maxVideoBytes / 1024 / 1024)} MB and {LIMITS.maxVideoSeconds}s
+                    {t("Video up to")} {Math.round(LIMITS.maxVideoBytes / 1024 / 1024)} {t("MB and")} {LIMITS.maxVideoSeconds}s
                   </span>
                 </>
               )}
@@ -216,7 +217,7 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
           {/* Catalog match */}
           <div>
             <label htmlFor="reel-ean" className={labelClass}>
-              Barcode (EAN) — to match a catalog product
+              {t("Barcode (EAN) — to match a catalog product")}
             </label>
             <div className="flex gap-2">
               <input
@@ -237,14 +238,14 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
                 disabled={matching}
                 className="shrink-0 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-300 flex items-center gap-1 cursor-pointer disabled:opacity-50"
               >
-                <Search className="w-3.5 h-3.5" /> Match
+                <Search className="w-3.5 h-3.5" /> {t("Match")}
               </button>
             </div>
             {errors.ean && <p className={errorClass} role="alert">{errors.ean}</p>}
             {matched && (
               <p className="flex items-start gap-1.5 text-[11px] text-emerald-300 mt-1.5" role="status">
                 <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                Matched: {matched.title}. Compare and Buy will use catalog offers.
+                {t("Matched:")} {matched.title}{t(". Compare and Buy will use catalog offers.")}
               </p>
             )}
             {matchNote && (
@@ -258,14 +259,14 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
           {/* Name, description, category */}
           <div>
             <label htmlFor="reel-title" className={labelClass}>
-              Product name *
+              {t("Product name *")}
             </label>
             <input id="reel-title" value={title} maxLength={LIMITS.maxTitle} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
             {errors.title && <p className={errorClass} role="alert">{errors.title}</p>}
           </div>
           <div>
             <label htmlFor="reel-subtitle" className={labelClass}>
-              Short description
+              {t("Short description")}
             </label>
             <textarea
               id="reel-subtitle"
@@ -279,38 +280,38 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
           </div>
           <div>
             <label htmlFor="reel-category" className={labelClass}>
-              Category
+              {t("Category")}
             </label>
-            <input id="reel-category" value={category} maxLength={LIMITS.maxCategory} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Headphones" className={inputClass} />
+            <input id="reel-category" value={category} maxLength={LIMITS.maxCategory} onChange={(e) => setCategory(e.target.value)} placeholder={t("e.g. Headphones")} className={inputClass} />
             {errors.category && <p className={errorClass} role="alert">{errors.category}</p>}
           </div>
 
           {/* Specs */}
           <fieldset>
-            <legend className={labelClass}>Specifications</legend>
+            <legend className={labelClass}>{t("Specifications")}</legend>
             <div className="space-y-2">
               {specs.map((spec, i) => (
                 <div key={i} className="flex gap-2">
                   <input
-                    aria-label={`Specification ${i + 1} label`}
+                    aria-label={t('Specification {n} label', { n: i + 1 })}
                     value={spec.label}
                     maxLength={LIMITS.maxSpecLabel}
                     onChange={(e) => updateSpec(i, { label: e.target.value })}
-                    placeholder="Label"
+                    placeholder={t("Label")}
                     className={`${inputClass} w-2/5`}
                   />
                   <input
-                    aria-label={`Specification ${i + 1} value`}
+                    aria-label={t('Specification {n} value', { n: i + 1 })}
                     value={spec.value}
                     maxLength={LIMITS.maxSpecValue}
                     onChange={(e) => updateSpec(i, { value: e.target.value })}
-                    placeholder="Value"
+                    placeholder={t("Value")}
                     className={inputClass}
                   />
                   <button
                     type="button"
                     onClick={() => setSpecs((prev) => prev.filter((_, idx) => idx !== i))}
-                    aria-label={`Remove specification ${i + 1}`}
+                    aria-label={t('Remove specification {n}', { n: i + 1 })}
                     className="shrink-0 p-2 text-slate-400 hover:text-amber-300 cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -324,7 +325,7 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
                 onClick={() => setSpecs((prev) => [...prev, { label: '', value: '' }])}
                 className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-cyan-300 hover:text-cyan-200 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" /> Add specification
+                <Plus className="w-3.5 h-3.5" /> {t("Add specification")}
               </button>
             )}
             {errors.specs && <p className={errorClass} role="alert">{errors.specs}</p>}
@@ -333,17 +334,17 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
           {/* Buy link */}
           <div>
             <label htmlFor="reel-buy" className={labelClass}>
-              Merchant link (optional)
+              {t("Merchant link (optional)")}
             </label>
-            <input id="reel-buy" type="url" value={buyUrl} onChange={(e) => setBuyUrl(e.target.value)} placeholder="https://…" className={inputClass} />
+            <input id="reel-buy" type="url" value={buyUrl} onChange={(e) => setBuyUrl(e.target.value)} placeholder={t("https://…")} className={inputClass} />
             <p className="text-[10px] text-slate-500 mt-1">
-              Used for the Buy button only when the product is not matched to a catalog product.
+              {t("Used for the Buy button only when the product is not matched to a catalog product.")}
             </p>
             {errors.buyUrl && <p className={errorClass} role="alert">{errors.buyUrl}</p>}
             {buyUrl.trim() && (
               <label className="flex items-center gap-2 mt-2 text-[11px] text-slate-300 cursor-pointer">
                 <input type="checkbox" checked={isAffiliate} onChange={(e) => setIsAffiliate(e.target.checked)} />
-                This is an affiliate link
+                {t("This is an affiliate link")}
               </label>
             )}
           </div>
@@ -361,14 +362,14 @@ export const AddReelModal: React.FC<AddReelModalProps> = ({ onClose, onSubmit })
               disabled={busy}
               className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 cursor-pointer"
             >
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="submit"
               disabled={busy}
               className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 text-xs font-bold cursor-pointer disabled:opacity-50"
             >
-              {busy ? 'Saving…' : 'Save Reel'}
+              {busy ? t("Saving…") : t("Save Reel")}
             </button>
           </div>
         </form>

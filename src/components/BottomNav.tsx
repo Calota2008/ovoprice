@@ -2,6 +2,7 @@ import React from 'react';
 import { Home, Search, Bookmark, Bell } from 'lucide-react';
 import { ActiveScreen } from '../types';
 
+import { t } from '../i18n';
 interface BottomNavProps {
   activeScreen: ActiveScreen;
   onNavigate: (screen: ActiveScreen) => void;
@@ -21,7 +22,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   return (
     <nav
       className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 max-w-md mx-auto w-full transition-all"
-      aria-label="Main Navigation"
+      aria-label={t("Main Navigation")}
     >
       <div className="grid grid-cols-4 h-16 items-center px-2">
         {/* Home */}
@@ -34,7 +35,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }`}
         >
           <Home className={`w-5 h-5 ${isHomeActive ? 'text-emerald-700 stroke-[2.3]' : 'stroke-[1.8]'}`} />
-          <span className="text-[11px] tracking-tight">Home</span>
+          <span className="text-[11px] tracking-tight">{t("Home")}</span>
         </button>
 
         {/* Search */}
@@ -47,7 +48,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }`}
         >
           <Search className={`w-5 h-5 ${isSearchActive ? 'text-emerald-700 stroke-[2.3]' : 'stroke-[1.8]'}`} />
-          <span className="text-[11px] tracking-tight">Search</span>
+          <span className="text-[11px] tracking-tight">{t("Search")}</span>
         </button>
 
         {/* Saved */}
@@ -60,7 +61,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }`}
         >
           <Bookmark className={`w-5 h-5 ${isSavedActive ? 'text-emerald-700 stroke-[2.3]' : 'stroke-[1.8]'}`} />
-          <span className="text-[11px] tracking-tight">Saved</span>
+          <span className="text-[11px] tracking-tight">{t("Saved")}</span>
         </button>
 
         {/* Alerts */}
@@ -78,7 +79,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white" />
             )}
           </div>
-          <span className="text-[11px] tracking-tight">Alerts</span>
+          <span className="text-[11px] tracking-tight">{t("Alerts")}</span>
         </button>
       </div>
     </nav>

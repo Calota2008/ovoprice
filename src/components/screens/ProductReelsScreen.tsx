@@ -30,6 +30,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+import { t, tr } from '../../i18n';
 type ReelFilter = 'for-you' | 'categories' | 'saved';
 
 /** Where the user is in the feed, so returning from Compare/Details restores the same reel. */
@@ -60,12 +61,12 @@ interface ProductReelsScreenProps {
 
 const SWIPE_THRESHOLD_PX = 50;
 const AFFILIATE_NOTE =
-  'Some links may be affiliate links. OvoPrice may earn a commission from qualifying purchases at no additional cost to you.';
+  tr('Some links may be affiliate links. OvoPrice may earn a commission from qualifying purchases at no additional cost to you.');
 
 const FILTERS: { id: ReelFilter; label: string }[] = [
-  { id: 'for-you', label: 'For You' },
-  { id: 'categories', label: 'Categories' },
-  { id: 'saved', label: 'Saved Products' },
+  { id: 'for-you', label: tr('For You') },
+  { id: 'categories', label: tr('Categories') },
+  { id: 'saved', label: tr('Saved Products') },
 ];
 
 export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
@@ -252,7 +253,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     if (!currentReel?.productId) return;
     onToggleSave(currentReel.productId);
     trackEvent(isCurrentSaved ? 'product_unsaved' : 'product_saved', { productId: currentReel.productId });
-    showToast(isCurrentSaved ? 'Removed from Saved' : 'Saved');
+    showToast(isCurrentSaved ? t('Removed from Saved') : t('Saved'));
   };
 
   const handleSetAlert = () => {
@@ -294,7 +295,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     }
     await userReels.remove(currentReel.id);
     setConfirmDelete(false);
-    showToast('Reel deleted');
+    showToast(t('Reel deleted'));
   };
 
   const handleAddReel = async (...args: Parameters<typeof userReels.add>) => {
@@ -304,7 +305,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       setFilter('for-you');
       setCategory(null);
       setCurrentIndex(0);
-      showToast('Reel added on this device');
+      showToast(t('Reel added on this device'));
     }
     return result;
   };
@@ -331,10 +332,10 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-cyan-400 border border-slate-700/60 backdrop-blur-md transition-all cursor-pointer text-xs font-semibold"
-        aria-label="Back to OvoPrice"
+        aria-label={t("Back to OvoPrice")}
       >
         <ArrowLeft className="w-4 h-4" />
-        <span>Back</span>
+        <span>{t("Back")}</span>
       </button>
 
       <div className="flex items-center gap-1.5 bg-slate-900/90 border border-cyan-500/30 px-2.5 py-1 rounded-full backdrop-blur-md shadow-xs">
@@ -347,8 +348,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         <button
           onClick={() => setShowAddReel(true)}
           className="w-8 h-8 rounded-full bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/50 flex items-center justify-center text-cyan-300 transition-colors backdrop-blur-md cursor-pointer"
-          aria-label="Add Reel"
-          title="Add Reel"
+          aria-label={t("Add Reel")}
+          title={t("Add Reel")}
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -356,11 +357,11 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           <button
             onClick={() => {
               setIsMuted((m) => !m);
-              showToast(isMuted ? 'Sound on' : 'Sound off');
+              showToast(isMuted ? t('Sound on') : t('Sound off'));
             }}
             className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-cyan-400 transition-colors backdrop-blur-md cursor-pointer"
-            aria-label={isMuted ? 'Unmute' : 'Mute'}
-            title={isMuted ? 'Unmute' : 'Mute'}
+            aria-label={isMuted ? t('Unmute') : t('Mute')}
+            title={isMuted ? t('Unmute') : t('Mute')}
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
           </button>
@@ -371,7 +372,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   const filterBar = (
     <div className="relative z-30 px-3.5 pb-2 space-y-2">
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" role="tablist" aria-label="Reel filters">
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" role="tablist" aria-label={t("Reel filters")}>
         {FILTERS.map((f) => (
           <button
             key={f.id}
@@ -384,12 +385,12 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
                 : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:text-cyan-300'
             }`}
           >
-            {f.label}
+            {t(f.label)}
           </button>
         ))}
       </div>
       {filter === 'categories' && (
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" aria-label="Categories">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" aria-label={t("Categories")}>
           <button
             onClick={() => changeCategory(null)}
             className={`shrink-0 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border cursor-pointer ${
@@ -398,7 +399,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
                 : 'bg-slate-900/80 text-slate-400 border-slate-700'
             }`}
           >
-            All
+            {t("All")}
           </button>
           {categories.map((c) => (
             <button
@@ -449,7 +450,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   if (reelsLoading) {
     return shell(
       <div className="flex-1 flex items-center justify-center text-sm text-slate-400" role="status">
-        Loading reels…
+        {t("Loading reels…")}
       </div>
     );
   }
@@ -458,7 +459,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     return shell(
       <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300" role="alert">
         <AlertTriangle className="w-6 h-6 text-amber-400" />
-        <p>Reels could not be loaded. Please try again later.</p>
+        <p>{t("Reels could not be loaded. Please try again later.")}</p>
       </div>
     );
   }
@@ -467,7 +468,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     return shell(
       <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300">
         <VideoOff className="w-6 h-6 text-slate-500" />
-        <p>No reels available yet.</p>
+        <p>{t("No reels available yet.")}</p>
       </div>
     );
   }
@@ -476,12 +477,12 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     return shell(
       <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-300">
         <Bookmark className="w-6 h-6 text-slate-500" />
-        <p>{filter === 'saved' ? "You haven't saved any products from Reels yet." : 'No reels in this category.'}</p>
+        <p>{filter === 'saved' ? t("You haven't saved any products from Reels yet.") : t("No reels in this category.")}</p>
         <button
           onClick={() => changeFilter('for-you')}
           className="px-4 py-2 rounded-lg bg-cyan-400 text-slate-950 text-xs font-bold cursor-pointer"
         >
-          Back to For You
+          {t("Back to For You")}
         </button>
       </div>
     );
@@ -528,20 +529,20 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           ) : (
             <div className="flex flex-col items-center gap-2 text-slate-500 text-xs">
               <VideoOff className="w-8 h-8" />
-              <span>Preview not available</span>
+              <span>{t("Preview not available")}</span>
             </div>
           )}
 
           {showVideo && videoStatus === 'loading' && (
             <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-300 pointer-events-none" role="status">
-              Loading video…
+              {t("Loading video…")}
             </div>
           )}
           {showVideo && isPaused && videoStatus === 'ready' && (
             <button
               onClick={togglePlayback}
               className="absolute w-14 h-14 rounded-full bg-black/60 border border-white/20 flex items-center justify-center cursor-pointer"
-              aria-label="Play"
+              aria-label={t("Play")}
             >
               <Play className="w-6 h-6 text-white fill-current" />
             </button>
@@ -550,16 +551,16 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           <div className="absolute top-2 left-4 flex flex-wrap gap-1.5 text-[10px] font-semibold">
             {!currentReel.videoUrl && !currentReel.isLocal && (
               <span className="bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-md text-slate-300 flex items-center gap-1">
-                <VideoOff className="w-3 h-3" /> Demo preview · no video yet
+                <VideoOff className="w-3 h-3" /> {t("Demo preview · no video yet")}
               </span>
             )}
             {currentReel.videoUrl && videoStatus === 'error' && (
               <span className="bg-amber-950/80 border border-amber-700 px-2 py-1 rounded-md text-amber-200 flex items-center gap-1" role="alert">
-                <AlertTriangle className="w-3 h-3" /> Video unavailable
+                <AlertTriangle className="w-3 h-3" /> {t("Video unavailable")}
               </span>
             )}
             <span className="bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-md text-slate-400 font-mono">
-              {currentReel.creatorLabel}
+              {t(currentReel.creatorLabel)}
             </span>
           </div>
 
@@ -571,9 +572,9 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
                   ? 'bg-amber-950/90 border-amber-600 text-amber-200'
                   : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:text-amber-300'
               }`}
-              aria-label={confirmDelete ? 'Confirm delete reel' : 'Delete reel'}
+              aria-label={confirmDelete ? t('Confirm delete reel') : t('Delete reel')}
             >
-              <Trash2 className="w-3 h-3" /> {confirmDelete ? 'Confirm delete' : 'Delete'}
+              <Trash2 className="w-3 h-3" /> {confirmDelete ? t("Confirm delete") : t("Delete")}
             </button>
           )}
         </div>
@@ -589,12 +590,12 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
                 ? 'bg-cyan-500 text-slate-950 border-cyan-400 scale-105'
                 : 'bg-slate-900/85 text-slate-200 hover:text-cyan-400 border-slate-700 hover:border-cyan-500/50'
             }`}
-            aria-label={isCurrentSaved ? 'Remove from Saved' : 'Save product'}
+            aria-label={isCurrentSaved ? t('Remove from Saved') : t('Save product')}
             aria-pressed={isCurrentSaved}
           >
             <Bookmark className="w-4 h-4 fill-current" />
           </button>
-          <span className="text-[10px] font-bold text-slate-300">{isCurrentSaved ? 'Saved' : 'Save'}</span>
+          <span className="text-[10px] font-bold text-slate-300">{isCurrentSaved ? t("Saved") : t("Save")}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <button
@@ -604,11 +605,11 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
                   ? 'bg-cyan-500 text-slate-950 border-cyan-400'
                   : 'bg-slate-900/85 text-slate-200 hover:text-cyan-400 border-slate-700 hover:border-cyan-500/50'
               }`}
-              aria-label={hasAlert ? 'Edit price alert' : 'Set price alert'}
+              aria-label={hasAlert ? t('Edit price alert') : t('Set price alert')}
             >
               {hasAlert ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
             </button>
-            <span className="text-[10px] font-bold text-slate-300">{hasAlert ? 'Alert on' : 'Alert'}</span>
+            <span className="text-[10px] font-bold text-slate-300">{hasAlert ? t("Alert on") : t("Alert")}</span>
           </div>
         </div>
         )}
@@ -620,14 +621,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
               <button
                 onClick={goPrev}
                 className="w-9 h-9 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-400 flex items-center justify-center cursor-pointer backdrop-blur-md shadow-md"
-                aria-label="Previous Reel"
+                aria-label={t("Previous Reel")}
               >
                 <ChevronUp className="w-5 h-5" />
               </button>
               <button
                 onClick={goNext}
                 className="w-9 h-9 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-400 flex items-center justify-center cursor-pointer backdrop-blur-md shadow-md"
-                aria-label="Next Reel"
+                aria-label={t("Next Reel")}
               >
                 <ChevronDown className="w-5 h-5" />
               </button>
@@ -649,10 +650,10 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800/90 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold uppercase tracking-wider truncate">
             <Store className="w-3 h-3 text-cyan-400" />
-            <span>{currentReel.category}</span>
+            <span>{t(currentReel.category)}</span>
           </span>
           <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-            {currentIndex + 1} of {visibleReels.length}
+            {currentIndex + 1} {t("of")} {visibleReels.length}
           </span>
         </div>
 
@@ -666,7 +667,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         </div>
 
         {specChips.length > 0 && (
-          <ul className="flex flex-wrap gap-1.5" aria-label="Specifications">
+          <ul className="flex flex-wrap gap-1.5" aria-label={t("Specifications")}>
             {specChips.slice(0, 6).map((spec, i) => (
               <li
                 key={`${spec.label}-${i}`}
@@ -682,27 +683,27 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         <div className="min-h-[30px]" aria-live="polite">
           {!isMatched ? (
             <p className="text-xs text-slate-400">
-              Not matched to a catalog product, so there is no price comparison for this Reel.
+              {t("Not matched to a catalog product, so there is no price comparison for this Reel.")}
             </p>
           ) : productLoading ? (
-            <p className="text-xs text-slate-500">Loading offers…</p>
+            <p className="text-xs text-slate-500">{t("Loading offers…")}</p>
           ) : productError ? (
-            <p className="text-xs text-amber-300">Offers could not be loaded.</p>
+            <p className="text-xs text-amber-300">{t("Offers could not be loaded.")}</p>
           ) : !product ? (
-            <p className="text-xs text-amber-300">Product not found</p>
+            <p className="text-xs text-amber-300">{t("Product not found")}</p>
           ) : !hasOffers ? (
-            <p className="text-xs text-slate-400">No offers available yet</p>
+            <p className="text-xs text-slate-400">{t("No offers available yet")}</p>
           ) : (
             <div className="flex items-baseline justify-between gap-2">
               <div className="flex items-baseline gap-2">
-                <span className="text-[11px] text-slate-400">from</span>
+                <span className="text-[11px] text-slate-400">{t("from")}</span>
                 <span className="text-xl sm:text-2xl font-black text-cyan-400 tracking-tight tnum">
                   {product.bestPrice.toFixed(2).replace('.', ',')} €
                 </span>
                 <DemoBadge />
               </div>
               <span className="text-[10px] text-slate-400">
-                {product.storesCount} {product.storesCount === 1 ? 'store' : 'stores'} compared
+                {product.storesCount} {product.storesCount === 1 ? t("store") : t("stores")} {t("compared")}
               </span>
             </div>
           )}
@@ -715,7 +716,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.99] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <Layers className="w-4 h-4 stroke-[2.3]" />
-            <span>Compare Prices</span>
+            <span>{t("Compare Prices")}</span>
           </button>
 
           {!isMatched && creatorBuyUrl ? (
@@ -727,17 +728,17 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
               className="w-full py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
             >
               <ExternalLink className="w-4 h-4" />
-              <span className="truncate">Buy at {creatorBuyHost}</span>
+              <span className="truncate">{t("Buy at")} {creatorBuyHost}</span>
             </a>
           ) : (
             <button
               onClick={handleBuy}
               disabled={!canBuy}
-              title={canBuy ? undefined : 'No valid merchant link available yet'}
+              title={canBuy ? undefined : t('No valid merchant link available yet')}
               className="w-full py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>Buy</span>
+              <span>{t("Buy")}</span>
             </button>
           )}
         </div>
@@ -748,14 +749,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             disabled={!productLoading && !product}
             className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span>View Details</span>
+            <span>{t("View Details")}</span>
           </button>
         )}
 
-        {hasAffiliateLinks && <p className="text-[10px] leading-snug text-slate-500">{AFFILIATE_NOTE}</p>}
+        {hasAffiliateLinks && <p className="text-[10px] leading-snug text-slate-500">{t(AFFILIATE_NOTE)}</p>}
         {saveError && (
           <p className="text-[10px] leading-snug text-amber-300" role="alert">
-            Saved products could not be stored in this browser. They may be lost when you close the page.
+            {t("Saved products could not be stored in this browser. They may be lost when you close the page.")}
           </p>
         )}
       </div>

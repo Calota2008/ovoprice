@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Cloud, X } from 'lucide-react';
 import { authProvider } from '../services/authProvider';
 
+import { t } from '../i18n';
 const KEY = 'ovoprice_auth_nudge_dismissed_v1';
 const read = (): boolean => {
   try {
@@ -21,11 +22,11 @@ export const AuthNudge: React.FC<{ onOpenAuth: () => void; message: string }> = 
       <p className="flex-1 text-xs text-slate-600 leading-snug">
         {message}{' '}
         <button onClick={onOpenAuth} className="font-semibold text-emerald-800 hover:underline cursor-pointer">
-          Sign in
+          {t("Sign in")}
         </button>
       </p>
       <button
-        aria-label="Dismiss"
+        aria-label={t("Dismiss")}
         onClick={() => {
           try {
             localStorage.setItem(KEY, '1');

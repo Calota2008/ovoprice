@@ -2,6 +2,7 @@ import { ReelSpec } from '../types';
 import { isSafeHttpUrl } from './url';
 import { explainInvalidGtin } from './ean';
 
+import { t } from '../i18n';
 export const USER_REELS_KEY = 'ovoprice_user_reels_v1';
 
 export const LIMITS = {
@@ -58,17 +59,17 @@ export function mediaKindOf(file: { type: string }): 'video' | 'image' | null {
 export function validateUserReelInput(input: UserReelInput): FormErrors {
   const errors: FormErrors = {};
   const title = input.title.trim();
-  if (!title) errors.title = 'Enter the product name.';
-  else if (title.length > LIMITS.maxTitle) errors.title = `Keep the name under ${LIMITS.maxTitle} characters.`;
+  if (!title) errors.title = t('Enter the product name.');
+  else if (title.length > LIMITS.maxTitle) errors.title = t('Keep the name under {n} characters.', { n: LIMITS.maxTitle });
   if (input.subtitle.trim().length > LIMITS.maxDescription)
-    errors.subtitle = `Keep the description under ${LIMITS.maxDescription} characters.`;
+    errors.subtitle = t('Keep the description under {n} characters.', { n: LIMITS.maxDescription });
   if (input.category.trim().length > LIMITS.maxCategory)
-    errors.category = `Keep the category under ${LIMITS.maxCategory} characters.`;
-  if (input.specs.length > LIMITS.maxSpecs) errors.specs = `Add at most ${LIMITS.maxSpecs} specifications.`;
+    errors.category = t('Keep the category under {n} characters.', { n: LIMITS.maxCategory });
+  if (input.specs.length > LIMITS.maxSpecs) errors.specs = t('Add at most {n} specifications.', { n: LIMITS.maxSpecs });
   else if (input.specs.some((s) => (s.label.trim() === '') !== (s.value.trim() === '')))
-    errors.specs = 'Fill both the label and the value, or remove the row.';
+    errors.specs = t('Fill both the label and the value, or remove the row.');
   else if (input.specs.some((s) => s.label.length > LIMITS.maxSpecLabel || s.value.length > LIMITS.maxSpecValue))
-    errors.specs = 'A specification is too long.';
+    errors.specs = t('A specification is too long.');
   const url = input.buyUrl.trim();
   if (url) {
     let ok = isSafeHttpUrl(url);
@@ -77,7 +78,7 @@ export function validateUserReelInput(input: UserReelInput): FormErrors {
     } catch {
       ok = false;
     }
-    if (!ok) errors.buyUrl = 'Enter a full https:// link to the merchant page.';
+    if (!ok) errors.buyUrl = t('Enter a full https:// link to the merchant page.');
   }
   return errors;
 }
@@ -85,11 +86,11 @@ export function validateUserReelInput(input: UserReelInput): FormErrors {
 export function eanMessage(input: string): string | null {
   switch (explainInvalidGtin(input)) {
     case 'empty':
-      return 'Enter a barcode.';
+      return t('Enter a barcode.');
     case 'length':
-      return 'A barcode has 8, 12, 13 or 14 digits.';
+      return t('A barcode has 8, 12, 13 or 14 digits.');
     case 'checksum':
-      return 'This barcode looks wrong (check digit does not match).';
+      return t('This barcode looks wrong (check digit does not match).');
     default:
       return null;
   }

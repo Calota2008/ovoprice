@@ -1,4 +1,5 @@
-/** Saved-product collections ("Wishlist", "Gifts"...). Stored locally, referencing products by id. */
+
+import { t } from '../i18n';/** Saved-product collections ("Wishlist", "Gifts"...). Stored locally, referencing products by id. */
 
 export const COLLECTIONS_KEY = 'ovoprice_collections_v1';
 
@@ -46,12 +47,18 @@ export function explainCollectionName(
   return null;
 }
 
-export const NAME_MESSAGES: Record<NameProblem, string> = {
-  empty: 'Enter a name.',
-  'too-long': `Use at most ${COLLECTION_LIMITS.maxNameLength} characters.`,
-  duplicate: 'A collection with this name already exists.',
-  limit: `You can have up to ${COLLECTION_LIMITS.maxCollections} collections.`,
-};
+export function nameMessage(problem: NameProblem): string {
+  switch (problem) {
+    case 'empty':
+      return t('Enter a name.');
+    case 'too-long':
+      return t('Use at most {n} characters.', { n: COLLECTION_LIMITS.maxNameLength });
+    case 'duplicate':
+      return t('A collection with this name already exists.');
+    default:
+      return t('You can have up to {n} collections.', { n: COLLECTION_LIMITS.maxCollections });
+  }
+}
 
 export function newCollectionId(): string {
   return `col-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;

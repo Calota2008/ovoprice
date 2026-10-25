@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, User, Bell, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, Settings } from 'lucide-react';
 import { OvoPriceLogo } from './OvoPriceLogo';
 
+import { t } from '../i18n';
 interface HeaderProps {
   title?: string;
   showBack?: boolean;
@@ -9,6 +10,7 @@ interface HeaderProps {
   unreadAlertsCount?: number;
   onOpenAlerts?: () => void;
   onOpenAuth?: (mode: 'sign-in' | 'create') => void;
+  onOpenSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   unreadAlertsCount = 0,
   onOpenAlerts,
   onOpenAuth,
+  onOpenSettings,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -28,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onBack}
             className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200/70 active:scale-95 transition-all shrink-0 cursor-pointer"
-            aria-label="Go back"
+            aria-label={t("Go back")}
           >
             <ArrowLeft className="w-5 h-5 text-slate-800" />
           </button>
@@ -49,8 +52,8 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={() => setShowProfileMenu((prev) => !prev)}
           className="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center hover:bg-emerald-800 active:scale-95 transition-transform cursor-pointer shadow-xs focus-visible:outline-2 focus-visible:outline-emerald-600"
-          aria-label="User Profile"
-          title="Account & Hub Settings"
+          aria-label={t("User Profile")}
+          title={t("Account & Hub Settings")}
         >
           <User className="w-4 h-4 text-emerald-50" />
         </button>
@@ -68,13 +71,13 @@ export const Header: React.FC<HeaderProps> = ({
                   OP
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900 text-sm">Visitor</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">No account — your data stays on this device</p>
+                  <p className="font-semibold text-slate-900 text-sm">{t("Visitor")}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{t("No account — your data stays on this device")}</p>
                 </div>
               </div>
 
               <div className="pt-2.5 text-[11px] text-slate-500 leading-relaxed">
-                Alerts and saved products are kept locally in your browser. Sign in to sync them across devices.
+                {t("Alerts and saved products are kept locally in your browser. Sign in to sync them across devices.")}
               </div>
               {onOpenAuth && (
                 <div className="pt-3 flex flex-col gap-2">
@@ -85,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                     className="h-10 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[13px] font-semibold cursor-pointer"
                   >
-                    Sign in
+                    {t("Sign in")}
                   </button>
                   <button
                     onClick={() => {
@@ -94,9 +97,21 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                     className="h-9 rounded-lg text-[13px] font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
                   >
-                    Create an account
+                    {t("Create an account")}
                   </button>
                 </div>
+              )}
+              {onOpenSettings && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    onOpenSettings();
+                  }}
+                  className="mt-3 pt-3 border-t border-slate-100 w-full flex items-center gap-2 text-[13px] font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
+                >
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  {t('Account settings')}
+                </button>
               )}
             </div>
           </>
