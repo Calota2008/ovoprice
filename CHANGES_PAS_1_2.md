@@ -139,3 +139,18 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - To check these screens before the backend exists there is a LOCAL TEST ACCOUNT: open the app once with `?previewAccount=1` (development only, kept for the browser session, `?previewAccount=0` switches it off). Any valid e-mail or "Continue with Google" signs in as a test user, labelled **TEST ACCOUNT** everywhere, nothing is sent or stored on a server. Production builds do not contain this code (checked in the build output).
 - Sign-up country still goes through `signInWithEmail(email, { mode, country })` and is saved locally.
 - Test: `tests/e2e_account_state.py` (mobile + desktop, 17 checks each).
+
+## Real accounts (Supabase, e-mail code)
+- New dependency: `@supabase/supabase-js` (`package.json` + `package-lock.json`). Run `npm install` after copying.
+- `src/services/supabaseAuthProvider.ts` + `supabaseConfig.ts`: sign-in/sign-up with a 6-digit code sent by e-mail (no password). Sign-up creates the user (country and language stored as metadata); "Sign in" never creates users. Session is kept and refreshed by Supabase. Config uses the public project URL and publishable key (safe in the browser; data is protected by row level security). `VITE_SUPABASE_URL=` (empty) switches real accounts off.
+- Database (already applied to the Supabase project): `public.profiles` (country, language) with row level security (each user reads/writes only their own row) and a trigger that creates the row at sign-up.
+- Auth sheet: after "Email me a … code" a second step asks for the code (numeric keyboard, one-time-code autofill, resend with 30 s cooldown, "use a different email"); clear messages for wrong/expired code, too many attempts, unknown account, Google not switched on.
+- Country/language are loaded from the account after sign-in and saved to it when changed in Account settings.
+- Honest wording: saved products, alerts and Reels are NOT synced yet; the sheet says so while accounts are connected (`syncsData: false`).
+- Google sign-in is wired but off until `VITE_SUPABASE_GOOGLE=1` (needs Google enabled in Supabase).
+- Tests: `tests/e2e_supabase_accounts.py` (Supabase answers mocked, no e-mail is sent; run against `VITE_SUPABASE_GOOGLE= npx vite --port 5198`). Other e2e suites were run with `VITE_SUPABASE_URL=` so they never contact Supabase.
+
+## Google / Apple sign-in buttons
+- "Continue with Google" is the main button (account picker, so signing in again is one tap); "Continue with Apple" is shown too and says honestly "coming soon" until `VITE_SUPABASE_APPLE=1` (needs a paid Apple Developer account). The e-mail code stays as the fallback.
+- First Google/Apple sign-in of a brand-new account keeps the country/language chosen on the device (sent to the profile instead of being overwritten by defaults).
+- Account settings explains what "Sign out" does (session removed from this device, account stays saved).

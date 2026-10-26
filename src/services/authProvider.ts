@@ -1,7 +1,11 @@
+import { isValidEmail } from '../utils/email';
+import { createSupabaseAuthProvider } from './supabaseAuthProvider';
+import { readSupabaseConfig } from './supabaseConfig';
+
 /**
- * Single access point for accounts. Today there is no backend, so the provider reports
- * `isConnected: false` and never pretends a user is signed in. When the backend exists,
- * replace this object (Firebase Auth / Supabase / own API) and the UI keeps working.
+ * Single access point for accounts. `pickProvider()` at the bottom chooses: the Supabase provider
+ * (real accounts), or, when accounts are switched off, a provider with `isConnected: false` that never
+ * pretends a user is signed in. The UI only talks to this interface.
  */
 export interface AuthUser {
   id: string;
@@ -16,32 +20,53 @@ export interface AuthOptions {
   country?: string;
 }
 
+export type AuthFailure =
+  | 'not-connected'
+  | 'invalid-email'
+  | 'failed'
+  | 'rate-limited'
+  | 'no-account'
+  | 'invalid-code'
+  | 'google-unavailable'
+  | 'apple-unavailable';
+
 export type AuthResult =
   | { ok: true; user: AuthUser }
-  | { ok: false; reason: 'not-connected' | 'invalid-email' | 'failed' };
+  /** A sign-in code was e-mailed; the user must enter it (see `verifyEmailCode`). */
+  | { ok: true; codeSent: true }
+  /** The browser is being sent to the identity provider (Google). */
+  | { ok: true; redirecting: true }
+  | { ok: false; reason: AuthFailure };
 
 export interface AuthProvider {
   /** False while no backend is connected. */
   isConnected: boolean;
   /** True only for the local test account (development builds, explicit opt-in). */
   isPreview?: boolean;
+  /** True once saved products, alerts and Reels are synced to the account (not yet). */
+  syncsData?: boolean;
   getUser(): AuthUser | null;
   /** Calls `listener` whenever the signed-in user changes. Returns the unsubscribe function. */
   subscribe(listener: () => void): () => void;
   signInWithGoogle(options?: AuthOptions): Promise<AuthResult>;
+  signInWithApple(options?: AuthOptions): Promise<AuthResult>;
   /** Sends a sign-in code or link to this email (passwordless). */
   signInWithEmail(email: string, options?: AuthOptions): Promise<AuthResult>;
+  /** Second step of the e-mail sign-in: checks the code from the e-mail. */
+  verifyEmailCode?(email: string, code: string): Promise<AuthResult>;
+  /** Saves country / language on the account (best effort). Returns false if it could not. */
+  updateProfile?(patch: { country?: string; language?: string }): Promise<boolean>;
   signOut(): Promise<void>;
 }
 
-export const isValidEmail = (value: string): boolean =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim()) && value.trim().length <= 254;
+export { isValidEmail };
 
 export const noBackendAuthProvider: AuthProvider = {
   isConnected: false,
   getUser: () => null,
   subscribe: () => () => undefined,
   signInWithGoogle: async () => ({ ok: false, reason: 'not-connected' }),
+  signInWithApple: async () => ({ ok: false, reason: 'not-connected' }),
   signInWithEmail: async (email, _options) =>
     isValidEmail(email) ? { ok: false, reason: 'not-connected' } : { ok: false, reason: 'invalid-email' },
   signOut: async () => undefined,
@@ -113,6 +138,11 @@ export const createPreviewAuthProvider = (): AuthProvider => {
       set(u);
       return { ok: true, user: u };
     },
+    signInWithApple: async () => {
+      const u = { id: 'preview-apple', name: 'Test User', email: 'test.user@example.com' };
+      set(u);
+      return { ok: true, user: u };
+    },
     signInWithEmail: async (email) => {
       if (!isValidEmail(email)) return { ok: false, reason: 'invalid-email' };
       const u = { id: 'preview-email', name: nameFromEmail(email), email: email.trim() };
@@ -124,5 +154,10 @@ export const createPreviewAuthProvider = (): AuthProvider => {
 };
 
 // `import.meta.env.DEV` is a build-time constant: in production the test account code is removed.
-export const authProvider: AuthProvider =
-  import.meta.env.DEV && previewAccountEnabled() ? createPreviewAuthProvider() : noBackendAuthProvider;
+const pickProvider = (): AuthProvider => {
+  if (import.meta.env.DEV && previewAccountEnabled()) return createPreviewAuthProvider();
+  const config = readSupabaseConfig();
+  return config ? createSupabaseAuthProvider(config) : noBackendAuthProvider;
+};
+
+export const authProvider: AuthProvider = pickProvider();

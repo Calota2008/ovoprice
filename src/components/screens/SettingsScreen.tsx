@@ -85,6 +85,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
                   <span className="font-bold">{t('TEST ACCOUNT')}</span> · {t('Test account: nothing is sent or stored on a server.')}
                 </p>
               )}
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {t('Signing out removes your session from this device. Your account stays saved; sign in again any time with Google, Apple or an email code.')}
+              </p>
               <button
                 onClick={() => void authProvider.signOut()}
                 className="w-full h-10 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-[13px] font-semibold cursor-pointer"
@@ -122,7 +125,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
       <Section icon={Globe2} title={t('Language')}>
         <div role="radiogroup" aria-label={t('Language')} className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
           {LANGUAGES.map((l) => (
-            <Option key={l.code} selected={l.code === lang} label={l.label} onSelect={() => setLanguage(l.code)} />
+            <Option key={l.code} selected={l.code === lang} label={l.label} onSelect={() => {
+                setLanguage(l.code);
+                void authProvider.updateProfile?.({ language: l.code });
+              }} />
           ))}
         </div>
       </Section>
@@ -130,7 +136,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
       <Section icon={MapPin} title={t('Country')} note={t('Sets the stores and prices you see. You can change it later in Account settings.')}>
         <div role="radiogroup" aria-label={t('Country')} className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
           {COUNTRIES.map((c) => (
-            <Option key={c.code} selected={c.code === country} label={countryName(c.code, lang)} onSelect={() => setCountry(c.code)} />
+            <Option key={c.code} selected={c.code === country} label={countryName(c.code, lang)} onSelect={() => {
+                setCountry(c.code);
+                void authProvider.updateProfile?.({ country: c.code });
+              }} />
           ))}
         </div>
       </Section>

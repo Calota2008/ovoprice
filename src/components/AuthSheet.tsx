@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Mail, Cloud, BellRing, Clapperboard, ShieldCheck } from 'lucide-react';
-import { authProvider } from '../services/authProvider';
+import { X, Mail, Cloud, BellRing, Clapperboard, ShieldCheck, KeyRound } from 'lucide-react';
+import { authProvider, AuthResult } from '../services/authProvider';
 import { t, tr, useLanguage } from '../i18n';
 import { COUNTRIES, countryName, setCountry, useCountry } from '../i18n/country';
 
@@ -11,6 +11,12 @@ interface AuthSheetProps {
   onModeChange: (mode: AuthMode) => void;
   onClose: () => void;
 }
+
+const AppleMark: React.FC = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true">
+    <path d="M16.4 12.6c0-2.4 2-3.5 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9s-1.9-.9-3.1-.8c-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.800 2.500 3.100 2.400 1.200 0 1.700-.8 3.200-.8s1.900.8 3.200.8c1.300 0 2.200-1.200 3-2.400.9-1.300 1.300-2.600 1.300-2.700-.1 0-2.400-.9-2.400-3.900zM14 5.500c.7-.8 1.100-1.900 1-3-1 0-2.100.7-2.800 1.500-.6.700-1.100 1.800-1 2.900 1.100.1 2.100-.6 2.800-1.400z"/>
+  </svg>
+);
 
 const GoogleG: React.FC = () => (
   <svg viewBox="0 0 48 48" className="w-5 h-5" aria-hidden="true">
@@ -61,8 +67,18 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Step 2 of the e-mail sign-in: the six-digit code the user received.
+  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [code, setCode] = useState('');
+  const [resendWait, setResendWait] = useState(0);
   const closeRef = useRef<HTMLButtonElement>(null);
   const copy = COPY[mode];
+
+  useEffect(() => {
+    if (resendWait <= 0) return;
+    const id = window.setTimeout(() => setResendWait((s) => s - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [resendWait]);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -80,19 +96,42 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
     } else if (reason === 'invalid-email') {
       setError(t('Enter a valid email address, like name@example.com.'));
       setNotice(null);
+    } else if (reason === 'rate-limited') {
+      setError(t('Too many attempts. Wait a minute and try again.'));
+      setNotice(null);
+    } else if (reason === 'no-account') {
+      setError(t("We couldn't find an account with this email. Create one first."));
+      setNotice(null);
+    } else if (reason === 'invalid-code') {
+      setError(t("That code isn't right or has expired. Check it or request a new one."));
+      setNotice(null);
+    } else if (reason === 'apple-unavailable') {
+      setNotice(t('Sign in with Apple is coming soon. Use Google or the email code for now.'));
+      setError(null);
+    } else if (reason === 'google-unavailable') {
+      setNotice(t("Google sign-in isn't switched on yet. Use the email code instead."));
+      setError(null);
     } else {
       setError(t('Something went wrong. Try again in a moment.'));
       setNotice(null);
     }
   };
 
-  const run = async (fn: () => Promise<{ ok: boolean; reason?: string }>) => {
+  const run = async (fn: () => Promise<AuthResult>) => {
     if (busy) return;
     setBusy(true);
     try {
       const res = await fn();
-      if (!res.ok) explain((res as { reason: string }).reason);
-      else onClose();
+      if (!res.ok) explain(res.reason);
+      else if ('codeSent' in res) {
+        setStep('code');
+        setCode('');
+        setError(null);
+        setNotice(null);
+        setResendWait(30);
+      } else if ('redirecting' in res) {
+        return; // the browser is leaving for the identity provider
+      } else onClose();
     } catch {
       explain('failed');
     } finally {
@@ -130,7 +169,7 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
         </div>
 
         <div className="px-6 pt-5 pb-6 space-y-4">
-          {mode === 'create' && (
+          {mode === 'create' && step === 'email' && (
             <fieldset>
               <legend className="text-[13px] font-semibold text-slate-800 mb-1.5">{t('Your country')}</legend>
               <div className="flex gap-2" role="radiogroup" aria-label={t('Your country')}>
@@ -158,6 +197,8 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
             </fieldset>
           )}
 
+          {step === 'email' && (
+          <>
           <button
             onClick={() => run(() => authProvider.signInWithGoogle(options))}
             disabled={busy}
@@ -165,6 +206,15 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
           >
             <GoogleG />
             {t('Continue with Google')}
+          </button>
+
+          <button
+            onClick={() => run(() => authProvider.signInWithApple(options))}
+            disabled={busy}
+            className="w-full h-12 rounded-xl bg-black hover:bg-slate-900 active:scale-[0.99] transition flex items-center justify-center gap-3 text-[15px] font-semibold text-white cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-emerald-600"
+          >
+            <AppleMark />
+            {t('Continue with Apple')}
           </button>
 
           <div className="flex items-center gap-3 text-xs text-slate-400" role="separator">
@@ -213,6 +263,84 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
               {t(copy.email)}
             </button>
           </form>
+          </>
+          )}
+
+          {step === 'code' && (
+            <form
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!/^\d{6,8}$/.test(code.replace(/\s+/g, ''))) {
+                  setError(t('Enter the 6-digit code from the email.'));
+                  return;
+                }
+                run(() => authProvider.verifyEmailCode!(email, code));
+              }}
+              className="space-y-2.5"
+            >
+              <p id="auth-code-help" className="text-[13px] leading-relaxed text-slate-700">
+                {t('We sent a 6-digit code to {email}. Enter it below.', { email: email.trim() })}
+              </p>
+              <label htmlFor="auth-code" className="sr-only">
+                {t('6-digit code')}
+              </label>
+              <input
+                id="auth-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={8}
+                autoFocus
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.replace(/[^\d\s]/g, ''));
+                  setError(null);
+                }}
+                placeholder="123456"
+                aria-invalid={!!error}
+                aria-describedby={error ? 'auth-error auth-code-help' : 'auth-code-help'}
+                className="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 text-center text-xl tracking-[0.35em] font-semibold text-slate-900 placeholder:text-slate-300 placeholder:tracking-[0.35em] focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
+              />
+              {error && (
+                <p id="auth-error" role="alert" className="text-xs text-rose-700">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full h-12 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] transition flex items-center justify-center gap-2 text-[15px] font-semibold text-white cursor-pointer disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+              >
+                <KeyRound className="w-[18px] h-[18px]" />
+                {t('Verify and continue')}
+              </button>
+              <div className="flex items-center justify-between text-[13px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('email');
+                    setCode('');
+                    setError(null);
+                  }}
+                  className="font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
+                >
+                  {t('Use a different email')}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || resendWait > 0}
+                  onClick={() => {
+                    setError(null);
+                    run(() => authProvider.signInWithEmail(email, options));
+                  }}
+                  className="font-semibold text-emerald-800 hover:underline cursor-pointer disabled:opacity-50 disabled:no-underline disabled:cursor-default"
+                >
+                  {resendWait > 0 ? t('Send a new code in {n} s', { n: resendWait }) : t('Send a new code')}
+                </button>
+              </div>
+            </form>
+          )}
 
           {notice && (
             <p role="status" className="text-xs leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
@@ -220,7 +348,13 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
             </p>
           )}
 
-          {mode === 'create' && (
+          {authProvider.isConnected && !authProvider.syncsData && (
+            <p className="text-xs leading-relaxed text-slate-600 bg-slate-100 rounded-lg px-3 py-2.5">
+              {t('Your account keeps your country and language. Saved products, alerts and Reels will sync in a coming update; for now they stay on this device.')}
+            </p>
+          )}
+
+          {mode === 'create' && !(authProvider.isConnected && !authProvider.syncsData) && (
             <ul className="space-y-2 pt-1">
               {BENEFITS.map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-center gap-2.5 text-[13px] text-slate-700">
@@ -235,7 +369,11 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
 
           <div className="flex items-start gap-2 text-[11px] leading-relaxed text-slate-500">
             <ShieldCheck className="w-4 h-4 text-slate-400 shrink-0" />
-            <span>{t('We never post for you. Products you saved on this device will move to your account when you sign in.')}</span>
+            <span>
+              {authProvider.isConnected && !authProvider.syncsData
+                ? t('We never post for you. We only use your email to sign you in.')
+                : t('We never post for you. Products you saved on this device will move to your account when you sign in.')}
+            </span>
           </div>
 
           <div className="flex items-center justify-between pt-1 text-[13px]">
