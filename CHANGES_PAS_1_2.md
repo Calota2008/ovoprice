@@ -154,3 +154,7 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - "Continue with Google" is the main button (account picker, so signing in again is one tap); "Continue with Apple" is shown too and says honestly "coming soon" until `VITE_SUPABASE_APPLE=1` (needs a paid Apple Developer account). The e-mail code stays as the fallback.
 - First Google/Apple sign-in of a brand-new account keeps the country/language chosen on the device (sent to the profile instead of being overwritten by defaults).
 - Account settings explains what "Sign out" does (session removed from this device, account stays saved).
+
+## Sign-in sheet hints
+- Under the Google/Apple buttons: "Google and Apple only work with a Google or Apple account. Another email (Yahoo, GMX, Outlook…)? Use the email code below."
+- On the code step: "Can't see the email? Check your Spam folder." (EN/DE/RO)

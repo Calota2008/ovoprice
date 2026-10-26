@@ -699,4 +699,6 @@ export const de: Record<string, string> = {
   "Sign in with Apple is coming soon. Use Google or the email code for now.": "Die Anmeldung mit Apple kommt bald. Nutze vorerst Google oder den Code per E-Mail.",
   "Continue with Apple": "Weiter mit Apple",
   "Signing out removes your session from this device. Your account stays saved; sign in again any time with Google, Apple or an email code.": "Beim Abmelden wird die Sitzung von diesem Gerät entfernt. Dein Konto bleibt gespeichert; melde dich jederzeit wieder mit Google, Apple oder einem E-Mail-Code an.",
+  "Google and Apple only work with a Google or Apple account. Another email (Yahoo, GMX, Outlook…)? Use the email code below.": "Google und Apple funktionieren nur mit einem Google- bzw. Apple-Konto. Andere E-Mail-Adresse (Yahoo, GMX, Outlook …)? Nutze unten den Code per E-Mail.",
+  "Can't see the email? Check your Spam folder.": "Du siehst die E-Mail nicht? Sieh im Spam-Ordner nach.",
 };

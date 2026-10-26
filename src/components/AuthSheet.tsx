@@ -217,6 +217,10 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
             {t('Continue with Apple')}
           </button>
 
+          <p className="text-[11px] leading-relaxed text-slate-500 text-center">
+            {t('Google and Apple only work with a Google or Apple account. Another email (Yahoo, GMX, Outlook…)? Use the email code below.')}
+          </p>
+
           <div className="flex items-center gap-3 text-xs text-slate-400" role="separator">
             <span className="flex-1 h-px bg-slate-200" />
             {t('or use your email')}
@@ -281,6 +285,9 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
             >
               <p id="auth-code-help" className="text-[13px] leading-relaxed text-slate-700">
                 {t('We sent a 6-digit code to {email}. Enter it below.', { email: email.trim() })}
+              </p>
+              <p className="text-[12px] leading-relaxed text-slate-500">
+                {t("Can't see the email? Check your Spam folder.")}
               </p>
               <label htmlFor="auth-code" className="sr-only">
                 {t('6-digit code')}

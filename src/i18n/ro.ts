@@ -699,4 +699,6 @@ export const ro: Record<string, string> = {
   "Sign in with Apple is coming soon. Use Google or the email code for now.": "Autentificarea cu Apple va fi disponibilă curând. Deocamdată folosește Google sau codul din e-mail.",
   "Continue with Apple": "Continuă cu Apple",
   "Signing out removes your session from this device. Your account stays saved; sign in again any time with Google, Apple or an email code.": "La deconectare, sesiunea este ștearsă de pe acest dispozitiv. Contul tău rămâne salvat; te poți conecta oricând cu Google, Apple sau cu un cod din e-mail.",
+  "Google and Apple only work with a Google or Apple account. Another email (Yahoo, GMX, Outlook…)? Use the email code below.": "Google și Apple merg doar cu un cont Google, respectiv Apple. Ai alt e-mail (Yahoo, GMX, Outlook …)? Folosește mai jos codul primit pe e-mail.",
+  "Can't see the email? Check your Spam folder.": "Nu vezi e-mailul? Verifică și folderul Spam.",
 };
