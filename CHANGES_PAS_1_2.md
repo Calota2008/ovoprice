@@ -158,3 +158,13 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 ## Sign-in sheet hints
 - Under the Google/Apple buttons: "Google and Apple only work with a Google or Apple account. Another email (Yahoo, GMX, Outlook…)? Use the email code below."
 - On the code step: "Can't see the email? Check your Spam folder." (EN/DE/RO)
+
+## Private preview (not indexed)
+- `index.html`: `<meta name="robots" content="noindex, nofollow, noarchive">` and `public/robots.txt` (`Disallow: /`) keep search engines away until launch. At launch: remove the meta line and change robots.txt to `Allow: /`.
+- This only hides the site from search engines; it does NOT block visitors. Real access control is Cloudflare Access (set up in the Cloudflare dashboard).
+
+## Delete account
+- Account settings → "Delete account" (signed-in users only) opens a confirmation sheet: explains it is permanent, that products/alerts/Reels saved on this device are not part of the account yet and stay on the device, and asks the user to type the confirmation word (DELETE / LÖSCHEN / ȘTERGE). Failure keeps the account and explains; success signs out and shows "Your account was deleted."
+- Server side: Supabase Edge Function `delete-account` (source in `supabase/functions/delete-account/index.ts`, already deployed to the project). It checks the caller's session token with Supabase Auth and deletes ONLY that user; the profile row goes with it (cascade). The service key lives only in the function runtime; `server.ts` is untouched. Origins allowed: ovoprice.com, www, onrender, localhost.
+- Tests: `tests/unit_delete_account_fn.mts` (runs the real function source with a fake client: no token / publishable key / fake token / wrong method are refused, only the caller is deleted), `tests/e2e_supabase_accounts.py` (dialog, wrong word, cancel, server failure, success).
+- Not tested live: a real deletion against Supabase (done by the owner with a test account).

@@ -138,5 +138,17 @@ export function createSupabaseAuthProvider(config: SupabaseConfig): AuthProvider
       await client.auth.signOut();
       setUser(null);
     },
+
+    deleteAccount: async () => {
+      if (!user) return false;
+      // The Edge Function checks the session token itself and deletes only that user.
+      const { data, error } = await client.functions.invoke('delete-account', { method: 'POST' });
+      if (error || !(data as { ok?: boolean } | null)?.ok) return false;
+      // The account is gone on the server: drop the local session without another server call.
+      await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      profilePulledFor = null;
+      setUser(null);
+      return true;
+    },
   };
 }

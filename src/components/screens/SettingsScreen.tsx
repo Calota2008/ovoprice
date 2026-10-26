@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, Globe2, MapPin, UserRound } from 'lucide-react';
 import { LANGUAGES, setLanguage, t, useLanguage } from '../../i18n';
 import { COUNTRIES, countryName, setCountry, useCountry } from '../../i18n/country';
 import { authProvider } from '../../services/authProvider';
 import { useAuthUser, userInitials } from '../../services/useAuthUser';
+import { DeleteAccountSheet } from '../DeleteAccountSheet';
 
 interface SettingsScreenProps {
   onOpenAuth: (mode: 'sign-in' | 'create') => void;
@@ -59,6 +60,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
   const lang = useLanguage();
   const country = useCountry();
   const user = useAuthUser();
+  const [deleting, setDeleting] = useState(false);
+  const [wasDeleted, setWasDeleted] = useState(false);
 
   return (
     <div className="pb-8 space-y-6">
@@ -94,9 +97,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
               >
                 {t('Sign out')}
               </button>
+              {authProvider.deleteAccount && (
+                <button
+                  onClick={() => setDeleting(true)}
+                  className="w-full h-10 rounded-lg text-rose-700 hover:bg-rose-50 text-[13px] font-semibold cursor-pointer"
+                >
+                  {t('Delete account')}
+                </button>
+              )}
             </>
           ) : (
             <>
+              {wasDeleted && (
+                <p role="status" className="rounded-md bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 text-[12px] font-medium text-emerald-900">
+                  {t('Your account was deleted.')}
+                </p>
+              )}
               <div>
                 <p className="text-sm font-semibold text-slate-900">{t("You're browsing as a guest")}</p>
                 <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
@@ -143,6 +159,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
           ))}
         </div>
       </Section>
+      {deleting && (
+        <DeleteAccountSheet
+          onClose={() => setDeleting(false)}
+          onDeleted={() => {
+            setDeleting(false);
+            setWasDeleted(true);
+          }}
+        />
+      )}
     </div>
   );
 };

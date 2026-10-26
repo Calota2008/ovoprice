@@ -57,6 +57,8 @@ export interface AuthProvider {
   /** Saves country / language on the account (best effort). Returns false if it could not. */
   updateProfile?(patch: { country?: string; language?: string }): Promise<boolean>;
   signOut(): Promise<void>;
+  /** Permanently deletes the signed-in account (server side). Resolves false if it could not. */
+  deleteAccount?(): Promise<boolean>;
 }
 
 export { isValidEmail };
@@ -150,6 +152,10 @@ export const createPreviewAuthProvider = (): AuthProvider => {
       return { ok: true, user: u };
     },
     signOut: async () => set(null),
+    deleteAccount: async () => {
+      set(null);
+      return true;
+    },
   };
 };
 
