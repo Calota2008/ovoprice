@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Check, Globe2, MapPin, UserRound } from 'lucide-react';
+import { Check, Globe2, LifeBuoy, MapPin, Pencil, UserRound } from 'lucide-react';
 import { LANGUAGES, setLanguage, t, useLanguage } from '../../i18n';
 import { COUNTRIES, countryName, setCountry, useCountry } from '../../i18n/country';
 import { authProvider } from '../../services/authProvider';
 import { useAuthUser, userInitials } from '../../services/useAuthUser';
 import { DeleteAccountSheet } from '../DeleteAccountSheet';
+import { CONTACT_EMAIL, contactHref } from '../../utils/contact';
 
 interface SettingsScreenProps {
   onOpenAuth: (mode: 'sign-in' | 'create') => void;
@@ -56,6 +57,97 @@ const Section: React.FC<{ icon: React.ElementType; title: string; note?: string;
   </section>
 );
 
+/** Lets a signed-in user choose the name shown in the app (saved on the account). */
+const NameEditor: React.FC<{ name: string }> = ({ name }) => {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!authProvider.updateProfile) return null;
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setValue(name);
+          setError(null);
+          setEditing(true);
+        }}
+        className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-emerald-800 hover:underline cursor-pointer"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+        {t('Edit name')}
+      </button>
+    );
+  }
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = value.trim();
+    if (!clean) {
+      setError(t('Enter a name (up to 60 characters).'));
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const ok = (await authProvider.updateProfile?.({ display_name: clean })) ?? false;
+      if (ok) setEditing(false);
+      else setError(t("We couldn't save your name. Try again in a moment."));
+    } catch {
+      setError(t("We couldn't save your name. Try again in a moment."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={save} className="space-y-2" noValidate>
+      <label htmlFor="display-name" className="block text-[13px] font-semibold text-slate-800">
+        {t('Name shown in the app')}
+      </label>
+      <input
+        id="display-name"
+        type="text"
+        maxLength={60}
+        autoComplete="name"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setError(null);
+        }}
+        aria-invalid={!!error}
+        aria-describedby={error ? 'display-name-error' : undefined}
+        className="w-full h-11 rounded-lg border border-slate-300 bg-white px-3 text-[15px] text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
+      />
+      {error && (
+        <p id="display-name-error" role="alert" className="text-xs text-rose-700">
+          {error}
+        </p>
+      )}
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={busy}
+          className="flex-1 h-10 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[13px] font-semibold cursor-pointer disabled:opacity-60"
+        >
+          {t('Save name')}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => setEditing(false)}
+          className="flex-1 h-10 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-[13px] font-semibold cursor-pointer disabled:opacity-60"
+        >
+          {t('Cancel')}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) => {
   const lang = useLanguage();
   const country = useCountry();
@@ -83,6 +175,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
               </div>
+              <NameEditor name={user.name} />
               {authProvider.isPreview && (
                 <p className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[11px] font-medium text-amber-900">
                   <span className="font-bold">{t('TEST ACCOUNT')}</span> · {t('Test account: nothing is sent or stored on a server.')}
@@ -149,7 +242,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
         </div>
       </Section>
 
-      <Section icon={MapPin} title={t('Country')} note={t('Sets the stores and prices you see. You can change it later in Account settings.')}>
+      <Section icon={MapPin} title={t('Country')} note={t('Your country will decide which stores and prices you see once real offers are available. For now it only adjusts voice search. You can change it later in Account settings.')}>
         <div role="radiogroup" aria-label={t('Country')} className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
           {COUNTRIES.map((c) => (
             <Option key={c.code} selected={c.code === country} label={countryName(c.code, lang)} onSelect={() => {
@@ -159,6 +252,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
           ))}
         </div>
       </Section>
+      {CONTACT_EMAIL && (
+        <Section icon={LifeBuoy} title={t('Help')}>
+          <a
+            href={contactHref(t('OvoPrice: question or feedback'))}
+            className="flex items-center justify-center w-full h-11 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-[14px] font-semibold text-slate-800 focus-visible:outline-2 focus-visible:outline-emerald-600"
+          >
+            {t('Contact us')}
+          </a>
+        </Section>
+      )}
+
       {deleting && (
         <DeleteAccountSheet
           onClose={() => setDeleting(false)}

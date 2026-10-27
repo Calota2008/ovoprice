@@ -38,6 +38,12 @@ export function createSupabaseAuthProvider(config: SupabaseConfig): AuthProvider
   const listeners = new Set<() => void>();
   let user: AuthUser | null = null;
   let profilePulledFor: string | null = null;
+  // The name chosen in the app wins over the one that comes from Google / the e-mail address.
+  let chosenName: { id: string; name: string } | null = null;
+  const present = (u: User): AuthUser => {
+    const base = toUser(u);
+    return chosenName && chosenName.id === u.id ? { ...base, name: chosenName.name } : base;
+  };
 
   const setUser = (next: AuthUser | null) => {
     if (user?.id === next?.id && user?.email === next?.email && user?.name === next?.name) return;
@@ -55,8 +61,12 @@ export function createSupabaseAuthProvider(config: SupabaseConfig): AuthProvider
         await client.from('profiles').update({ country: getCountry(), language: getLanguage() }).eq('id', id);
         return;
       }
-      const { data } = await client.from('profiles').select('country, language').eq('id', id).maybeSingle();
+      const { data } = await client.from('profiles').select('country, language, display_name').eq('id', id).maybeSingle();
       if (!data) return;
+      if (typeof data.display_name === 'string' && data.display_name.trim()) {
+        chosenName = { id, name: data.display_name.trim() };
+        if (user && user.id === id) setUser({ ...user, name: chosenName.name });
+      }
       if (typeof data.language === 'string' && isLang(data.language)) setLanguage(data.language);
       if (typeof data.country === 'string' && isCountryCode(data.country)) setCountry(data.country);
     } catch {
@@ -65,11 +75,11 @@ export function createSupabaseAuthProvider(config: SupabaseConfig): AuthProvider
   };
 
   void client.auth.getSession().then(({ data }) => {
-    setUser(data.session ? toUser(data.session.user) : null);
+    setUser(data.session ? present(data.session.user) : null);
     if (data.session) setTimeout(() => void pullProfile(data.session!.user.id, data.session!.user.created_at), 0);
   });
   client.auth.onAuthStateChange((event, session) => {
-    setUser(session ? toUser(session.user) : null);
+    setUser(session ? present(session.user) : null);
     if (!session) profilePulledFor = null;
     // Never await Supabase calls inside this callback; defer them.
     else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') setTimeout(() => void pullProfile(session.user.id, session.user.created_at), 0);
@@ -123,15 +133,27 @@ export function createSupabaseAuthProvider(config: SupabaseConfig): AuthProvider
       if (!/^\d{6,8}$/.test(token)) return fail('invalid-code');
       const { data, error } = await client.auth.verifyOtp({ email: email.trim(), token, type: 'email' });
       if (error || !data.user) return fail(error ? failureOf(error) : 'failed');
-      const u = toUser(data.user);
+      const u = present(data.user);
       setUser(u);
       return { ok: true, user: u };
     },
 
     updateProfile: async (patch) => {
       if (!user) return false;
-      const { error } = await client.from('profiles').update(patch).eq('id', user.id);
-      return !error;
+      const { display_name, ...rest } = patch as { country?: string; language?: string; display_name?: string };
+      const row: Record<string, string | null> = { ...rest };
+      if (display_name !== undefined) {
+        const clean = display_name.trim().slice(0, 60);
+        if (!clean) return false;
+        row.display_name = clean;
+      }
+      const { error } = await client.from('profiles').update(row).eq('id', user.id);
+      if (error) return false;
+      if (row.display_name) {
+        chosenName = { id: user.id, name: row.display_name };
+        setUser({ ...user, name: row.display_name });
+      }
+      return true;
     },
 
     signOut: async () => {

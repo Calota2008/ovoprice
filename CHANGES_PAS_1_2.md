@@ -168,3 +168,48 @@ Probleme găsite la audit: nu există videoclipuri reale; „Compare Prices" des
 - Server side: Supabase Edge Function `delete-account` (source in `supabase/functions/delete-account/index.ts`, already deployed to the project). It checks the caller's session token with Supabase Auth and deletes ONLY that user; the profile row goes with it (cascade). The service key lives only in the function runtime; `server.ts` is untouched. Origins allowed: ovoprice.com, www, onrender, localhost.
 - Tests: `tests/unit_delete_account_fn.mts` (runs the real function source with a fake client: no token / publishable key / fake token / wrong method are refused, only the caller is deleted), `tests/e2e_supabase_accounts.py` (dialog, wrong word, cancel, server failure, success).
 - Not tested live: a real deletion against Supabase (done by the owner with a test account).
+
+## Display name and Contact us
+- Database (already applied): `profiles.display_name` (1-60 characters). Account settings → "Edit name": validated, saved on the account, shown in the header, popover and settings. The chosen name wins over the one from Google / the e-mail address, also on other devices (loaded after sign-in).
+- "Contact us" (Account settings → Help) opens an e-mail to `VITE_CONTACT_EMAIL`. If the variable is empty or not a valid address the button is not shown; no address is ever invented. Set it in Render (Environment) once an inbox exists, e.g. support@ovoprice.com.
+- Tests: `tests/e2e_supabase_accounts.py` (name: empty refused, failure explained, saved, shown, restored after sign-in), `tests/e2e_contact.py` (needs a dev server with and without VITE_CONTACT_EMAIL).
+
+## Legal pages, honest country text, photo errors (made while the owner was away)
+
+**Legal pages (draft skeleton, NOT legal advice).** New screen `LegalScreen` with Impressum, privacy notice
+(Datenschutzerklärung) and terms of use, in EN/DE/RO (`src/data/legalContent.ts`; German is the authoritative
+version). Links sit in a footer under every screen (`LegalFooter`), and the create-account sheet shows a note with
+links to the terms and privacy notice (an agreement notice, not a blocking checkbox).
+- Operator details come from `VITE_LEGAL_NAME`, `VITE_LEGAL_ADDRESS` (use " | " for line breaks), `VITE_LEGAL_EMAIL`
+  (falls back to `VITE_CONTACT_EMAIL`) and optional `VITE_LEGAL_PHONE`. Nothing is invented: while name, address or
+  e-mail is empty, the pages show a "Draft" warning and "[to be completed]" markers. The phone line is hidden when empty.
+- The privacy text describes what the app really does: no analytics or tracking cookies; data in the browser; Render
+  (Frankfurt); Supabase (eu-central-1, Frankfurt); sign-in e-mails through Resend (EU); Google sign-in; photo analysis
+  via the Gemini API (not stored by us); voice search by the browser; delete account.
+- To do before publishing (needs a specialist or a generator such as eRecht24 / IT-Recht Kanzlei): review all three
+  texts; Impressum details of the operator (private person: name and address, plus a second quick contact way);
+  affiliate marking ("Anzeige"/ad) next to real affiliate links once Awin offers are shown; consumer arbitration
+  statement if required; update the privacy text whenever a service is added (analytics, ads, Apple sign-in, sync).
+
+**Country text corrected.** Settings and the sign-up sheet claimed the country "sets the stores and prices you see".
+Today it does not (offers are demo data); it only adjusts the voice-search language. The text now says so.
+
+**Photo recognition errors.** A network failure showed the browser's English "Failed to fetch", and an HTML error
+page from the host showed a JSON parse error. Both now show a clear, translated message.
+
+**Tests.** New `tests/e2e_legal.py` (28 checks) and `tests/e2e_photo_errors.py` (23 checks); `e2e_voice_search.py`
+now targets the "Main Navigation" landmark because the footer adds a second navigation landmark.
+`server.ts` is unchanged.
+
+## Shareable lists (link, no server)
+
+A collection in Saved now has a **Share list** button. The list (its name and product ids, at most 50 products) is
+encoded inside the link `…/?list=…`; nothing is stored on a server, so there is no account, database or personal
+data involved, and nothing to maintain. Whoever opens the link sees the **Shared list** screen: the products with
+their current prices (and the DEMO label while data is demo), a note that anyone with the link can see the list, and
+**Save all to my products**. Products that no longer exist are reported, never invented. Invalid or tampered links
+are ignored (Home opens), names are shown as plain text only. On phones the native share sheet is used; otherwise
+the link is copied, or shown in a field if copying is blocked.
+Files: `src/utils/shareList.ts`, `src/components/screens/SharedListScreen.tsx`, changes in `SavedScreen.tsx`, `App.tsx`.
+Tests: `tests/unit_share_list.ts` (15 checks) and `tests/e2e_share_list.py` (29 checks).
+Not included on purpose (needs real data or accounts): "who buys what" coordination, price-drop e-mails, points.

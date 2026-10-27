@@ -55,7 +55,7 @@ export interface AuthProvider {
   /** Second step of the e-mail sign-in: checks the code from the e-mail. */
   verifyEmailCode?(email: string, code: string): Promise<AuthResult>;
   /** Saves country / language on the account (best effort). Returns false if it could not. */
-  updateProfile?(patch: { country?: string; language?: string }): Promise<boolean>;
+  updateProfile?(patch: { country?: string; language?: string; display_name?: string }): Promise<boolean>;
   signOut(): Promise<void>;
   /** Permanently deletes the signed-in account (server side). Resolves false if it could not. */
   deleteAccount?(): Promise<boolean>;
@@ -150,6 +150,14 @@ export const createPreviewAuthProvider = (): AuthProvider => {
       const u = { id: 'preview-email', name: nameFromEmail(email), email: email.trim() };
       set(u);
       return { ok: true, user: u };
+    },
+    updateProfile: async (patch) => {
+      const name = patch.display_name?.trim();
+      if (patch.display_name !== undefined) {
+        if (!name || !user) return false;
+        set({ ...user, name: name.slice(0, 60) });
+      }
+      return true;
     },
     signOut: async () => set(null),
     deleteAccount: async () => {

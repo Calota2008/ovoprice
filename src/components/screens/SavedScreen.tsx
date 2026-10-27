@@ -10,9 +10,11 @@ import {
   FolderPlus,
   FolderOpen,
   Pencil,
+  Share2,
 } from 'lucide-react';
 import { SavedProductItem } from '../../types';
 import { AuthNudge } from '../AuthNudge';
+import { buildShareUrl } from '../../utils/shareList';
 import {
   COLLECTION_LIMITS,
   Collection,
@@ -62,6 +64,8 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
   const [nameError, setNameError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openPanelFor, setOpenPanelFor] = useState<string | null>(null);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const [shareFallback, setShareFallback] = useState<string | null>(null);
 
   const activeCollection = collections.find((c) => c.id === activeCollectionId) ?? null;
   const visibleItems = activeCollection
@@ -77,9 +81,33 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
     setNameError(null);
   };
 
+  // The list travels inside the link (name + product ids); nothing is stored on a server.
+  const shareActiveCollection = async () => {
+    if (!activeCollection) return;
+    const url = buildShareUrl(window.location, { name: activeCollection.name, productIds: activeCollection.productIds });
+    setShareMsg(null);
+    setShareFallback(null);
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share({ title: activeCollection.name, url });
+        return;
+      }
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return; // the person closed the share sheet
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMsg(t('Link copied. Anyone with the link can see this list.'));
+    } catch {
+      setShareFallback(url);
+    }
+  };
+
   const selectCollection = (id: string | null) => {
     setActiveCollectionId(id);
     setConfirmDelete(false);
+    setShareMsg(null);
+    setShareFallback(null);
     resetNameForm();
   };
 
@@ -197,6 +225,14 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
               >
                 <Pencil className="w-3.5 h-3.5" /> {t("Rename")}
               </button>
+              {activeCollection.productIds.length > 0 && (
+                <button
+                  onClick={() => void shareActiveCollection()}
+                  className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-semibold cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> {t("Share list")}
+                </button>
+              )}
               <button
                 onClick={() => {
                   if (!confirmDelete) {
@@ -213,6 +249,21 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                 <Trash2 className="w-3.5 h-3.5" /> {confirmDelete ? t("Confirm delete collection") : t("Delete collection")}
               </button>
               {confirmDelete && <span className="text-slate-500">{t("Products stay saved.")}</span>}
+            </div>
+          )}
+          {shareMsg && (
+            <p role="status" className="text-xs font-medium text-emerald-800">{shareMsg}</p>
+          )}
+          {shareFallback && (
+            <div className="space-y-1">
+              <label htmlFor="share-link" className="block text-xs font-semibold text-slate-700">{t("Copy this link:")}</label>
+              <input
+                id="share-link"
+                readOnly
+                value={shareFallback}
+                onFocus={(e) => e.currentTarget.select()}
+                className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-xs text-slate-800"
+              />
             </div>
           )}
         </div>

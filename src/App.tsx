@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Header } from './components/Header';
 import { SettingsScreen } from './components/screens/SettingsScreen';
+import { LegalScreen } from './components/screens/LegalScreen';
+import { LegalFooter } from './components/LegalFooter';
+import { SharedListScreen } from './components/screens/SharedListScreen';
+import { readSharedListFromLocation, SharedList } from './utils/shareList';
+import type { LegalPage } from './utils/legal';
 import { useLanguage } from './i18n';
 import { useCountry } from './i18n/country';
 import { AuthSheet, AuthMode } from './components/AuthSheet';
@@ -61,13 +66,17 @@ export default function App() {
       .querySelector('meta[name="description"]')
       ?.setAttribute('content', t("Search for a product, compare merchants' offers and buy from the store you choose."));
   }, [language]);
-  const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
+  // A valid ?list= link opens that shared list first; anything else is ignored.
+  const [sharedList] = useState<SharedList | null>(() =>
+    typeof window === 'undefined' ? null : readSharedListFromLocation(window.location.search)
+  );
+  const [activeScreen, setActiveScreen] = useState<ActiveScreen>(sharedList ? 'shared-list' : 'home');
   const [spokenQuery, setSpokenQuery] = useState('');
   // A spoken search only seeds the Search screen it opens; forget it afterwards.
   useEffect(() => {
     if (activeScreen !== 'search') setSpokenQuery('');
   }, [activeScreen]);
-  const [screenHistory, setScreenHistory] = useState<ActiveScreen[]>(['home']);
+  const [screenHistory, setScreenHistory] = useState<ActiveScreen[]>([sharedList ? 'shared-list' : 'home']);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isVisualMatcherOpen, setIsVisualMatcherOpen] = useState(false);
   const [visualMatcherInitialTab, setVisualMatcherInitialTab] = useState<'link' | 'photo' | 'barcode'>('link');
@@ -79,6 +88,7 @@ export default function App() {
   const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => loadJson(ALERTS_STORAGE_KEY, validateAlerts, []));
   const [collections, setCollections] = useState<Collection[]>(() => loadJson(COLLECTIONS_KEY, validateCollections, []));
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
+  const [legalPage, setLegalPage] = useState<LegalPage>('impressum');
   const [reelsView, setReelsView] = useState<ReelsView | undefined>(undefined);
   const [savedStorageFailed, setSavedStorageFailed] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedProductItem[]>(() => loadJson(SAVED_STORAGE_KEY, validateSaved, []));
@@ -186,6 +196,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const openLegal = (page: LegalPage) => {
+    setLegalPage(page);
+    navigateTo('legal');
+  };
+
   const handleBack = () => {
     if (screenHistory.length > 1) {
       const nextHistory = [...screenHistory];
@@ -231,6 +246,10 @@ export default function App() {
         return t('Product Reels');
       case 'settings':
         return t('Account settings');
+      case 'shared-list':
+        return t('Shared list');
+      case 'legal':
+        return t(legalPage === 'impressum' ? 'Impressum' : legalPage === 'privacy' ? 'Privacy' : 'Terms');
       default:
         return undefined;
     }
@@ -245,6 +264,8 @@ export default function App() {
     'visual-result',
     'product-reels',
     'settings',
+    'legal',
+    'shared-list',
   ].includes(activeScreen);
 
   // Quick jump screens for reviewer convenience
@@ -580,9 +601,35 @@ export default function App() {
             />
           )}
           {activeScreen === 'settings' && <SettingsScreen onOpenAuth={(mode) => setAuthMode(mode)} />}
+          {activeScreen === 'legal' && <LegalScreen page={legalPage} />}
+          {activeScreen === 'shared-list' && sharedList && (
+            <SharedListScreen
+              list={sharedList}
+              savedIds={savedItems.map((i) => i.productId ?? i.id)}
+              onOpenProduct={(id) => handleOpenProduct(id)}
+              onSaveProducts={(products) =>
+                setSavedItems((prev) => [
+                  ...products
+                    .filter((p) => !prev.some((i) => (i.productId ?? i.id) === p.id))
+                    .map((p) => savedFromProduct(p)),
+                  ...prev,
+                ])
+              }
+            />
+          )}
         </main>
 
-        {authMode && <AuthSheet mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} />}
+        <LegalFooter onOpen={openLegal} />
+
+        {authMode && <AuthSheet
+            mode={authMode}
+            onModeChange={setAuthMode}
+            onOpenLegal={(page) => {
+              setAuthMode(null);
+              openLegal(page);
+            }}
+            onClose={() => setAuthMode(null)}
+          />}
 
         {/* Global Bottom Navigation (Visible on primary tabs and can be accessed anywhere) */}
         {!['breakdown'].includes(activeScreen) && (

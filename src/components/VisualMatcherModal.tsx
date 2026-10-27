@@ -238,10 +238,11 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
       clearTimeout(timer1);
       clearTimeout(timer2);
 
-      const data = await response.json();
+      // A proxy or hosting error can answer with HTML instead of JSON: treat that as a failed request.
+      const data = await response.json().catch(() => null);
 
-      if (!response.ok) {
-        throw new Error(data.error || t('Server error while analyzing photograph.'));
+      if (!response.ok || !data) {
+        throw new Error((typeof data?.error === 'string' && data.error) || t('Server error while analyzing photograph.'));
       }
 
       const visualResult: VisualAnalysisResult = {
@@ -261,7 +262,8 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
       clearTimeout(timer1);
       clearTimeout(timer2);
       setIsAnalyzingPhoto(false);
-      setPhotoError(err?.message || t('Failed to connect to the image analysis service.'));
+      // A network failure surfaces as the browser's own English TypeError: show our translated message instead.
+      setPhotoError(err instanceof TypeError ? t('Failed to connect to the image analysis service.') : err?.message || t('Failed to connect to the image analysis service.'));
     }
   };
 

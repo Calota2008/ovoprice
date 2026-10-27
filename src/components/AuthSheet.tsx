@@ -9,6 +9,8 @@ export type AuthMode = 'sign-in' | 'create';
 interface AuthSheetProps {
   mode: AuthMode;
   onModeChange: (mode: AuthMode) => void;
+  /** Opens a legal page (the sheet closes first). Without it the legal notice shows no links. */
+  onOpenLegal?: (page: 'terms' | 'privacy') => void;
   onClose: () => void;
 }
 
@@ -60,7 +62,7 @@ const BENEFITS = [
   { icon: Clapperboard, text: tr('Your Reels, available everywhere') },
 ];
 
-export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClose }) => {
+export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onOpenLegal, onClose }) => {
   const lang = useLanguage();
   const country = useCountry();
   const [email, setEmail] = useState('');
@@ -193,7 +195,7 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
                   );
                 })}
               </div>
-              <p className="text-[11px] text-slate-500 mt-1.5">{t('Sets the stores and prices you see. You can change it later in Account settings.')}</p>
+              <p className="text-[11px] text-slate-500 mt-1.5">{t('Your country will decide which stores and prices you see once real offers are available. For now it only adjusts voice search. You can change it later in Account settings.')}</p>
             </fieldset>
           )}
 
@@ -382,6 +384,27 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onClos
                 : t('We never post for you. Products you saved on this device will move to your account when you sign in.')}
             </span>
           </div>
+
+          {mode === 'create' && onOpenLegal && (
+            <p className="text-[11px] leading-relaxed text-slate-500" data-testid="auth-legal-note">
+              {t('By creating an account you accept the {terms} and confirm you have read the {privacy}.')
+                .split(/(\{terms\}|\{privacy\})/)
+                .map((part, i) =>
+                  part === '{terms}' || part === '{privacy}' ? (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => onOpenLegal(part === '{terms}' ? 'terms' : 'privacy')}
+                      className="font-semibold text-emerald-800 hover:underline cursor-pointer"
+                    >
+                      {part === '{terms}' ? t('Terms of use') : t('Privacy notice')}
+                    </button>
+                  ) : (
+                    <React.Fragment key={i}>{part}</React.Fragment>
+                  )
+                )}
+            </p>
+          )}
 
           <div className="flex items-center justify-between pt-1 text-[13px]">
             <span className="text-slate-600">

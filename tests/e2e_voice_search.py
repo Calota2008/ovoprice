@@ -64,13 +64,13 @@ with sync_playwright() as p:
     # 4) the box still opens Search; mic click does not
     pg.get_by_text('What are you looking for?').click(); pg.wait_for_timeout(300)
     check('box opens Search with empty field', pg.locator('input[type=search]').input_value()=='')
-    pg.get_by_role('navigation').get_by_role('button').nth(0).click(); pg.wait_for_timeout(200); ctx.close()
+    pg.get_by_role('navigation', name='Main Navigation').get_by_role('button').nth(0).click(); pg.wait_for_timeout(200); ctx.close()
     # 5) stale spoken text is not reused
     ctx=b.new_context(viewport={'width':430,'height':900},locale='en-US'); pg=ctx.new_page()
     pg.add_init_script(FAKE); pg.goto(U); pg.wait_for_timeout(400)
     pg.get_by_role('button',name='Voice search').click(); pg.wait_for_timeout(600)
-    pg.get_by_role('navigation').get_by_role('button').nth(0).click(); pg.wait_for_timeout(200)
-    pg.get_by_role('navigation').get_by_role('button').nth(1).click(); pg.wait_for_timeout(300)
+    pg.get_by_role('navigation', name='Main Navigation').get_by_role('button').nth(0).click(); pg.wait_for_timeout(200)
+    pg.get_by_role('navigation', name='Main Navigation').get_by_role('button').nth(1).click(); pg.wait_for_timeout(300)
     check('Search from the bottom bar starts empty', pg.locator('input[type=search]').input_value()==''); ctx.close()
     # 6) keyboard: phone/tablet focus the field, computer does not
     for name,kw,exp in [('phone',dict(viewport={'width':390,'height':800},is_mobile=True,has_touch=True),True),
