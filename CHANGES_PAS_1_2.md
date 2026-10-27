@@ -213,3 +213,13 @@ the link is copied, or shown in a field if copying is blocked.
 Files: `src/utils/shareList.ts`, `src/components/screens/SharedListScreen.tsx`, changes in `SavedScreen.tsx`, `App.tsx`.
 Tests: `tests/unit_share_list.ts` (15 checks) and `tests/e2e_share_list.py` (29 checks).
 Not included on purpose (needs real data or accounts): "who buys what" coordination, price-drop e-mails, points.
+
+## Fonts self-hosted (privacy fix)
+
+`index.html` loaded Inter and JetBrains Mono from Google Fonts, which sends every visitor's IP address to Google
+(German courts have treated this as a GDPR violation without consent). The Google links are removed. Inter is now
+served from our own server through the package `@fontsource-variable/inter` (imported in `src/main.tsx`). JetBrains
+Mono was never applied (no Tailwind theme set it), so it is dropped. **New dependency, needed for legal reasons:**
+`package.json` and `package-lock.json` changed and must be uploaded; Render installs it at build time.
+Test: `tests/e2e_no_third_party.py` checks that browsing contacts only our own host and that Inter is used.
+The privacy notice now says fonts and images come from our own server.
