@@ -241,3 +241,12 @@ The privacy notice now says fonts and images come from our own server.
 - **Acasă:** „Popular searches” a fost înlocuit cu două rânduri laterale, „Price drops” și „New products” (demo, marcate „Example”). Provider-ul are acum `getPriceDrops()` și `getNewProducts()`; un provider live fără date întoarce listă goală și secțiunea dispare.
 - Corectat un produs greșit din demo: cardul „Samsung Galaxy S24 Ultra” deschidea pagina unui televizor. Acum arată starea „Product Details Unavailable”.
 - Teste noi: `tests/unit_stores_for_product.ts` (17), `tests/e2e_stores_for_product.py` (14), `tests/e2e_home_rails.py` (12); `e2e_pasul_6_alerte_salvate.py` actualizat.
+
+## Ecranul „Vezi toate” (Price drops / New products)
+
+- În rândurile „Price drops” și „New products” de pe Acasă a apărut linkul **Vezi toate** (zonă de atingere de minimum 44 px).
+- Ecran nou `SeeAllScreen`: listă verticală, marcată „Example”/DEMO. Fiecare produs are **Compară prețurile** (merge direct la oferte) și **Detalii** (pagina produsului), butoane de 44 px.
+- Sortare: Price drops = Cel mai mare rabat / Cel mai mic preț / Categorie; New products = Cele mai multe magazine / Categorie. Rabatul e folosit doar pentru ordonare, nu e afișat ca număr nou.
+- Produsele fără detalii în catalogul demo au butoanele dezactivate și o notă, nu se deschide un produs greșit.
+- Fișiere: `src/components/screens/SeeAllScreen.tsx` (nou), `HomeScreen.tsx`, `App.tsx`, `src/types.ts`, `src/i18n/de.ts`, `src/i18n/ro.ts`; teste: `tests/e2e_see_all.py` (nou, 20 verificări), `tests/e2e_home_rails.py`, `tests/unit_i18n.ts`.
+- `server.ts` neatins. Nicio dependență nouă.
