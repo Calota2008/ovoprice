@@ -23,6 +23,8 @@ interface HomeScreenProps {
   onPasteLink: (text: string) => void;
   onSelectPopularItem: (item: PopularSearchItem) => void;
   onOpenReels?: () => void;
+  /** Opens the full vertical list for a row. */
+  onSeeAll?: (kind: 'drops' | 'new') => void;
 }
 
 /** A row of product cards that scrolls sideways. Shared by "Price drops" and "New products". */
@@ -31,11 +33,25 @@ const ProductRail: React.FC<{
   items: PopularSearchItem[];
   onSelect: (item: PopularSearchItem) => void;
   testId: string;
-}> = ({ title, items, onSelect, testId }) => (
+  onSeeAll?: () => void;
+}> = ({ title, items, onSelect, testId, onSeeAll }) => (
   <section aria-label={title} data-testid={testId}>
     <div className="flex items-center justify-between mb-2">
       <h3 className="text-sm font-bold text-slate-900">{title}</h3>
-      <DemoBadge label={t("Example")} />
+      <div className="flex items-center gap-2">
+        <DemoBadge label={t("Example")} />
+        {onSeeAll && (
+          <button
+            type="button"
+            onClick={onSeeAll}
+            aria-label={`${t('See all')}: ${title}`}
+            className="min-h-11 -my-2 px-1 inline-flex items-center gap-0.5 text-xs font-bold text-emerald-800 hover:text-emerald-950 cursor-pointer"
+          >
+            {t('See all')}
+            <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        )}
+      </div>
     </div>
     <ul className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scroll-pl-4 snap-x scrollbar-none">
       {items.map((item) => (
@@ -78,6 +94,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onPasteLink,
   onSelectPopularItem,
   onOpenReels,
+  onSeeAll,
 }) => {
   const [pasteError, setPasteError] = useState<string | null>(null);
   const language = useLanguage();
@@ -332,10 +349,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
       {/* Price drops and new products: each section is hidden when the provider has nothing to show. */}
       {priceDrops.length > 0 && (
-        <ProductRail title={t("Price drops")} items={priceDrops} onSelect={onSelectPopularItem} testId="home-price-drops" />
+        <ProductRail title={t("Price drops")} items={priceDrops} onSelect={onSelectPopularItem} testId="home-price-drops" onSeeAll={onSeeAll ? () => onSeeAll('drops') : undefined} />
       )}
       {newProducts.length > 0 && (
-        <ProductRail title={t("New products")} items={newProducts} onSelect={onSelectPopularItem} testId="home-new-products" />
+        <ProductRail title={t("New products")} items={newProducts} onSelect={onSelectPopularItem} testId="home-new-products" onSeeAll={onSeeAll ? () => onSeeAll('new') : undefined} />
       )}
 
       {/* Paste link from clipboard (read only when the user taps) */}

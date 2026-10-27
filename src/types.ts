@@ -107,7 +107,8 @@ export type ActiveScreen =
   | 'product-reels'
   | 'settings'
   | 'legal'
-  | 'shared-list';
+  | 'shared-list'
+  | 'see-all';
 
 export interface RecognizedRetailerLink {
   retailerName: string;

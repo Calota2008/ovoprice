@@ -20,6 +20,7 @@ import { SetPriceAlertScreen } from './components/screens/SetPriceAlertScreen';
 import { AlertsScreen } from './components/screens/AlertsScreen';
 import { SavedScreen } from './components/screens/SavedScreen';
 import { VisualMatchResultScreen } from './components/screens/VisualMatchResultScreen';
+import { SeeAllScreen, SeeAllKind } from './components/screens/SeeAllScreen';
 import { ProductReelsScreen, ReelsView } from './components/screens/ProductReelsScreen';
 import { VisualMatcherModal } from './components/VisualMatcherModal';
 import { ExternalRedirectModal } from './components/ExternalRedirectModal';
@@ -70,6 +71,7 @@ export default function App() {
   const [sharedList] = useState<SharedList | null>(() =>
     typeof window === 'undefined' ? null : readSharedListFromLocation(window.location.search)
   );
+  const [seeAllKind, setSeeAllKind] = useState<SeeAllKind>('drops');
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>(sharedList ? 'shared-list' : 'home');
   const [spokenQuery, setSpokenQuery] = useState('');
   // A spoken search only seeds the Search screen it opens; forget it afterwards.
@@ -248,6 +250,8 @@ export default function App() {
         return t('Account settings');
       case 'shared-list':
         return t('Shared list');
+      case 'see-all':
+        return seeAllKind === 'drops' ? t('Price drops') : t('New products');
       case 'legal':
         return t(legalPage === 'impressum' ? 'Impressum' : legalPage === 'privacy' ? 'Privacy' : 'Terms');
       default:
@@ -266,6 +270,7 @@ export default function App() {
     'settings',
     'legal',
     'shared-list',
+    'see-all',
   ].includes(activeScreen);
 
   // Quick jump screens for reviewer convenience
@@ -463,6 +468,18 @@ export default function App() {
                 }
               }}
               onOpenReels={() => navigateTo('product-reels')}
+              onSeeAll={(kind) => {
+                setSeeAllKind(kind);
+                navigateTo('see-all');
+              }}
+            />
+          )}
+
+          {activeScreen === 'see-all' && (
+            <SeeAllScreen
+              kind={seeAllKind}
+              onCompare={(item) => handleOpenProduct(item.productId, 'offers-comparison')}
+              onDetails={(item) => handleOpenProduct(item.productId)}
             />
           )}
 

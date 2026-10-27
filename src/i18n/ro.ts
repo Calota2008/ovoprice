@@ -756,4 +756,12 @@ export const ro: Record<string, string> = {
   "Price drops": "Scăderi de preț",
   "New products": "Produse noi",
   "NEW": "NOU",
+  "See all": "Vezi toate",
+  "Most stores": "Cele mai multe magazine",
+  "Sort by": "Sortează după",
+  "Compare prices": "Compară prețurile",
+  "Details": "Detalii",
+  "{n} products · example items, not real offers": "{n} produse · exemple, nu oferte reale",
+  "Details are not available for this example yet.": "Pentru acest exemplu nu sunt încă disponibile detalii.",
+  "Demo data. Always check the final price on the merchant's website.": "Date demo. Verifică întotdeauna prețul final pe site-ul comerciantului.",
 };

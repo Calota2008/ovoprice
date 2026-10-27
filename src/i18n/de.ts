@@ -756,4 +756,12 @@ export const de: Record<string, string> = {
   "Price drops": "Preissenkungen",
   "New products": "Neue Produkte",
   "NEW": "NEU",
+  "See all": "Alle ansehen",
+  "Most stores": "Meiste Shops",
+  "Sort by": "Sortieren nach",
+  "Compare prices": "Preise vergleichen",
+  "Details": "Details",
+  "{n} products · example items, not real offers": "{n} Produkte · Beispiele, keine echten Angebote",
+  "Details are not available for this example yet.": "Für dieses Beispiel sind noch keine Details verfügbar.",
+  "Demo data. Always check the final price on the merchant's website.": "Demodaten. Prüfe den Endpreis immer auf der Website des Händlers.",
 };
