@@ -741,4 +741,12 @@ export const ro: Record<string, string> = {
   "All of these are already saved.": "Toate acestea sunt deja salvate.",
   "Saved: {n}": "Salvate: {n}",
   "Prices are current, not from the moment the list was shared. Anyone with the link can see this list.": "Prețurile sunt cele actuale, nu din momentul distribuirii. Oricine are linkul poate vedea această listă.",
+  "Compare {n} prices": "Compară {n} prețuri",
+  "Link copied": "Link copiat",
+  "Could not copy the link.": "Linkul nu a putut fi copiat.",
+  "Show all as a grid": "Arată toate într-o grilă",
+  "Show one by one": "Arată pe rând",
+  "All reels": "Toate reelurile",
+  "Share product": "Trimite produsul",
+  "Share": "Trimite",
 };

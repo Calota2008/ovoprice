@@ -8,6 +8,8 @@ import { ReelCompareSheet } from '../ReelCompareSheet';
 import { useUserReels } from '../../services/useUserReels';
 import { isSafeHttpUrl } from '../../utils/url';
 import { trackEvent } from '../../utils/analytics';
+import { ADD_REEL_ENABLED } from '../../utils/featureFlags';
+import { buildShareUrl } from '../../utils/shareList';
 import {
   ArrowLeft,
   Bookmark,
@@ -16,7 +18,9 @@ import {
   ChevronUp,
   ChevronDown,
   Sparkles,
-  ShoppingBag,
+  Share2,
+  LayoutGrid,
+  Rows3,
   Store,
   Check,
   Layers,
@@ -32,6 +36,7 @@ import {
 
 import { t, tr } from '../../i18n';
 type ReelFilter = 'for-you' | 'categories' | 'saved';
+type ReelLayout = 'feed' | 'grid';
 
 /** Where the user is in the feed, so returning from Compare/Details restores the same reel. */
 export interface ReelsView {
@@ -91,6 +96,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [videoStatus, setVideoStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [showAddReel, setShowAddReel] = useState(false);
+  const [layout, setLayout] = useState<ReelLayout>('feed');
   const [showCompare, setShowCompare] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -142,16 +148,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     (!!product && product.offers.some((o) => o.isAffiliate === true)) ||
     (!isMatched && currentReel?.isAffiliate === true && isSafeHttpUrl(currentReel?.buyUrl));
 
-  // Buy: best catalog offer with a valid link, otherwise the creator's own https link.
-  const bestOffer: StoreOffer | null = useMemo(() => {
-    if (!product) return null;
-    const valid = product.offers.filter((o) => isSafeHttpUrl(o.affiliateUrl));
-    if (valid.length === 0) return null;
-    return valid.reduce((best, o) => (o.totalLandedPrice < best.totalLandedPrice ? o : best));
-  }, [product]);
   const creatorBuyUrl = !isMatched && isSafeHttpUrl(currentReel?.buyUrl) ? currentReel?.buyUrl : undefined;
   const creatorBuyHost = creatorBuyUrl ? new URL(creatorBuyUrl).hostname.replace(/^www\./, '') : '';
-  const canBuy = isMatched ? !!bestOffer : !!creatorBuyUrl;
 
   // Specs: the creator's own, or basic catalog facts for catalog reels.
   const specChips = useMemo(() => {
@@ -261,6 +259,27 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     onSetAlert(currentReel.productId);
   };
 
+  // The link carries the product id inside it (same format as a shared list of one product).
+  const handleShare = async () => {
+    if (!currentReel?.productId) return;
+    const url = buildShareUrl(window.location, { name: currentReel.title, productIds: [currentReel.productId] });
+    trackEvent('reel_shared', { productId: currentReel.productId });
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share({ title: currentReel.title, url });
+        return;
+      }
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return; // the person closed the share sheet
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast(t('Link copied'));
+    } catch {
+      showToast(t('Could not copy the link.'));
+    }
+  };
+
   const handleDetails = () => {
     if (!currentReel?.productId) return;
     trackEvent('product_details_opened', { productId: currentReel.productId });
@@ -277,10 +296,6 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     if (!currentReel?.productId) return;
     setShowCompare(false);
     onCompareOffers(currentReel.productId);
-  };
-
-  const handleBuy = () => {
-    if (bestOffer) onBuyOffer(bestOffer);
   };
 
   const handleCreatorBuyClick = () => {
@@ -345,6 +360,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5">
+        {ADD_REEL_ENABLED && (
         <button
           onClick={() => setShowAddReel(true)}
           className="w-8 h-8 rounded-full bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/50 flex items-center justify-center text-cyan-300 transition-colors backdrop-blur-md cursor-pointer"
@@ -353,6 +369,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         >
           <Plus className="w-4 h-4" />
         </button>
+        )}
         {currentReel?.videoUrl && videoStatus !== 'error' && (
           <button
             onClick={() => {
@@ -372,7 +389,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   const filterBar = (
     <div className="relative z-30 px-3.5 pb-2 space-y-2">
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" role="tablist" aria-label={t("Reel filters")}>
+      <div className="flex items-center gap-1.5">
+      <div className="flex flex-1 min-w-0 items-center gap-1.5 overflow-x-auto scrollbar-none" role="tablist" aria-label={t("Reel filters")}>
         {FILTERS.map((f) => (
           <button
             key={f.id}
@@ -388,6 +406,16 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             {t(f.label)}
           </button>
         ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => setLayout((l) => (l === 'feed' ? 'grid' : 'feed'))}
+        className="shrink-0 w-8 h-8 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-cyan-400 cursor-pointer"
+        aria-label={layout === 'feed' ? t('Show all as a grid') : t('Show one by one')}
+        title={layout === 'feed' ? t('Show all as a grid') : t('Show one by one')}
+      >
+        {layout === 'feed' ? <LayoutGrid className="w-4 h-4" /> : <Rows3 className="w-4 h-4" />}
+      </button>
       </div>
       {filter === 'categories' && (
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" aria-label={t("Categories")}>
@@ -432,7 +460,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           onSeeAll={handleSeeAllOffers}
         />
       )}
-      {showAddReel && <AddReelModal onClose={() => setShowAddReel(false)} onSubmit={handleAddReel} />}
+      {ADD_REEL_ENABLED && showAddReel && <AddReelModal onClose={() => setShowAddReel(false)} onSubmit={handleAddReel} />}
       {toastMessage && (
         <div
           role="status"
@@ -489,6 +517,40 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   }
 
   /* ------------------------------- Reel ------------------------------- */
+
+  if (layout === 'grid') {
+    return shell(
+      <ul className="grid grid-cols-2 gap-2.5 p-3.5 pt-1" aria-label={t('All reels')}>
+        {visibleReels.map((r, idx) => (
+          <li key={r.id}>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentIndex(idx);
+                setLayout('feed');
+              }}
+              className="w-full text-left rounded-xl overflow-hidden bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer"
+              aria-label={r.title}
+            >
+              <div className="aspect-[4/5] bg-black flex items-center justify-center">
+                {r.image ? (
+                  <img src={r.image} alt="" className="max-h-full max-w-full object-contain" referrerPolicy="no-referrer" />
+                ) : r.videoUrl ? (
+                  <Play className="w-6 h-6 text-slate-500" />
+                ) : (
+                  <VideoOff className="w-6 h-6 text-slate-600" />
+                )}
+              </div>
+              <div className="p-2">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-cyan-300 truncate">{t(r.category)}</p>
+                <p className="text-[11px] font-semibold text-white line-clamp-2">{r.title}</p>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   const showVideo = !!currentReel.videoUrl && videoStatus !== 'error';
 
@@ -611,6 +673,16 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             </button>
             <span className="text-[10px] font-bold text-slate-300">{hasAlert ? t("Alert on") : t("Alert")}</span>
           </div>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-md border bg-slate-900/85 text-slate-200 hover:text-cyan-400 border-slate-700 hover:border-cyan-500/50"
+              aria-label={t('Share product')}
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <span className="text-[10px] font-bold text-slate-300">{t("Share")}</span>
+          </div>
         </div>
         )}
 
@@ -709,17 +781,17 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className={`grid gap-2 pt-1 ${!isMatched && creatorBuyUrl ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <button
             onClick={handleCompare}
             disabled={!isMatched || !hasOffers}
             className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.99] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <Layers className="w-4 h-4 stroke-[2.3]" />
-            <span>{t("Compare Prices")}</span>
+            <span>{hasOffers && product ? t('Compare {n} prices', { n: product.offers.length }) : t("Compare Prices")}</span>
           </button>
 
-          {!isMatched && creatorBuyUrl ? (
+          {!isMatched && creatorBuyUrl && (
             <a
               href={creatorBuyUrl}
               target="_blank"
@@ -730,16 +802,6 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
               <ExternalLink className="w-4 h-4" />
               <span className="truncate">{t("Buy at")} {creatorBuyHost}</span>
             </a>
-          ) : (
-            <button
-              onClick={handleBuy}
-              disabled={!canBuy}
-              title={canBuy ? undefined : t('No valid merchant link available yet')}
-              className="w-full py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>{t("Buy")}</span>
-            </button>
           )}
         </div>
 

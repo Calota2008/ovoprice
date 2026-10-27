@@ -5,6 +5,7 @@
  */
 export type TrackedEventName =
   | 'reel_viewed'
+  | 'reel_shared'
   | 'product_details_opened'
   | 'compare_prices_clicked'
   | 'offer_opened'

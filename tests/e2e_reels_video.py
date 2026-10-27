@@ -27,7 +27,7 @@ with sync_playwright() as p:
     check('fallback image shown', pg.get_by_role('img', name=re.compile('Sony')).is_visible())
     check('no video element for broken reel', pg.locator('video').count()==0)
     check('mute hidden when video failed', pg.get_by_role('button', name=re.compile('Mute|Unmute')).count()==0)
-    check('buttons still work on broken video', pg.get_by_role('button', name='Compare Prices').is_enabled())
+    check('buttons still work on broken video', pg.get_by_role('button', name=re.compile(r'^Compare (\d+ prices|Prices)$')).is_enabled())
     pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(400)
     check('next reel (no video) -> zero video elements', pg.locator('video').count()==0)
     pg.get_by_label('Previous Reel').click(); pg.get_by_label('Previous Reel').click(); pg.wait_for_timeout(1200)

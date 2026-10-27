@@ -223,3 +223,11 @@ Mono was never applied (no Tailwind theme set it), so it is dropped. **New depen
 `package.json` and `package-lock.json` changed and must be uploaded; Render installs it at build time.
 Test: `tests/e2e_no_third_party.py` checks that browsing contacts only our own host and that Inter is used.
 The privacy notice now says fonts and images come from our own server.
+
+## Reeluri v1 (ecran mai clar, fără dublură cu Acasă)
+- **Acasă** rămâne pentru căutare/identificare. Bannerul „Discover Reels” arată acum 3 miniaturi din Reeluri (doar imagini existente), în același buton.
+- **Reeluri:** un singur buton principal „Compară N prețuri” (N = numărul real de oferte). Butonul „Cumpără” separat a fost scos pentru reelurile din catalog; cumpărarea rămâne în foaia de comparare („Buy at …”).
+- Buton nou **Trimite** (Share): linkul poartă produsul în el (același format ca lista partajată), fără server.
+- **Mod grilă**: buton lângă filtre; miniaturi cu categorie și titlu, apăsarea deschide reelul în feed.
+- Butonul **+ (Add Reel)** este ascuns pentru utilizatori. Apare doar cu `VITE_ENABLE_ADD_REEL=true` (testare locală). Decizie: în prima versiune doar echipa OvoPrice adaugă reeluri, cu MP4 încărcat de noi.
+- Teste: `tests/e2e_reels_v1.py` nou (14 verificări); `e2e_reels.py` și `e2e_add_reel.py` adaptate (Add Reel cere serverul cu flag-ul). `e2e_reels_video.py` cere fixture temporar, neschimbat ca procedură.

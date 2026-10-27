@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Search, Mic, Camera, Link2, Barcode, CheckCircle2, Sparkles, Clipboard, Coins, ChevronRight } from 'lucide-react';
 import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
-import { PopularSearchItem } from '../../types';
+import { PopularSearchItem, ReelItem } from '../../types';
 import { DemoBadge } from '../DemoBadge';
 
 import { t, useLanguage } from '../../i18n';
@@ -97,6 +97,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     [],
     []
   );
+  const { data: homeReels } = usePriceData<ReelItem[]>(() => priceProvider.getReels(), [], []);
+  // Only reels that have a picture are shown as thumbnails.
+  const reelThumbs = homeReels.filter((r) => !!r.image).slice(0, 3);
 
   return (
     <div className="pb-24 space-y-4">
@@ -229,34 +232,48 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </div>
 
-      {/* Discover Reels entry point */}
+      {/* Discover Reels entry point: a few thumbnails, not a second list of products */}
       <button
         type="button"
         onClick={onOpenReels}
-        className="w-full text-left bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl p-3 border border-slate-800 hover:border-cyan-500/50 transition-all flex items-center justify-between shadow-xs cursor-pointer group"
+        className="w-full text-left bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl p-3 border border-slate-800 hover:border-cyan-500/50 transition-all shadow-xs cursor-pointer group"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
-                {t("Discover Reels")}
-              </span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                REELS
-              </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
             </div>
-            <p className="text-[11px] text-slate-400 truncate">
-              {t("Shopping-video highlights & immersive product feed")}
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                  {t("Discover Reels")}
+                </span>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  REELS
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 truncate">
+                {t("Shopping-video highlights & immersive product feed")}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-cyan-400 shrink-0 ml-2">
+            <span className="text-xs font-semibold hidden xs:inline">{t("Watch")}</span>
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
-        <div className="flex items-center gap-1 text-cyan-400 shrink-0 ml-2">
-          <span className="text-xs font-semibold hidden xs:inline">{t("Watch")}</span>
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </div>
+        {reelThumbs.length > 0 && (
+          <div className="mt-2.5 grid grid-cols-3 gap-2" data-testid="home-reel-thumbs">
+            {reelThumbs.map((r) => (
+              <div key={r.id} className="rounded-lg overflow-hidden bg-black border border-slate-800">
+                <div className="aspect-[4/5] flex items-center justify-center">
+                  <img src={r.image} alt="" className="max-h-full max-w-full object-contain" referrerPolicy="no-referrer" />
+                </div>
+                <p className="px-1.5 py-1 text-[10px] font-semibold text-slate-200 line-clamp-1">{r.title}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </button>
 
       {/* Data source indicator (no fake "live" feed) */}

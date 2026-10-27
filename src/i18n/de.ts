@@ -741,4 +741,12 @@ export const de: Record<string, string> = {
   "All of these are already saved.": "Alle diese Produkte sind bereits gespeichert.",
   "Saved: {n}": "Gespeichert: {n}",
   "Prices are current, not from the moment the list was shared. Anyone with the link can see this list.": "Die Preise sind aktuell, nicht vom Zeitpunkt des Teilens. Jeder mit dem Link kann diese Liste sehen.",
+  "Compare {n} prices": "{n} Preise vergleichen",
+  "Link copied": "Link kopiert",
+  "Could not copy the link.": "Der Link konnte nicht kopiert werden.",
+  "Show all as a grid": "Alle als Raster anzeigen",
+  "Show one by one": "Einzeln anzeigen",
+  "All reels": "Alle Reels",
+  "Share product": "Produkt teilen",
+  "Share": "Teilen",
 };
