@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, TrendingDown, Camera, Truck, ShieldCheck, Shield, ArrowRight, RefreshCw, AlertCircle, HelpCircle, Bell, Bookmark } from 'lucide-react';
 import { Product } from '../../types';
+import { StoresForProduct } from '../StoresForProduct';
 
 import { t } from '../../i18n';
 interface ProductOverviewScreenProps {
@@ -287,6 +288,8 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
         <span>{t("Compare offers (")}{product.storesCount})</span>
         <ArrowRight className="w-4 h-4" />
       </button>
+
+      <StoresForProduct product={product} />
 
       {/* Secondary Rescan Button */}
       <button

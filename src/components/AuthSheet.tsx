@@ -195,7 +195,7 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onOpen
                   );
                 })}
               </div>
-              <p className="text-[11px] text-slate-500 mt-1.5">{t('Your country will decide which stores and prices you see once real offers are available. For now it only adjusts voice search. You can change it later in Account settings.')}</p>
+              <p className="text-[11px] text-slate-500 mt-1.5">{t('Your country decides which stores we suggest and, once real offers are available, which prices you see. It also adjusts voice search. You can change it later in Account settings.')}</p>
             </fieldset>
           )}
 

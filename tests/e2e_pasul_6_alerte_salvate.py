@@ -15,9 +15,9 @@ with sync_playwright() as p:
     pg.get_by_role('button', name=re.compile('Alerts')).click(); pg.wait_for_timeout(300)
     check('alerts: starts empty (no fake demo alerts)', pg.get_by_text('You have no alerts').is_visible())
     check('header badge: no fake unread count', pg.locator('header span').filter(has_text=re.compile(r'^\d+$')).count()==0)
-    # open Sony from Home popular
+    # open Sony from the Home "Price drops" row
     pg.get_by_role('button', name=re.compile('Home')).click(); pg.wait_for_timeout(300)
-    pg.get_by_text('Sony WH-1000XM5').first.click(); pg.wait_for_timeout(600)
+    pg.get_by_test_id('home-price-drops').get_by_role('button', name=re.compile('Sony WH-1000XM5')).click(); pg.wait_for_timeout(600)
     check('overview: sony', pg.get_by_text('Sony WH-1000XM5').first.is_visible())
     # save
     pg.get_by_role('button', name=re.compile('^Save$')).click(); pg.wait_for_timeout(200)

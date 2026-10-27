@@ -231,3 +231,13 @@ The privacy notice now says fonts and images come from our own server.
 - **Mod grilă**: buton lângă filtre; miniaturi cu categorie și titlu, apăsarea deschide reelul în feed.
 - Butonul **+ (Add Reel)** este ascuns pentru utilizatori. Apare doar cu `VITE_ENABLE_ADD_REEL=true` (testare locală). Decizie: în prima versiune doar echipa OvoPrice adaugă reeluri, cu MP4 încărcat de noi.
 - Teste: `tests/e2e_reels_v1.py` nou (14 verificări); `e2e_reels.py` și `e2e_add_reel.py` adaptate (Add Reel cere serverul cu flag-ul). `e2e_reels_video.py` cere fixture temporar, neschimbat ca procedură.
+
+## Magazine potrivite tipului de produs + Acasă nou
+- **„Unde să cauți” (Where to look)** pe pagina produsului: magazine din țara aleasă (DE/AT) care vând de obicei acel *tip* de produs. Un uscător de păr arată magazine de electronice, electrocasnice și drogherii, nu magazine de mobilă, bricolaj sau supermarketuri. Sunt linkuri de căutare, nu prețuri, și textul spune asta.
+  - `src/data/storeDirectory.ts`: directorul de magazine (doar magazine cunoscute, cu grupa lor). `src/utils/storesForProduct.ts`: regulile pe categorie/titlu. `src/components/StoresForProduct.tsx`: afișarea.
+  - Pagina de căutare proprie a magazinului se folosește doar unde adresa e cunoscută (Amazon, MediaMarkt, Saturn, OTTO). Pentru restul, linkul e o căutare web limitată la site-ul magazinului, marcată „via web search”. Nu se inventează linkuri de produs.
+  - Austria folosește amazon.de (nu există amazon.at). Tip de produs nerecunoscut: doar magazinele generale (Amazon, OTTO), cu mențiune.
+  - Textul din Setări/Cont despre țară a fost actualizat (țara decide acum sugestiile de magazine).
+- **Acasă:** „Popular searches” a fost înlocuit cu două rânduri laterale, „Price drops” și „New products” (demo, marcate „Example”). Provider-ul are acum `getPriceDrops()` și `getNewProducts()`; un provider live fără date întoarce listă goală și secțiunea dispare.
+- Corectat un produs greșit din demo: cardul „Samsung Galaxy S24 Ultra” deschidea pagina unui televizor. Acum arată starea „Product Details Unavailable”.
+- Teste noi: `tests/unit_stores_for_product.ts` (17), `tests/e2e_stores_for_product.py` (14), `tests/e2e_home_rails.py` (12); `e2e_pasul_6_alerte_salvate.py` actualizat.

@@ -25,6 +25,52 @@ interface HomeScreenProps {
   onOpenReels?: () => void;
 }
 
+/** A row of product cards that scrolls sideways. Shared by "Price drops" and "New products". */
+const ProductRail: React.FC<{
+  title: string;
+  items: PopularSearchItem[];
+  onSelect: (item: PopularSearchItem) => void;
+  testId: string;
+}> = ({ title, items, onSelect, testId }) => (
+  <section aria-label={title} data-testid={testId}>
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+      <DemoBadge label={t("Example")} />
+    </div>
+    <ul className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scroll-pl-4 snap-x scrollbar-none">
+      {items.map((item) => (
+        <li key={item.id} className="snap-start shrink-0 w-[150px]">
+          <button
+            type="button"
+            onClick={() => onSelect(item)}
+            className="w-full h-full text-left bg-white rounded-xl border border-slate-200 p-2 shadow-2xs hover:border-slate-300 flex flex-col gap-1.5 transition-colors cursor-pointer"
+          >
+            <span className="relative block h-[84px] rounded-lg bg-slate-100 border border-slate-200 overflow-hidden">
+              <img src={item.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <span
+                className={`absolute left-1.5 top-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  item.badgeType === 'new' ? 'bg-sky-100 text-sky-900' : item.badgeType === 'discount' ? 'bg-emerald-100 text-emerald-900' : 'bg-emerald-700 text-white'
+                }`}
+              >
+                {t(item.badgeText)}
+              </span>
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-600 truncate">{t(item.category)}</span>
+            <span className="text-[13px] font-bold text-slate-900 leading-tight line-clamp-2">{item.title}</span>
+            <span className="text-[12px] text-slate-700 tnum">
+              {item.badgeType === 'new' ? (
+                <>{item.storesCount} {t("stores")}</>
+              ) : (
+                <>{t("From")} <b className="text-slate-900">{item.price.toFixed(2).replace('.', ',')} €</b></>
+              )}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </section>
+);
+
 export const HomeScreen: React.FC<HomeScreenProps> = ({
   onSearchFocus,
   onVoiceSearch,
@@ -92,11 +138,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       onOpenVisualMatcher('link');
     }
   };
-  const { data: popularSearches, loading: popularLoading } = usePriceData<PopularSearchItem[]>(
-    () => priceProvider.getPopularSearches(),
-    [],
-    []
-  );
+  const { data: priceDrops } = usePriceData<PopularSearchItem[]>(() => priceProvider.getPriceDrops(), [], []);
+  const { data: newProducts } = usePriceData<PopularSearchItem[]>(() => priceProvider.getNewProducts(), [], []);
   const { data: homeReels } = usePriceData<ReelItem[]>(() => priceProvider.getReels(), [], []);
   // Only reels that have a picture are shown as thumbnails.
   const reelThumbs = homeReels.filter((r) => !!r.image).slice(0, 3);
@@ -287,68 +330,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       )}
 
-      {/* Popular Searches */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-slate-900">{t("Popular searches")}</h3>
-          <DemoBadge label={t("Example")} />
-        </div>
-
-        <div className="space-y-2">
-          {popularLoading && <p className="text-xs text-slate-500 px-1">{t("Loading…")}</p>}
-          {popularSearches.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => onSelectPopularItem(item)}
-              className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs hover:border-slate-300 flex items-center justify-between gap-3 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium mb-0.5">
-                    <span className="uppercase">{t(item.category)}</span>
-                    <span>· {item.storesCount} {t("stores")}</span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-900 truncate">
-                    {item.title}
-                  </h4>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs font-bold text-slate-900 tnum">
-                      {t("From")} {item.price.toFixed(2).replace('.', ',')} €
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="text-right">
-                  <span
-                    className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                      item.badgeType === 'discount'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-emerald-600 text-white'
-                    }`}
-                  >
-                    {t(item.badgeText)}
-                  </span>
-                  <span className="block text-[10px] text-slate-400 mt-0.5">
-                    {t(item.shippingNote)}
-                  </span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Price drops and new products: each section is hidden when the provider has nothing to show. */}
+      {priceDrops.length > 0 && (
+        <ProductRail title={t("Price drops")} items={priceDrops} onSelect={onSelectPopularItem} testId="home-price-drops" />
+      )}
+      {newProducts.length > 0 && (
+        <ProductRail title={t("New products")} items={newProducts} onSelect={onSelectPopularItem} testId="home-new-products" />
+      )}
 
       {/* Paste link from clipboard (read only when the user taps) */}
       <div className="bg-slate-900 text-white rounded-xl p-3 shadow-xl border border-slate-700 flex items-center justify-between gap-3">

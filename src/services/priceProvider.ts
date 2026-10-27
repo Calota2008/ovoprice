@@ -34,6 +34,10 @@ export interface PriceProvider {
   /** Pasul 4 (căutare textuală). */
   searchProducts(query: string): Promise<Product[]>;
   getPopularSearches(): Promise<PopularSearchItem[]>;
+  /** Products whose price dropped. A provider without such data returns an empty list and the section is hidden. */
+  getPriceDrops(): Promise<PopularSearchItem[]>;
+  /** Products that recently appeared in the catalog. Empty list => the section is hidden. */
+  getNewProducts(): Promise<PopularSearchItem[]>;
   getRelatedModels(productId: string): Promise<RelatedModelItem[]>;
   getReels(): Promise<ReelItem[]>;
   /** Pasul 5: încearcă să potrivească un link de magazin cu un produs din catalog. */
@@ -90,9 +94,9 @@ function sanitizeProduct(product: Product): Product {
   };
 }
 
+// Only items that really have a catalog product are linked. A phone must never open a TV page.
 const POPULAR_TO_PRODUCT: Record<string, string> = {
   'pop-1': 'sony-wh1000xm5',
-  'pop-2': 'samsung-crystal-tv',
   'pop-3': 'delonghi-magnifica',
 };
 
@@ -124,6 +128,17 @@ export const demoProvider: PriceProvider = {
 
   getPopularSearches: () =>
     wait(demo.popularSearches.map((p) => ({ ...p, productId: POPULAR_TO_PRODUCT[p.id] }))),
+
+  // Demo only: derived from the example list, so the sections can be shown and tested. Marked DEMO on screen.
+  getPriceDrops: () =>
+    wait(demo.popularSearches.filter((p) => p.badgeType === 'discount').map((p) => ({ ...p, productId: POPULAR_TO_PRODUCT[p.id] }))),
+
+  getNewProducts: () =>
+    wait(
+      demo.popularSearches
+        .filter((p) => p.badgeType !== 'discount')
+        .map((p) => ({ ...p, badgeText: tr('NEW'), badgeType: 'new', productId: POPULAR_TO_PRODUCT[p.id] }))
+    ),
 
   getRelatedModels: () => wait(demo.relatedModels),
 

@@ -242,7 +242,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
         </div>
       </Section>
 
-      <Section icon={MapPin} title={t('Country')} note={t('Your country will decide which stores and prices you see once real offers are available. For now it only adjusts voice search. You can change it later in Account settings.')}>
+      <Section icon={MapPin} title={t('Country')} note={t('Your country decides which stores we suggest and, once real offers are available, which prices you see. It also adjusts voice search. You can change it later in Account settings.')}>
         <div role="radiogroup" aria-label={t('Country')} className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
           {COUNTRIES.map((c) => (
             <Option key={c.code} selected={c.code === country} label={countryName(c.code, lang)} onSelect={() => {
