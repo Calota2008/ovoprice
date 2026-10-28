@@ -65,6 +65,12 @@ export const ExternalRedirectModal: React.FC<ExternalRedirectModalProps> = ({
         </div>
 
         <div className="flex flex-col gap-2">
+          {offer.isAffiliate === true && (
+            <div data-testid="affiliate-notice" className="flex items-start gap-2 text-xs leading-snug text-slate-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200/70">
+              <span className="shrink-0 rounded bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900">{t("Advertisement")}</span>
+              <span>{t("Some links may be affiliate links. OvoPrice may earn a commission from qualifying purchases at no additional cost to you.")}</span>
+            </div>
+          )}
           {hasValidLink ? (
             <a
               href={offer.affiliateUrl}
@@ -86,11 +92,6 @@ export const ExternalRedirectModal: React.FC<ExternalRedirectModalProps> = ({
             >
               {t("No valid link available for this offer yet.")}
             </div>
-          )}
-          {offer.isAffiliate === true && (
-            <p className="text-[10px] leading-snug text-slate-500">
-              {t("Some links may be affiliate links. OvoPrice may earn a commission from qualifying purchases at no additional cost to you.")}
-            </p>
           )}
           <button
             onClick={onClose}

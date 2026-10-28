@@ -34,6 +34,29 @@ export function recognitionLang(lang: Lang, country: string): string {
   return 'en-GB';
 }
 
+const VOICE_LANG_KEY = 'ovoprice_voice_lang_v1';
+const isVoiceLang = (v: unknown): v is Lang => v === 'en' || v === 'de' || v === 'ro';
+
+/** The language the person last picked for the microphone on this device, if any. */
+export function readVoiceLang(): Lang | null {
+  try {
+    const v = localStorage.getItem(VOICE_LANG_KEY);
+    return isVoiceLang(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Remembers the choice (or forgets it with null). Storage problems are ignored: the choice then lasts for this visit only. */
+export function saveVoiceLang(lang: Lang | null): void {
+  try {
+    if (lang) localStorage.setItem(VOICE_LANG_KEY, lang);
+    else localStorage.removeItem(VOICE_LANG_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 /** Cleans the spoken text: no trailing full stop, single spaces. */
 export function cleanTranscript(text: string): string {
   return text.replace(/\s+/g, ' ').trim().replace(/[.。!?]+$/, '').trim();

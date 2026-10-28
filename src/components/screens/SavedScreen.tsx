@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { SavedProductItem } from '../../types';
 import { AuthNudge } from '../AuthNudge';
+import type { AuthMode } from '../AuthSheet';
+import { useAuthUser } from '../../services/useAuthUser';
+import { ACCOUNT_LIMITS } from '../../utils/limits';
 import { buildShareUrl } from '../../utils/shareList';
 import {
   COLLECTION_LIMITS,
@@ -29,8 +32,16 @@ interface SavedScreenProps {
   onQuickAlert: () => void;
   onRemoveSavedItem?: (id: string) => void;
   onDiscover?: () => void;
-  onOpenAuth?: () => void;
+  onOpenAuth?: (mode?: AuthMode) => void;
   collections?: Collection[];
+  /** State of the sync with the account ('off' for guests). */
+  syncStatus?: 'off' | 'syncing' | 'synced' | 'error';
+  onRetrySync?: () => void;
+  /** Free limit for saved products; the screen explains it when it is reached. */
+  limit?: number;
+  /** New collections need an account: the button then calls onCollectionsLocked instead of opening the form. */
+  collectionsLocked?: boolean;
+  onCollectionsLocked?: () => void;
   onCreateCollection?: (name: string) => void;
   onRenameCollection?: (id: string, name: string) => void;
   onDeleteCollection?: (id: string) => void;
@@ -52,6 +63,11 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
   onDiscover,
   onOpenAuth,
   collections = [],
+  limit,
+  syncStatus = 'off',
+  onRetrySync,
+  collectionsLocked = false,
+  onCollectionsLocked,
   onCreateCollection,
   onRenameCollection,
   onDeleteCollection,
@@ -67,12 +83,14 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [shareFallback, setShareFallback] = useState<string | null>(null);
 
+  const signedIn = !!useAuthUser();
   const activeCollection = collections.find((c) => c.id === activeCollectionId) ?? null;
   const visibleItems = activeCollection
     ? items.filter((i) => activeCollection.productIds.includes(i.productId ?? i.id))
     : items;
   const totalDrop = visibleItems.reduce((acc, item) => acc + (item.dropAmount || 0), 0);
   const canManageCollections = !!onCreateCollection && items.length > 0;
+  const atLimit = limit !== undefined && items.length >= limit;
 
   const resetNameForm = () => {
     setCreating(false);
@@ -129,6 +147,11 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
       <div className="pt-1">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("Saved products")}</h1>
+          {atLimit ? (
+            <span className="inline-flex items-center px-2.5 py-1 border rounded-md text-[11px] font-bold bg-amber-50 border-amber-300 text-amber-900">
+              {t('{n} of {limit} saved', { n: items.length, limit })}
+            </span>
+          ) : (
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-md text-[11px] font-bold ${
               items.length > 0
@@ -141,16 +164,47 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
               {items.length} {items.length === 1 ? t("product") : t("products")}
             </span>
           </span>
+          )}
         </div>
 
         <p className="text-xs text-slate-500 flex items-center gap-1.5">
           <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-          <span>{t("Saved on this device · demo prices")}</span>
+          <span>
+            {syncStatus === 'synced'
+              ? t('Saved to your account · demo prices')
+              : syncStatus === 'syncing'
+                ? t('Syncing with your account… · demo prices')
+                : syncStatus === 'error'
+                  ? t('Could not reach your account. Your changes stay on this device and are sent when it works again.')
+                  : t("Saved on this device · demo prices")}
+          </span>
+          {syncStatus === 'error' && onRetrySync && (
+            <button type="button" onClick={onRetrySync} className="min-h-11 px-2 font-semibold text-emerald-800 hover:underline cursor-pointer">
+              {t('Try again')}
+            </button>
+          )}
         </p>
       </div>
 
+      {atLimit && (
+        <div role="status" className="rounded-2xl border border-emerald-300 bg-white p-3.5 space-y-1.5">
+          <p className="text-sm font-extrabold text-slate-900 leading-snug">{t('You have reached the limit of saved products: {n}', { n: limit })}</p>
+          <p className="text-xs text-slate-700 leading-snug">
+            {onOpenAuth && !signedIn
+              ? t('Remove the saved product to save another one, or create a free account to save up to {n}.', { n: ACCOUNT_LIMITS.savedProducts })
+              : t('Remove a product you no longer need to save a new one.')}
+          </p>
+          {onOpenAuth && !signedIn && (
+            <button type="button" onClick={() => onOpenAuth('create')} className="min-h-11 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold cursor-pointer">
+              {t('Create an account')}
+            </button>
+          )}
+          <p className="text-[11px] text-slate-600 leading-snug">{t('You can still search, compare and open everything. Nothing you saved is deleted.')}</p>
+        </div>
+      )}
+
       {onOpenAuth && items.length > 0 && (
-        <AuthNudge onOpenAuth={onOpenAuth} message={t("Saved on this device only.")} />
+        <AuthNudge onOpenAuth={() => onOpenAuth()} message={t("Saved on this device only.")} />
       )}
 
       {/* Collections bar */}
@@ -174,6 +228,10 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
             {collections.length < COLLECTION_LIMITS.maxCollections && (
               <button
                 onClick={() => {
+                  if (collectionsLocked) {
+                    onCollectionsLocked?.();
+                    return;
+                  }
                   resetNameForm();
                   setCreating(true);
                 }}

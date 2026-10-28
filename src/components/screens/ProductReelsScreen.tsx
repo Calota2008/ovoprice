@@ -731,10 +731,10 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
         <div>
           <h2 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug line-clamp-1">
-            {currentReel.title}
+            {t(currentReel.title)}
           </h2>
           {currentReel.subtitle && (
-            <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{currentReel.subtitle}</p>
+            <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{t(currentReel.subtitle)}</p>
           )}
         </div>
 

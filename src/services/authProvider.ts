@@ -1,4 +1,5 @@
 import { isValidEmail } from '../utils/email';
+import type { UserLists } from '../utils/mergeLists';
 import { createSupabaseAuthProvider } from './supabaseAuthProvider';
 import { readSupabaseConfig } from './supabaseConfig';
 
@@ -38,13 +39,25 @@ export type AuthResult =
   | { ok: true; redirecting: true }
   | { ok: false; reason: AuthFailure };
 
+/** Result of reading the account's saved products, alerts and collections. `lists: null` = nothing stored yet. */
+export type ListsLoad = { ok: true; lists: UserLists | null } | { ok: false };
+
+/** Saved products, alerts and collections kept on the account (only for the signed-in user). */
+export interface ListsStore {
+  load(): Promise<ListsLoad>;
+  /** Replaces what is stored on the account. Resolves false if it could not be saved. */
+  save(lists: UserLists): Promise<boolean>;
+}
+
 export interface AuthProvider {
   /** False while no backend is connected. */
   isConnected: boolean;
   /** True only for the local test account (development builds, explicit opt-in). */
   isPreview?: boolean;
-  /** True once saved products, alerts and Reels are synced to the account (not yet). */
+  /** True when saved products, alerts and collections are synced to the account (Reels stay on the device). */
   syncsData?: boolean;
+  /** Present only when the account can keep the lists (see `syncsData`). */
+  lists?: ListsStore;
   getUser(): AuthUser | null;
   /** Calls `listener` whenever the signed-in user changes. Returns the unsubscribe function. */
   subscribe(listener: () => void): () => void;

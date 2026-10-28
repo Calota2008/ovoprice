@@ -381,7 +381,7 @@ export const AuthSheet: React.FC<AuthSheetProps> = ({ mode, onModeChange, onOpen
             <span>
               {authProvider.isConnected && !authProvider.syncsData
                 ? t('We never post for you. We only use your email to sign you in.')
-                : t('We never post for you. Products you saved on this device will move to your account when you sign in.')}
+                : t('We never post for you. Products you saved on this device can be added to your account when you sign in.')}
             </span>
           </div>
 

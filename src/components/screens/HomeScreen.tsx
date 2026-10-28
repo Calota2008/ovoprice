@@ -5,10 +5,12 @@ import { usePriceData } from '../../services/usePriceData';
 import { PopularSearchItem, ReelItem } from '../../types';
 import { DemoBadge } from '../DemoBadge';
 
-import { t, useLanguage } from '../../i18n';
+import { t, useLanguage, LANGUAGES, Lang } from '../../i18n';
 import { useCountry } from '../../i18n/country';
 import {
+  readVoiceLang,
   recognitionLang,
+  saveVoiceLang,
   startVoiceSearch,
   VoiceProblem,
   VoiceSession,
@@ -106,15 +108,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Stop the microphone when leaving the screen.
   useEffect(() => () => voiceSession.current?.cancel(), []);
 
-  const handleMic = (e: React.MouseEvent) => {
-    e.stopPropagation(); // the box itself opens Search; the mic only listens
-    if (listening) {
-      voiceSession.current?.cancel();
-      return;
-    }
+  // The browser understands one language at a time, so the person picks it. It starts as the app language.
+  const [voiceLang, setVoiceLang] = useState<Lang>(() => readVoiceLang() ?? language);
+  const lastAppLanguage = useRef(language);
+  useEffect(() => {
+    // Changing the app language resets the microphone language to it (not on the first render).
+    if (lastAppLanguage.current === language) return;
+    lastAppLanguage.current = language;
+    saveVoiceLang(null);
+    setVoiceLang(language);
+  }, [language]);
+
+  const listen = (lang: Lang) => {
     setVoiceProblem(null);
     setListening(true);
-    voiceSession.current = startVoiceSearch(recognitionLang(language, country), {
+    voiceSession.current = startVoiceSearch(recognitionLang(lang, country), {
       onResult: (text) => onVoiceSearch(text),
       onProblem: (p) => setVoiceProblem(p),
       onEnd: () => {
@@ -122,6 +130,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         setListening(false);
       },
     });
+  };
+
+  const handleMic = (e: React.MouseEvent) => {
+    e.stopPropagation(); // the box itself opens Search; the mic only listens
+    if (listening) {
+      voiceSession.current?.cancel();
+      return;
+    }
+    listen(voiceLang);
+  };
+
+  const pickVoiceLang = (lang: Lang) => {
+    setVoiceLang(lang);
+    saveVoiceLang(lang === language ? null : lang);
+    voiceSession.current?.cancel();
+    listen(lang);
   };
 
   const voiceMessage = (p: VoiceProblem): string => {
@@ -210,6 +234,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <p role="alert" className="-mt-2 text-xs font-medium text-amber-800">
           {voiceMessage(voiceProblem)}
         </p>
+      )}
+      {(listening || (voiceProblem && voiceProblem !== 'unsupported')) && (
+        <div data-testid="voice-languages" className="-mt-1">
+          <p id="voice-lang-label" className="text-xs text-slate-600 mb-1.5">{t('I am speaking')}</p>
+          <div role="group" aria-labelledby="voice-lang-label" className="flex gap-2">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                aria-pressed={voiceLang === l.code}
+                onClick={() => pickVoiceLang(l.code)}
+                className={`h-11 px-4 rounded-full border text-sm font-semibold cursor-pointer transition-colors ${
+                  voiceLang === l.code ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-300 text-slate-900 hover:border-slate-400'
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-600 leading-snug mt-1.5">
+            {t('Tap another language and the microphone starts again in it. The browser understands one language at a time, so it cannot guess.')}
+          </p>
+        </div>
       )}
 
       {/* Scan / Find Product Hero Banner */}
@@ -329,7 +376,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 <div className="aspect-[4/5] flex items-center justify-center">
                   <img src={r.image} alt="" className="max-h-full max-w-full object-contain" referrerPolicy="no-referrer" />
                 </div>
-                <p className="px-1.5 py-1 text-[10px] font-semibold text-slate-200 line-clamp-1">{r.title}</p>
+                <p className="px-1.5 py-1 text-[10px] font-semibold text-slate-200 line-clamp-1">{t(r.title)}</p>
               </div>
             ))}
           </div>

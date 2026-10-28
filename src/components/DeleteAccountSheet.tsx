@@ -76,7 +76,7 @@ export const DeleteAccountSheet: React.FC<DeleteAccountSheetProps> = ({ onClose,
           {t("This permanently deletes your OvoPrice account and the settings saved with it. This can't be undone.")}
         </p>
         <p className="mt-2 text-[13px] leading-relaxed text-slate-600">
-          {t('Products, alerts and Reels you saved on this device are not part of the account yet. They stay on this device until you clear your browser data.')}
+          {t('Your saved products, alerts and collections in the account are deleted with it. What you saved on this device before signing in stays on this device until you clear your browser data.')}
         </p>
         <form onSubmit={submit} className="mt-4 space-y-2.5" noValidate>
           <label htmlFor="delete-confirm" className="block text-[13px] font-semibold text-slate-800">

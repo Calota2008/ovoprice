@@ -2,6 +2,8 @@ import { createClient, type User } from '@supabase/supabase-js';
 import type { AuthFailure, AuthOptions, AuthProvider, AuthResult, AuthUser } from './authProvider';
 import type { SupabaseConfig } from './supabaseConfig';
 import { isValidEmail } from '../utils/email';
+import { validateAlerts, validateSaved } from '../utils/alerts';
+import { validateCollections } from '../utils/collections';
 import { getLanguage, isLang, setLanguage } from '../i18n';
 import { getCountry, isCountryCode, setCountry } from '../i18n/country';
 
@@ -89,7 +91,38 @@ export function createSupabaseAuthProvider(config: SupabaseConfig): AuthProvider
 
   return {
     isConnected: true,
-    syncsData: false,
+    syncsData: true,
+    lists: {
+      load: async () => {
+        if (!user) return { ok: false };
+        try {
+          const { data, error } = await client.from('user_lists').select('saved, alerts, collections').eq('user_id', user.id).maybeSingle();
+          if (error) return { ok: false };
+          if (!data) return { ok: true, lists: null };
+          return {
+            ok: true,
+            lists: {
+              saved: validateSaved(data.saved) ?? [],
+              alerts: validateAlerts(data.alerts) ?? [],
+              collections: validateCollections(data.collections) ?? [],
+            },
+          };
+        } catch {
+          return { ok: false };
+        }
+      },
+      save: async (lists) => {
+        if (!user) return false;
+        try {
+          const { error } = await client
+            .from('user_lists')
+            .upsert({ user_id: user.id, saved: lists.saved, alerts: lists.alerts, collections: lists.collections }, { onConflict: 'user_id' });
+          return !error;
+        } catch {
+          return false;
+        }
+      },
+    },
     getUser: () => user,
     subscribe: (l) => {
       listeners.add(l);

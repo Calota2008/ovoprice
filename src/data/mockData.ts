@@ -6,6 +6,7 @@ import {
   ReelItem,
 } from '../types';
 
+import { tr } from '../i18n';
 import dysonImg from '@/src/assets/images/dyson_v15_detect_1791531473643.jpg';
 import samsungTvImg from '@/src/assets/images/samsung_crystal_tv_1791531484976.jpg';
 import sonyXm5Img from '@/src/assets/images/sony_xm5_headphones_1791531495929.jpg';
@@ -696,5 +697,15 @@ export const demoReels: ReelItem[] = [
     category: "MINI PROJECTOR",
     image: magcubicImg,
     creatorLabel: "Demo Reel",
+  },
+  // Example clip made by the team to show how a video reel looks. It is not a product: no productId, no prices.
+  {
+    id: "reel-demo-clip",
+    title: tr("Demo clip"),
+    subtitle: tr("An example reel, so you can see how clips look in the feed. Not a real product."),
+    category: "DEMO CLIP",
+    image: "/reels/demo_poster.jpg",
+    videoUrl: "/reels/demo_reel.mp4",
+    creatorLabel: "OvoPrice team",
   },
 ];

@@ -20,6 +20,11 @@ import { SetPriceAlertScreen } from './components/screens/SetPriceAlertScreen';
 import { AlertsScreen } from './components/screens/AlertsScreen';
 import { SavedScreen } from './components/screens/SavedScreen';
 import { VisualMatchResultScreen } from './components/screens/VisualMatchResultScreen';
+import { LimitSheet } from './components/LimitSheet';
+import { MergeSheet } from './components/MergeSheet';
+import { limitsFor, roomLeft, LimitKind, ACCOUNT_LIMITS } from './utils/limits';
+import { useAuthUser } from './services/useAuthUser';
+import { usePersistedLists } from './services/usePersistedLists';
 import { SeeAllScreen, SeeAllKind } from './components/screens/SeeAllScreen';
 import { ProductReelsScreen, ReelsView } from './components/screens/ProductReelsScreen';
 import { VisualMatcherModal } from './components/VisualMatcherModal';
@@ -27,22 +32,13 @@ import { ExternalRedirectModal } from './components/ExternalRedirectModal';
 
 import { DemoBanner } from './components/DemoBadge';
 import { parseProductLink } from './utils/retailerLinks';
-import { loadJson, saveJson } from './utils/storage';
-import {
-  COLLECTIONS_KEY,
-  Collection,
-  newCollectionId,
-  pruneCollections,
-  toggleInCollection,
-  validateCollections,
-} from './utils/collections';
-import { buildAlert, evaluateAlert, refreshSaved, savedFromProduct, validateAlerts, validateSaved } from './utils/alerts';
+import { newCollectionId, pruneCollections, toggleInCollection } from './utils/collections';
+import { buildAlert, evaluateAlert, refreshSaved, savedFromProduct } from './utils/alerts';
 import { priceProvider } from './services/priceProvider';
 import {
   ActiveScreen,
   StoreOffer,
   PriceAlertItem,
-  SavedProductItem,
   RecognizedRetailerLink,
   VisualAnalysisResult,
   Product,
@@ -51,8 +47,6 @@ import {
 import { Smartphone, Monitor } from 'lucide-react';
 
 import { t } from './i18n';
-const SAVED_STORAGE_KEY = 'ovoprice_saved_products_v1';
-const ALERTS_STORAGE_KEY = 'ovoprice_alerts_v1';
 
 const DEV_NAV =
   typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('devnav');
@@ -71,6 +65,9 @@ export default function App() {
   const [sharedList] = useState<SharedList | null>(() =>
     typeof window === 'undefined' ? null : readSharedListFromLocation(window.location.search)
   );
+  const authUser = useAuthUser();
+  const limits = limitsFor(!!authUser);
+  const [limitNotice, setLimitNotice] = useState<LimitKind | null>(null);
   const [seeAllKind, setSeeAllKind] = useState<SeeAllKind>('drops');
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>(sharedList ? 'shared-list' : 'home');
   const [spokenQuery, setSpokenQuery] = useState('');
@@ -87,13 +84,24 @@ export default function App() {
   const [visualAnalysisResult, setVisualAnalysisResult] = useState<VisualAnalysisResult | null>(null);
   const [selectedOfferForRedirect, setSelectedOfferForRedirect] = useState<StoreOffer | null>(null);
   const [activeOffer, setActiveOffer] = useState<StoreOffer | null>(null);
-  const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => loadJson(ALERTS_STORAGE_KEY, validateAlerts, []));
-  const [collections, setCollections] = useState<Collection[]>(() => loadJson(COLLECTIONS_KEY, validateCollections, []));
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [legalPage, setLegalPage] = useState<LegalPage>('impressum');
   const [reelsView, setReelsView] = useState<ReelsView | undefined>(undefined);
-  const [savedStorageFailed, setSavedStorageFailed] = useState(false);
-  const [savedItems, setSavedItems] = useState<SavedProductItem[]>(() => loadJson(SAVED_STORAGE_KEY, validateSaved, []));
+  const {
+    savedItems,
+    setSavedItems,
+    alerts,
+    setAlerts,
+    collections,
+    setCollections,
+    storageFailed: savedStorageFailed,
+    syncStatus,
+    retrySync,
+    mergeOffer,
+    acceptMergeOffer,
+    declineMergeOffer,
+    dataScope,
+  } = usePersistedLists(authUser, { savedProducts: limits.savedProducts, alerts: limits.alerts });
   const [deviceFrameMode, setDeviceFrameMode] = useState<'mobile' | 'expanded'>('mobile');
 
   // Initial data comes ONLY from the price provider (demo today, backend later).
@@ -112,10 +120,11 @@ export default function App() {
 
   // Refresh prices/images of the user's alerts and saved items once at startup.
   // (A server will do this in the background later; the comparison logic is the same.)
-  const hydratedRef = useRef(false);
+  // Once per data set: the device's own data at start, and again when the account's data arrives.
+  const hydratedRef = useRef<string | null>(null);
   useEffect(() => {
-    if (hydratedRef.current) return;
-    hydratedRef.current = true;
+    if (hydratedRef.current === dataScope) return;
+    hydratedRef.current = dataScope;
     const ids = Array.from(new Set([...alerts.map((a) => a.productId), ...savedItems.map((i) => i.productId ?? i.id)]));
     if (!ids.length) return;
     Promise.all(ids.map((id) => priceProvider.getProductById(id).catch(() => null))).then((products) => {
@@ -130,24 +139,12 @@ export default function App() {
       );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    setSavedStorageFailed(!saveJson(SAVED_STORAGE_KEY, savedItems));
-  }, [savedItems]);
-
-  useEffect(() => {
-    saveJson(COLLECTIONS_KEY, collections);
-  }, [collections]);
+  }, [dataScope]);
 
   // A product that is no longer saved leaves its collections.
   useEffect(() => {
     setCollections((prev) => pruneCollections(prev, savedItems.map((i) => i.productId ?? i.id)));
   }, [savedItems]);
-
-  useEffect(() => {
-    saveJson(ALERTS_STORAGE_KEY, alerts);
-  }, [alerts]);
 
   // Saved items show the target of their alert (if any).
   const savedView = useMemo(
@@ -312,6 +309,11 @@ export default function App() {
   // One alert per product: creating again updates the target.
   const handleConfirmAlert = (targetPrice: number) => {
     if (!selectedProduct) return;
+    const isUpdate = alerts.some((a) => a.productId === selectedProduct.id);
+    if (!isUpdate && roomLeft(alerts.length, limits.alerts) === 0) {
+      setLimitNotice('alerts');
+      return;
+    }
     const newAlert = buildAlert(selectedProduct, targetPrice);
     setAlerts((prev) => [newAlert, ...prev.filter((a) => a.productId !== selectedProduct.id)]);
     navigateTo('alerts');
@@ -321,6 +323,11 @@ export default function App() {
     savedItems.some((i) => (i.productId ?? i.id) === productId || i.id === `save-${productId}`);
 
   const handleToggleSaveProduct = (product: Product) => {
+    // A new save over the limit is explained, never silently dropped. Removing is always allowed.
+    if (!isProductSaved(product.id) && roomLeft(savedItems.length, limits.savedProducts) === 0) {
+      setLimitNotice('saved');
+      return;
+    }
     setSavedItems((prev) =>
       prev.some((i) => (i.productId ?? i.id) === product.id || i.id === `save-${product.id}`)
         ? prev.filter((i) => (i.productId ?? i.id) !== product.id && i.id !== `save-${product.id}`)
@@ -339,6 +346,10 @@ export default function App() {
   };
 
   const handleSaveToWatchlist = () => {
+    if (selectedProduct && !isProductSaved(selectedProduct.id) && roomLeft(savedItems.length, limits.savedProducts) === 0) {
+      setLimitNotice('saved');
+      return;
+    }
     if (selectedProduct && !isProductSaved(selectedProduct.id)) {
       setSavedItems((prev) => [savedFromProduct(selectedProduct), ...prev]);
     }
@@ -574,8 +585,13 @@ export default function App() {
               onQuickAlert={() => navigateTo('alerts')}
               onRemoveSavedItem={handleRemoveSavedItem}
               onDiscover={() => navigateTo('product-reels')}
-              onOpenAuth={() => setAuthMode('sign-in')}
+              onOpenAuth={(mode) => setAuthMode(mode ?? 'sign-in')}
               collections={collections}
+              limit={limits.savedProducts}
+              syncStatus={syncStatus}
+              onRetrySync={retrySync}
+              collectionsLocked={!limits.collections}
+              onCollectionsLocked={() => setLimitNotice('collections')}
               onCreateCollection={(name) =>
                 setCollections((prev) => [...prev, { id: newCollectionId(), name, productIds: [] }])
               }
@@ -624,19 +640,38 @@ export default function App() {
               list={sharedList}
               savedIds={savedItems.map((i) => i.productId ?? i.id)}
               onOpenProduct={(id) => handleOpenProduct(id)}
-              onSaveProducts={(products) =>
+              onSaveProducts={(products) => {
+                const fresh = products.filter((p) => !savedItems.some((i) => (i.productId ?? i.id) === p.id));
+                const room = roomLeft(savedItems.length, limits.savedProducts);
+                if (fresh.length > room) setLimitNotice('saved'); // the first ones that fit are saved, the rest are explained
+                if (room === 0) return;
                 setSavedItems((prev) => [
-                  ...products
+                  ...fresh
                     .filter((p) => !prev.some((i) => (i.productId ?? i.id) === p.id))
+                    .slice(0, room)
                     .map((p) => savedFromProduct(p)),
                   ...prev,
-                ])
-              }
+                ]);
+              }}
             />
           )}
         </main>
 
         <LegalFooter onOpen={openLegal} />
+
+        {mergeOffer && <MergeSheet offer={mergeOffer} onAccept={acceptMergeOffer} onDecline={declineMergeOffer} />}
+
+        {limitNotice && (
+          <LimitSheet
+            kind={limitNotice}
+            limits={limits}
+            accountLimits={ACCOUNT_LIMITS}
+            signedIn={!!authUser}
+            onClose={() => setLimitNotice(null)}
+            onManage={() => navigateTo(limitNotice === 'saved' ? 'saved' : 'alerts')}
+            onOpenAuth={(mode) => setAuthMode(mode)}
+          />
+        )}
 
         {authMode && <AuthSheet
             mode={authMode}
