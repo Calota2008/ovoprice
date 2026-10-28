@@ -299,3 +299,8 @@ The privacy notice now says fonts and images come from our own server.
 - Real-world finding: the server reached Gemini fine (key OK) but Google answered 503 UNAVAILABLE ("high demand"); the app showed the raw JSON.
 - `VisualMatcherModal`: on 503 / 429 / UNAVAILABLE the request is retried up to 2 more times (2 s, 4 s pause, status line "The analysis service is busy, trying again..."). If it still fails, a friendly translated message is shown instead of raw JSON. Other errors behave as before. `server.ts` untouched.
 - `tests/e2e_photo_errors.py`: two new cases (always 503 = 3 tries + friendly message; 503 once then success).
+
+## Two transparency notes (Oct 28)
+- Photo tab: a short note under "Analyze Photo with Gemini" says the photo is sent through our server to Google's Gemini service and is not stored (the privacy text already said this; now it is visible before the user taps).
+- Footer (`LegalFooter`): idealo-style price note: euros incl. VAT, plus shipping where it applies; prices, ranking and delivery times can change; the merchant's website price counts. EN/DE/RO.
+- Tests: `e2e_photo_errors.py` +3 checks. Not legal advice: the texts still need a specialist review before launch.

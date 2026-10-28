@@ -577,6 +577,9 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           <span>{t("Analyze Photo with Gemini")}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
+                        <p data-testid="photo-privacy-note" className="text-[11px] leading-snug text-slate-500">
+                          {t("When you analyze, the photo is sent through our server to Google's Gemini service to identify the product. We do not store it.")}
+                        </p>
                       </div>
                     )}
                   </>

@@ -68,6 +68,18 @@ with sync_playwright() as p:
     ctx, pg, errs = run(b, 'en', busy_once, ''); open_photo(pg); pg.wait_for_timeout(4500)
     check('503 once, then success: second attempt gives the result', calls2['n'] == 2 and pg.get_by_text('Test kettle').count() >= 1)
     check('503 once: no page errors', not errs); ctx.close()
+    # privacy note next to the Analyze button + price note in the footer
+    ctx, pg, errs = run(b, 'en', lambda r: r.abort(), ''); open_photo_tab = None
+    pg.get_by_role('button', name='Scan or find product').first.click() if pg.get_by_role('button', name='Scan or find product').count() else None
+    pg.wait_for_timeout(300)
+    pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
+    pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+    check('photo: note says the photo goes to Google Gemini and is not stored', pg.get_by_test_id('photo-privacy-note').count() == 1 and 'Google' in pg.get_by_test_id('photo-privacy-note').inner_text() and 'do not store' in pg.get_by_test_id('photo-privacy-note').inner_text())
+    ctx.close()
+    ctx, pg, errs = run(b, 'en', lambda r: r.abort(), '')
+    check('footer: price note shown (VAT, shipping, merchant price counts)', pg.get_by_test_id('price-note').count() == 1 and 'VAT' in pg.get_by_test_id('price-note').inner_text())
+    check('footer: no horizontal overflow', pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth'))
+    ctx.close()
     # German translation of the network failure
     ctx, pg, errs = run(b, 'de', lambda r: r.abort(), '')
     pg.get_by_role('button', name='Produkt scannen oder suchen').first.click() if pg.get_by_role('button', name='Produkt scannen oder suchen').count() else None

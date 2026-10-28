@@ -797,4 +797,6 @@ export const ro: Record<string, string> = {
   "Advertisement": "Publicitate",
   "The analysis service is busy, trying again...": "Serviciul de analiză este ocupat, încerc din nou...",
   "The analysis service is very busy right now. Please try again in a minute, or search by name.": "Serviciul de analiză este foarte ocupat acum. Încearcă din nou peste un minut sau caută după nume.",
+  "When you analyze, the photo is sent through our server to Google's Gemini service to identify the product. We do not store it.": "La analiză, poza este trimisă prin serverul nostru către serviciul Gemini al Google pentru a identifica produsul. Nu o păstrăm.",
+  "Prices are in euros including VAT, plus shipping where it applies. Prices, ranking and delivery times can change; the price on the merchant's website is the one that counts.": "Prețurile sunt în euro, cu TVA inclus, plus transport acolo unde se aplică. Prețurile, ordinea și timpii de livrare se pot schimba; contează prețul de pe site-ul magazinului.",
 };

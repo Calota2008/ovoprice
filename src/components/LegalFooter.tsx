@@ -20,6 +20,9 @@ export const LegalFooter: React.FC<{ onOpen: (page: LegalPage) => void }> = ({ o
           {t('Terms')}
         </button>
       </nav>
+      <p data-testid="price-note" className="mt-2 mx-auto max-w-md leading-snug">
+        {t('Prices are in euros including VAT, plus shipping where it applies. Prices, ranking and delivery times can change; the price on the merchant\'s website is the one that counts.')}
+      </p>
     </footer>
   );
 };
