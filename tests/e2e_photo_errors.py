@@ -44,6 +44,30 @@ with sync_playwright() as p:
         check(f'{name}: no raw browser/JSON error text', pg.get_by_text('Failed to fetch').count() == 0 and pg.get_by_text('Unexpected token').count() == 0)
         check(f'{name}: dialog still open, button usable again', pg.get_by_role('button', name='Analyze Photo with Gemini').is_enabled())
         check(f'{name}: no page errors', not errs); ctx.close()
+    # Google overload (503 UNAVAILABLE): retried automatically, then a friendly message, never the raw JSON
+    BUSY = json.dumps({'error': json.dumps({'error': {'code': 503, 'message': 'This model is currently experiencing high demand.', 'status': 'UNAVAILABLE'}})})
+    def open_photo(pg):
+        pg.get_by_role('button', name='Scan or find product').first.click() if pg.get_by_role('button', name='Scan or find product').count() else None
+        pg.wait_for_timeout(300)
+        pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
+        pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+        pg.get_by_role('button', name='Analyze Photo with Gemini').click()
+    calls = {'n': 0}
+    def always_busy(r):
+        calls['n'] += 1; r.fulfill(status=503, content_type='application/json', body=BUSY)
+    ctx, pg, errs = run(b, 'en', always_busy, ''); open_photo(pg); pg.wait_for_timeout(9000)
+    check('503: tried 3 times in total', calls['n'] == 3)
+    check('503: friendly message, no raw JSON', pg.get_by_text('The analysis service is very busy right now. Please try again in a minute, or search by name.', exact=True).count() == 1 and pg.get_by_text('UNAVAILABLE').count() == 0 and pg.get_by_text('high demand').count() == 0)
+    check('503: button usable again', pg.get_by_role('button', name='Analyze Photo with Gemini').is_enabled())
+    check('503: no page errors', not errs); ctx.close()
+    calls2 = {'n': 0}
+    def busy_once(r):
+        calls2['n'] += 1
+        if calls2['n'] == 1: r.fulfill(status=503, content_type='application/json', body=BUSY)
+        else: r.fulfill(status=200, content_type='application/json', body=json.dumps(OK))
+    ctx, pg, errs = run(b, 'en', busy_once, ''); open_photo(pg); pg.wait_for_timeout(4500)
+    check('503 once, then success: second attempt gives the result', calls2['n'] == 2 and pg.get_by_text('Test kettle').count() >= 1)
+    check('503 once: no page errors', not errs); ctx.close()
     # German translation of the network failure
     ctx, pg, errs = run(b, 'de', lambda r: r.abort(), '')
     pg.get_by_role('button', name='Produkt scannen oder suchen').first.click() if pg.get_by_role('button', name='Produkt scannen oder suchen').count() else None

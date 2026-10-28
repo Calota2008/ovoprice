@@ -795,4 +795,6 @@ export const de: Record<string, string> = {
   "Delete the alert to set another one, or create a free account to set up to {n}.": "Lösche den Alarm, um einen anderen zu setzen, oder erstelle ein kostenloses Konto, um bis zu {n} zu setzen.",
   "I already have an account": "Ich habe bereits ein Konto",
   "Advertisement": "Werbung",
+  "The analysis service is busy, trying again...": "Der Analysedienst ist ausgelastet, neuer Versuch...",
+  "The analysis service is very busy right now. Please try again in a minute, or search by name.": "Der Analysedienst ist gerade stark ausgelastet. Bitte versuche es in einer Minute erneut oder suche nach dem Namen.",
 };

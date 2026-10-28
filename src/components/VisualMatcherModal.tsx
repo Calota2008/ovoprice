@@ -224,25 +224,40 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
     }, 2500);
 
     try {
-      const response = await fetch('/api/analyze-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageBase64: previewBase64,
-          mimeType: selectedFile.type || 'image/jpeg',
-        }),
-      });
+      // Google's model is sometimes overloaded (HTTP 503 / UNAVAILABLE) or rate limited (429). That is temporary:
+      // retry up to 2 more times with a short pause before showing a message.
+      const isBusy = (status: number, text: string) =>
+        status === 503 || status === 429 || /UNAVAILABLE|high demand|RESOURCE_EXHAUSTED/i.test(text);
+      let response: Response | null = null;
+      let data: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        response = await fetch('/api/analyze-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageBase64: previewBase64,
+            mimeType: selectedFile.type || 'image/jpeg',
+          }),
+        });
+        // A proxy or hosting error can answer with HTML instead of JSON: treat that as a failed request.
+        data = await response.json().catch(() => null);
+        const raw = typeof data?.error === 'string' ? data.error : '';
+        if (response.ok || !isBusy(response.status, raw) || attempt === 2) break;
+        setPhotoScanStep(t('The analysis service is busy, trying again...'));
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+      }
 
       clearTimeout(timer1);
       clearTimeout(timer2);
 
-      // A proxy or hosting error can answer with HTML instead of JSON: treat that as a failed request.
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok || !data) {
-        throw new Error((typeof data?.error === 'string' && data.error) || t('Server error while analyzing photograph.'));
+      if (!response || !response.ok || !data) {
+        const raw = typeof data?.error === 'string' ? data.error : '';
+        if (response && isBusy(response.status, raw)) {
+          throw new Error(t('The analysis service is very busy right now. Please try again in a minute, or search by name.'));
+        }
+        throw new Error(raw || t('Server error while analyzing photograph.'));
       }
 
       const visualResult: VisualAnalysisResult = {

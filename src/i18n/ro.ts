@@ -795,4 +795,6 @@ export const ro: Record<string, string> = {
   "Delete the alert to set another one, or create a free account to set up to {n}.": "Șterge alerta ca să setezi alta sau creează un cont gratuit ca să setezi până la {n}.",
   "I already have an account": "Am deja un cont",
   "Advertisement": "Publicitate",
+  "The analysis service is busy, trying again...": "Serviciul de analiză este ocupat, încerc din nou...",
+  "The analysis service is very busy right now. Please try again in a minute, or search by name.": "Serviciul de analiză este foarte ocupat acum. Încearcă din nou peste un minut sau caută după nume.",
 };
