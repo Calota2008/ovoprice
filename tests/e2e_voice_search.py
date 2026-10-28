@@ -2,7 +2,7 @@
 # Speech recognition is replaced by a fake that records the language and returns a preset phrase.
 import re, sys
 from playwright.sync_api import sync_playwright
-U='http://127.0.0.1:5199/'
+U=sys.argv[1] if len(sys.argv)>1 else 'http://127.0.0.1:5199/'
 fails=[]
 def check(n,ok):
     print(('PASS ' if ok else 'FAIL ')+n)

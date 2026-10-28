@@ -13,8 +13,14 @@ def new(b, perms=None, lang='en'):
     pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.add_init_script(f"if(!localStorage.getItem('ovoprice_lang_v1'))localStorage.setItem('ovoprice_lang_v1','{lang}')")
     return ctx, pg, errs
+def sign_in_preview(pg, url):
+    """Signs in with the LOCAL TEST ACCOUNT (dev only), so account-only features can be tested."""
+    pg.goto(url + '?previewAccount=1'); pg.wait_for_timeout(500)
+    pg.get_by_role('button', name='User Profile').click(); pg.get_by_role('button', name='Create an account').click(); pg.wait_for_timeout(250)
+    d = pg.get_by_role('dialog'); d.get_by_label('Email address').fill('anna.muster@example.com')
+    d.get_by_role('button', name=re.compile('Email me')).click(); pg.wait_for_timeout(300)
 def save_two(pg):
-    pg.goto(U); pg.wait_for_timeout(600)
+    sign_in_preview(pg, U)  # collections need an account
     for q in ['xm5', 'dyson']:
         pg.get_by_role('button', name=re.compile('^Search$')).first.click(); pg.wait_for_timeout(300)
         pg.get_by_placeholder(re.compile('Product, model')).fill(q); pg.wait_for_timeout(800)
@@ -45,8 +51,9 @@ with sync_playwright() as p:
     check('no Share list button on the "All" view', pg.get_by_role('button', name='Share list').count() == 0)
     check('sender: no page errors', not errs); ctx.close()
 
-    # --- receiver (fresh browser)
+    # --- receiver (fresh browser), signed in with the local test account (a visitor can only keep 1 product)
     ctx, pg, errs = new(b)
+    sign_in_preview(pg, U)
     pg.goto(url); pg.wait_for_timeout(1200)
     sl = pg.get_by_test_id('shared-list')
     check('shared list screen opens straight from the link', sl.count() == 1)

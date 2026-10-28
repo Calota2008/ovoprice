@@ -6,11 +6,17 @@ fails = []
 def check(n, ok):
     print(('PASS ' if ok else 'FAIL ') + n)
     if not ok: fails.append(n)
+def sign_in_preview(pg, url):
+    """Signs in with the LOCAL TEST ACCOUNT (dev only), so account-only features can be tested."""
+    pg.goto(url + '?previewAccount=1'); pg.wait_for_timeout(500)
+    pg.get_by_role('button', name='User Profile').click(); pg.get_by_role('button', name='Create an account').click(); pg.wait_for_timeout(250)
+    d = pg.get_by_role('dialog'); d.get_by_label('Email address').fill('anna.muster@example.com')
+    d.get_by_role('button', name=re.compile('Email me')).click(); pg.wait_for_timeout(300)
 def tab(pg, name): return pg.get_by_role('tab', name=re.compile(name))
 with sync_playwright() as p:
     b = p.chromium.launch(); ctx = b.new_context(viewport={'width': 430, 'height': 900}); pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(U); pg.wait_for_timeout(600)
+    sign_in_preview(pg, U)  # collections need an account
     # save two products from the Search screen
     for q in ['xm5', 'dyson']:
         pg.get_by_role('button', name=re.compile('^Search$')).first.click(); pg.wait_for_timeout(300)

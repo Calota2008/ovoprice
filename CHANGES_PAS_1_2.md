@@ -250,3 +250,47 @@ The privacy notice now says fonts and images come from our own server.
 - Produsele fără detalii în catalogul demo au butoanele dezactivate și o notă, nu se deschide un produs greșit.
 - Fișiere: `src/components/screens/SeeAllScreen.tsx` (nou), `HomeScreen.tsx`, `App.tsx`, `src/types.ts`, `src/i18n/de.ts`, `src/i18n/ro.ts`; teste: `tests/e2e_see_all.py` (nou, 20 verificări), `tests/e2e_home_rails.py`, `tests/unit_i18n.ts`.
 - `server.ts` neatins. Nicio dependență nouă.
+
+## Limite, microfon cu 3 limbi, clip demo în Reels
+
+**Limite (fără plată)**
+- `src/utils/limits.ts` (nou) = singurul loc cu numerele: 10 produse salvate, 3 alerte, colecții doar cu cont. Vizitatorii și conturile gratuite au aceleași limite de salvări/alerte; contul deblochează colecțiile. Un plan plătit se adaugă ulterior ca a treia intrare.
+- `LimitSheet.tsx` (nou): când cineva depășește limita apare o fereastră care explică, nu o eroare. Nimic nu se șterge; ștergerea rămâne mereu posibilă. Textul nu promite sincronizare pe cont (nu există încă).
+- Salvare produs, „Save without alert", „Salvează tot" din lista primită prin link (se salvează doar cât încape) și alerte noi sunt oprite la limită. Schimbarea țintei unei alerte existente rămâne permisă.
+- Ecranul Saved: la limită apare „10 din 10 salvate" și o notă; „New collection" explică pentru vizitatori că e nevoie de cont. Colecțiile deja existente rămân vizibile.
+- Teste: `tests/e2e_limits.py` (nou). `e2e_collections.py` și `e2e_share_list.py` se autentifică acum cu contul de test local.
+
+**Microfon**
+- În timpul ascultării apar 3 butoane: English, Deutsch, Română (44 px). Începe cu limba aplicației (germana + Austria = de-AT). Alegerea unei alte limbi repornește ascultarea în ea; se ține minte pe dispozitiv și se resetează când schimbi limba aplicației. Browserul înțelege o singură limbă o dată, deci limba nu se ghicește. Butoanele rămân și după „n-am auzit nimic".
+- Teste: `tests/e2e_voice_languages.py` (nou); `unit_voice`/`e2e_voice_search` neschimbate ca logică.
+
+**Clip demo în Reels**
+- `public/reels/demo_reel.mp4` (8 s, 720×1280, H.264, fără sunet) și `demo_poster.jpg`. Intrare nouă `reel-demo-clip` la sfârșitul listei, fără produs legat: fără preț, fără Buy, „Compare" dezactivat cu explicația existentă. Titlul și descrierea sunt traduse.
+- Teste: `tests/e2e_demo_reel.py` (nou); numărul de reeluri din `e2e_reels`, `e2e_reels_v1`, `e2e_add_reel` actualizat (5 → 6).
+- `server.ts` neatins. Nicio dependență nouă.
+
+## Sincronizare pe cont (salvări, alerte, colecții)
+
+**Baza de date (Supabase, deja aplicată; copie în `supabase/migrations/20261028_create_user_lists.sql`)**
+- Tabel nou `public.user_lists`: un rând per cont (`saved`, `alerts`, `collections` ca JSON), RLS activ, politici doar pentru `authenticated` cu `user_id = auth.uid()`, `anon` fără acces, plafoane de mărime. Se șterge odată cu contul (`on delete cascade`).
+- Verificat cu SQL (tranzacție anulată, doi utilizatori fictivi): fiecare își citește/scrie doar rândul; celălalt nu vede, nu modifică, nu șterge; `anon` blocat; nu a rămas nimic în baza de date. Avertismentele de securitate rămase sunt vechi (`rls_auto_enable`, parole scurse) și nu țin de tabelul nou.
+
+**Aplicație**
+- `src/services/usePersistedLists.ts` (nou) înlocuiește salvarea locală din `App.tsx`. Vizitator: ca până acum, pe dispozitiv. Cont: datele contului se citesc de pe server și se trimit la fiecare schimbare (după 0,7 s). Nimic nu se trimite înainte ca datele contului să fi fost citite, deci un dispozitiv gol nu poate șterge contul.
+- Datele de pe dispozitiv (de vizitator) nu se suprascriu niciodată: după autentificare apare o singură dată „Adaugi în cont ce ai salvat pe acest dispozitiv?" (`MergeSheet.tsx`). „Adaugă" le îmbină (fără dubluri, în limitele de 10/3, restul rămâne pe dispozitiv); „Nu acum" nu trimite nimic. La deconectare revine lista de pe dispozitiv, iar copia contului dispare de pe dispozitiv.
+- Dacă serverul nu răspunde: mesaj clar pe ecranul Saved + „Încearcă din nou"; schimbările rămân pe dispozitiv și se îmbină cu contul la reîncercare. Ultima scriere câștigă între dispozitive.
+- Reeluri adăugate de utilizator nu se sincronizează (rămân pe dispozitiv; funcția e oprită oricum).
+- Texte actualizate (fereastra de creare cont, ștergerea contului). `src/utils/mergeLists.ts` (nou) = logica pură de îmbinare.
+- Teste: `tests/unit_merge_lists.ts` (11), `tests/e2e_account_sync.py` (nou, 26, Supabase simulat), `e2e_supabase_accounts.py` adaptat.
+- `server.ts` neatins. Nicio dependență nouă.
+
+## Visitor limits: 1 saved product, 1 alert (Oct 28)
+- `src/utils/limits.ts`: `GUEST_LIMITS` is now 1 saved product and 1 price alert (no collections). Accounts keep 10 saved / 3 alerts / collections (a Premium tier can raise these later).
+- Reason: someone who only needs one or two products should not be able to use the app forever without an account.
+- `LimitSheet` and the Saved banner now show the account offer to visitors ("Create an account" / "I already have an account"); signed-in users see only "Manage …".
+- Nothing already saved is ever deleted; removing and re-saving still works; changing the target of an existing alert is allowed.
+- Tests: `e2e_limits.py` rewritten (visitor 1/1, account 10/3); `e2e_share_list.py` receiver signs in with the local test account.
+
+## Affiliate notice in the merchant hand-over window (Oct 28)
+- `ExternalRedirectModal`: for affiliate offers (`isAffiliate === true`) a visible "Advertisement" (DE "Werbung", RO "Publicitate") label plus the commission sentence now sit ABOVE the "Proceed to …" button (before: small text below it). Non-affiliate offers show nothing.
+- The demo catalog has no affiliate offers, so this is only visible once real (Awin) offers set `isAffiliate`. Terms already contain the "Affiliate links" section.

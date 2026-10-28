@@ -33,6 +33,9 @@ def setup(pg,state):
             return route.fulfill(status=200,headers=CORS,content_type='application/json',body='{"ok":true}')
         if '/auth/v1/logout' in url: return route.fulfill(status=204,headers=CORS)
         if '/auth/v1/user' in url: return route.fulfill(status=200,headers=CORS,content_type='application/json',body=json.dumps(USER))
+        if '/rest/v1/user_lists' in url:
+            if req.method=='GET': return route.fulfill(status=200,headers=CORS,content_type='application/json',body='[]')
+            return route.fulfill(status=201,headers=CORS)
         if '/rest/v1/profiles' in url:
             if req.method=='GET': return route.fulfill(status=200,headers=CORS,content_type='application/json',body=json.dumps({'country':'AT','language':'de','display_name':state.get('profile_name')}))
             body=json.loads(req.post_data or '{}')
@@ -49,7 +52,7 @@ with sync_playwright() as p:
         pg.goto(U); pg.wait_for_timeout(600)
         pg.get_by_role('button',name='User Profile').click(); pg.get_by_role('button',name='Create an account').click(); pg.wait_for_timeout(250)
         d=pg.get_by_role('dialog')
-        check(f'{name}: honest note, no promise of sync', d.get_by_text('for now they stay on this device').is_visible() and d.get_by_text('will move to your account').count()==0)
+        check(f'{name}: sync is real now: no "stays on this device" note, device data is offered, not moved silently', d.get_by_text('for now they stay on this device').count()==0 and d.get_by_text('can be added to your account').is_visible() and d.get_by_text('will move to your account').count()==0)
         d.get_by_role('button',name=re.compile('Google')).first.click(); pg.wait_for_timeout(300)
         check(f'{name}: Google says not switched on (no fake sign-in)', d.get_by_text("isn't switched on yet").is_visible() and pg.get_by_role('dialog').count()==1)
         d.get_by_role('button',name=re.compile('Apple')).click(); pg.wait_for_timeout(300)
@@ -115,7 +118,7 @@ with sync_playwright() as p:
     # delete account (the UI is Romanian now: the account profile says so)
     pg.get_by_role('button',name='Șterge contul',exact=True).click(); pg.wait_for_timeout(300)
     d=pg.get_by_role('dialog')
-    check('delete: confirmation dialog explains it is permanent', d.get_by_text('definitiv').is_visible() and d.get_by_text('nu fac încă parte din cont').is_visible())
+    check('delete: confirmation dialog explains it is permanent', d.get_by_text('definitiv').is_visible() and d.get_by_text('se șterg odată cu el').is_visible())
     sub=d.get_by_role('button',name='Șterge contul meu')
     check('delete: button disabled until the word is typed', sub.is_disabled())
     d.get_by_label(re.compile('Pentru confirmare')).fill('sterge'); pg.wait_for_timeout(100)
