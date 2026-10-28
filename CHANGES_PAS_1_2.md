@@ -294,3 +294,8 @@ The privacy notice now says fonts and images come from our own server.
 ## Affiliate notice in the merchant hand-over window (Oct 28)
 - `ExternalRedirectModal`: for affiliate offers (`isAffiliate === true`) a visible "Advertisement" (DE "Werbung", RO "Publicitate") label plus the commission sentence now sit ABOVE the "Proceed to …" button (before: small text below it). Non-affiliate offers show nothing.
 - The demo catalog has no affiliate offers, so this is only visible once real (Awin) offers set `isAffiliate`. Terms already contain the "Affiliate links" section.
+
+## Photo analysis: Google overload (503) handled (Oct 28)
+- Real-world finding: the server reached Gemini fine (key OK) but Google answered 503 UNAVAILABLE ("high demand"); the app showed the raw JSON.
+- `VisualMatcherModal`: on 503 / 429 / UNAVAILABLE the request is retried up to 2 more times (2 s, 4 s pause, status line "The analysis service is busy, trying again..."). If it still fails, a friendly translated message is shown instead of raw JSON. Other errors behave as before. `server.ts` untouched.
+- `tests/e2e_photo_errors.py`: two new cases (always 503 = 3 tries + friendly message; 503 once then success).
