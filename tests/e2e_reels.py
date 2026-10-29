@@ -29,12 +29,13 @@ with sync_playwright() as p:
     check('no mute button without video', pg.get_by_role('button', name=re.compile('Mute|Unmute')).count() == 0)
     check('no "More options" placeholder button (Share is a real button now)', pg.get_by_label('More options').count() == 0 and pg.get_by_label('Share product').count() == 1)
 
-    # navigation: buttons, keyboard, swipe
-    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(200)
+    # navigation: touch screens have no arrow buttons (swipe instead); PC arrows are checked at the end
+    check('touch screen: no up/down arrow buttons', not pg.get_by_label('Next Reel').is_visible() and not pg.get_by_label('Previous Reel').is_visible())
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(200)
     check('next -> 2 of 6', pg.get_by_text('2 of 6').is_visible())
-    pg.get_by_label('Previous Reel').click(); pg.wait_for_timeout(200)
+    pg.keyboard.press('ArrowUp'); pg.wait_for_timeout(200)
     check('previous -> 1 of 6', pg.get_by_text('1 of 6').is_visible())
-    pg.get_by_label('Previous Reel').click(); pg.wait_for_timeout(200)
+    pg.keyboard.press('ArrowUp'); pg.wait_for_timeout(200)
     check('previous wraps -> 6 of 6', pg.get_by_text('6 of 6').is_visible())
     pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(200)
     check('ArrowDown -> 1 of 6', pg.get_by_text('1 of 6').is_visible())
@@ -57,7 +58,7 @@ with sync_playwright() as p:
     for i, (key, label) in enumerate(PRODUCTS):
         open_reels(pg)
         for _ in range(i):
-            pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(120)
+            pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(120)
         title_ok = pg.get_by_role('heading', name=re.compile(key)).first.is_visible()
         pg.get_by_role('button', name=re.compile(r'^Compare (\d+ prices|Prices)$')).click(); pg.wait_for_timeout(400)
         sheet = pg.get_by_role('dialog')
@@ -79,7 +80,7 @@ with sync_playwright() as p:
 
     # Compare sheet behaviour (stays on the feed)
     open_reels(pg)
-    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)   # Sony
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(150)   # Sony
     pg.get_by_role('button', name=re.compile(r'^Compare (\d+ prices|Prices)$')).click(); pg.wait_for_timeout(300)
     check('sheet shows DEMO + disclaimer', pg.get_by_role('dialog').get_by_text('DEMO').first.is_visible() and pg.get_by_text(re.compile('Demo prices are examples')).is_visible())
     pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(200)
@@ -103,7 +104,7 @@ with sync_playwright() as p:
 
     # Price alert from a Reel
     open_reels(pg)
-    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)   # Sony
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(150)   # Sony
     check('bell shows "Set price alert" before any alert', pg.get_by_role('button', name='Set price alert').is_visible())
     pg.get_by_role('button', name='Set price alert').click(); pg.wait_for_timeout(600)
     check('alert screen opens for the reel product (Sony)', pg.get_by_text(re.compile('target price', re.I)).first.is_visible() and 'Sony' in pg.inner_text('body') and 'Dyson' not in pg.inner_text('body'))
@@ -112,18 +113,18 @@ with sync_playwright() as p:
     pg.get_by_role('button', name=re.compile('Home')).click(); pg.wait_for_timeout(300)
     pg.get_by_role('button', name=re.compile('Discover Reels')).click(); pg.wait_for_timeout(700)
     check('back in Reels on the same reel, bell shows alert on', pg.get_by_text('2 of 6').is_visible() and pg.get_by_role('button', name='Edit price alert').is_visible())
-    pg.get_by_label('Previous Reel').click(); pg.wait_for_timeout(150)
+    pg.keyboard.press('ArrowUp'); pg.wait_for_timeout(150)
     check('other reel (Dyson) has no alert', pg.get_by_role('button', name='Set price alert').is_visible())
     pg.evaluate("localStorage.removeItem('ovoprice_alerts_v1')")
 
     # Save / persist / filters
     open_reels(pg)
-    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)      # Sony
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(150)      # Sony
     pg.get_by_role('button', name='Save product').click(); pg.wait_for_timeout(200)
     check('save -> Saved state immediately', pg.get_by_role('button', name='Remove from Saved').is_visible())
     pg.reload(); pg.wait_for_timeout(600)
     pg.get_by_role('button', name=re.compile('Discover Reels')).click(); pg.wait_for_timeout(600)
-    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(150)
     check('saved persists after reload', pg.get_by_role('button', name='Remove from Saved').is_visible())
     pg.get_by_role('tab', name='Saved Products').click(); pg.wait_for_timeout(300)
     check('Saved Products filter lists only saved (1 of 1)', pg.get_by_text('1 of 1').is_visible() and pg.get_by_role('heading', name=re.compile('Sony')).is_visible())
@@ -139,7 +140,7 @@ with sync_playwright() as p:
     check('category All restores list', pg.get_by_text('1 of 6').is_visible())
 
     # Saved from Reel visible on Saved screen & corrupt storage
-    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(150)
+    pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(150)
     pg.get_by_role('button', name='Save product').click(); pg.wait_for_timeout(200)
     pg.get_by_role('button', name=re.compile('^Saved$|Saved')).last.click(); pg.wait_for_timeout(500)
     check('Saved screen shows product saved from Reel', pg.get_by_text(re.compile('Sony')).first.is_visible())
@@ -148,6 +149,31 @@ with sync_playwright() as p:
     check('corrupt storage does not break Reels', pg.get_by_text('1 of 6').is_visible())
     check('no page errors', not errs)
     if errs: print(errs[:3])
+    ctx.close()
+    # PC (mouse): the up/down arrows are shown and work
+    ctx = b.new_context(viewport={'width': 1280, 'height': 900}); pg = ctx.new_page()
+    pg.add_init_script("localStorage.setItem('ovoprice_lang_v1','en')")
+    open_reels(pg)
+    check('PC: arrows visible', pg.get_by_label('Next Reel').is_visible() and pg.get_by_label('Previous Reel').is_visible())
+    pg.get_by_label('Next Reel').click(); pg.wait_for_timeout(200)
+    check('PC: next arrow -> 2 of 6', pg.get_by_text('2 of 6').is_visible())
+    pg.get_by_label('Previous Reel').click(); pg.wait_for_timeout(200)
+    check('PC: previous arrow -> 1 of 6', pg.get_by_text('1 of 6').is_visible())
+    ctx.close()
+    # Phone: a real finger swipe up / down changes the reel
+    ctx = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True); pg = ctx.new_page()
+    pg.add_init_script("localStorage.setItem('ovoprice_lang_v1','en')")
+    open_reels(pg)
+    def swipe(y0, y1):
+        box = pg.locator('.touch-pan-x').first.bounding_box(); x = box['x'] + box['width'] / 2
+        cdp = ctx.new_cdp_session(pg)
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y0}]})
+        for k in range(1, 6):
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x, 'y': y0 + (y1 - y0) * k / 5}]})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); pg.wait_for_timeout(250)
+    check('phone: arrows hidden', not pg.get_by_label('Next Reel').is_visible())
+    swipe(500, 300); check('phone: swipe up -> 2 of 6', pg.get_by_text('2 of 6').is_visible())
+    swipe(300, 500); check('phone: swipe down -> 1 of 6', pg.get_by_text('1 of 6').is_visible())
     ctx.close(); b.close()
 print('FAILED:', fails or 'none')
 sys.exit(1 if fails else 0)

@@ -325,3 +325,8 @@ The privacy notice now says fonts and images come from our own server.
 - New files: `public/ovoprice_icon_256.png` (header), `public/ovoprice_icon_512.png` (spare, large), `public/ovoprice_favicon_32.png` (tab), `public/ovoprice_apple_touch_180.png` (phone home screen).
 - `src/components/OvoPriceLogo.tsx` and `index.html` now use these PNGs. The name is written next to the icon in the header.
 - `public/ovoprice_mark.svg` and the old `ovoprice_logo.png` are no longer used, but kept.
+
+## Reels: no up/down arrows on phones and tablets (Oct 29)
+- `src/components/screens/ProductReelsScreen.tsx`: the two arrow buttons are hidden on touch screens (`hidden pointer-fine:flex`); phones and tablets switch reels by swiping. On PC (mouse) the arrows stay, because a mouse cannot swipe; the keyboard arrows also keep working.
+- `tests/e2e_reels.py`: navigation on the touch test uses the keyboard; new checks: arrows hidden on touch, visible and working on PC, a real finger swipe up/down changes the reel.
+- All Reels buttons were clicked through on a phone-size screen (Back, For You / Categories / Saved Products, category chips, grid view, Save, Alert, Share, Compare prices, Buy at, See all offers, Close, View Details): all work.

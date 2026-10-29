@@ -686,10 +686,10 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         </div>
         )}
 
-        {/* Previous / next (only when there is more than one reel) */}
+        {/* Previous / next arrows: only for mouse users (PC). Phones and tablets swipe instead. */}
         {visibleReels.length > 1 && (
           <>
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-20 hidden pointer-fine:flex flex-col gap-2" data-testid="reel-arrows">
               <button
                 onClick={goPrev}
                 className="w-9 h-9 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-400 flex items-center justify-center cursor-pointer backdrop-blur-md shadow-md"
