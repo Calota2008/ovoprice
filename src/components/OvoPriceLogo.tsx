@@ -1,5 +1,6 @@
 import React from 'react';
-import ovoPriceLogoSrc from '../assets/images/ovoprice_logo.png';
+/** Vector mark (public/ovoprice_mark.svg): stays sharp at every size. */
+const OVOPRICE_MARK = '/ovoprice_mark.svg';
 
 export interface OvoPriceLogoProps {
   className?: string;
@@ -14,22 +15,24 @@ export const OvoPriceLogo: React.FC<OvoPriceLogoProps> = ({
 }) => {
   const iconSizes = {
     sm: 'w-6 h-6',
-    md: 'w-7 h-7',
-    lg: 'w-9 h-9',
+    md: 'w-8 h-8 lg:w-10 lg:h-10',
+    lg: 'w-11 h-11',
   };
 
   const textSizes = {
     sm: 'text-base font-bold tracking-tight',
-    md: 'text-lg font-bold tracking-tight',
+    md: 'text-lg lg:text-xl font-bold tracking-tight',
     lg: 'text-xl font-bold tracking-tight',
   };
 
   return (
     <div className={`flex items-center gap-2 select-none ${className}`}>
       <img
-        src={ovoPriceLogoSrc}
+        src={OVOPRICE_MARK}
         alt="OvoPrice"
-        className={`${iconSizes[size]} rounded-lg object-contain shadow-xs shrink-0 bg-[#08142e]`}
+        width={40}
+        height={40}
+        className={`${iconSizes[size]} object-contain shrink-0`}
       />
 
       {!iconOnly && (

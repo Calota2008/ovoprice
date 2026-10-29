@@ -312,3 +312,10 @@ The privacy notice now says fonts and images come from our own server.
 - `HomeScreen.tsx`: two columns (headline + search | Scan card), Reels strip with up to 6 thumbnails, "Price drops" / "New products" as a 4-column grid, larger headline.
 - Tests: new `tests/e2e_wide_layout.py` (1280 / 390 / 768 px); `e2e_i18n_settings` and `e2e_reels_v1` adapted (hidden header nav and extra thumbnails).
 - Next steps: Search, product page with offers table, comparison, Saved/Alerts grids.
+
+## New vector logo mark (Oct 29)
+- New `public/ovoprice_mark.svg` (tag + magnifier + bars, no wordmark inside): sharp at every size, transparent rounded corners, ~1 KB.
+- `OvoPriceLogo.tsx`: uses the SVG (32 px on phones, 40 px on wide screens) with the "OvoPrice" text beside it (before: a 195 KB PNG that already contained the wordmark, unreadable below ~48 px).
+- `index.html`: SVG favicon + 32 px PNG fallback + 180 px apple-touch icon (opaque, full-bleed, as iOS expects). New files: `public/ovoprice_favicon_32.png`, `public/ovoprice_apple_touch_180.png`.
+- The old `public/ovoprice_logo.png` and `src/assets/images/ovoprice_logo.png` are no longer used (kept in the repo; can be deleted).
+- Drawn as a close approximation of the old artwork, not a pixel copy. Check the "OvoPrice" name as a trademark before launch.
