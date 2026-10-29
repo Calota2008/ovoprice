@@ -1,6 +1,6 @@
 import React from 'react';
-/** Vector mark (public/ovoprice_mark.svg): stays sharp at every size. */
-const OVOPRICE_MARK = '/ovoprice_mark.svg';
+/** App icon without the wordmark (public/ovoprice_icon_256.png); the name is written next to it. */
+const OVOPRICE_MARK = '/ovoprice_icon_256.png';
 
 export interface OvoPriceLogoProps {
   className?: string;

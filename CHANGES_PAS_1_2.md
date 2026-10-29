@@ -319,3 +319,9 @@ The privacy notice now says fonts and images come from our own server.
 - `index.html`: SVG favicon + 32 px PNG fallback + 180 px apple-touch icon (opaque, full-bleed, as iOS expects). New files: `public/ovoprice_favicon_32.png`, `public/ovoprice_apple_touch_180.png`.
 - The old `public/ovoprice_logo.png` and `src/assets/images/ovoprice_logo.png` are no longer used (kept in the repo; can be deleted).
 - Drawn as a close approximation of the old artwork, not a pixel copy. Check the "OvoPrice" name as a trademark before launch.
+
+## Logo: your own icon, without the wordmark (Oct 29)
+- The original icon (price tag + magnifier with bars) was taken from `public/ovoprice_logo.png`; the "OvoPrice" text was removed and the symbol enlarged on a clean background with the same blue colours.
+- New files: `public/ovoprice_icon_256.png` (header), `public/ovoprice_icon_512.png` (spare, large), `public/ovoprice_favicon_32.png` (tab), `public/ovoprice_apple_touch_180.png` (phone home screen).
+- `src/components/OvoPriceLogo.tsx` and `index.html` now use these PNGs. The name is written next to the icon in the header.
+- `public/ovoprice_mark.svg` and the old `ovoprice_logo.png` are no longer used, but kept.
