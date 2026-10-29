@@ -74,7 +74,7 @@ with sync_playwright() as p:
     pg.goto(U); pg.wait_for_timeout(600)
     for tab,heading in [('Alarme','Preisalarme'),('Gespeichert','Gespeicherte Produkte'),('Suchen','Suchen')]:
         pg.get_by_role('navigation').get_by_role('button',name=re.compile('^'+tab)).first.click(); pg.wait_for_timeout(300)
-        check(f'DE tab {tab}', pg.get_by_text(heading).first.is_visible())
+        check(f'DE tab {tab}', pg.get_by_text(heading).locator('visible=true').count() > 0)  # the wide-screen header nav is hidden on phones
         shot(pg,f'de_{tab}')
     check('DE: no page errors', not errs); ctx.close()
     b.close()

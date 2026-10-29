@@ -438,7 +438,7 @@ export default function App() {
       <div
         className={`w-full transition-all duration-200 flex flex-col flex-1 ${
           deviceFrameMode === 'mobile'
-            ? 'max-w-[430px] my-0 sm:my-4 sm:rounded-3xl sm:border sm:border-slate-300 sm:shadow-2xl overflow-hidden bg-[#faf8ff]'
+            ? 'max-w-[430px] my-0 sm:my-4 sm:rounded-3xl sm:border sm:border-slate-300 sm:shadow-2xl overflow-hidden bg-[#faf8ff] lg:max-w-6xl lg:my-0 lg:rounded-none lg:border-0 lg:shadow-none lg:overflow-visible'
             : 'max-w-2xl px-2 my-2'
         }`}
       >
@@ -451,12 +451,14 @@ export default function App() {
           onBack={handleBack}
           unreadAlertsCount={alerts.filter((a) => a.isUnread).length}
           onOpenAlerts={() => navigateTo('alerts')}
+          activeScreen={activeScreen}
+          onNavigate={(screen) => navigateTo(screen)}
         />
 
         <DemoBanner />
 
         {/* Content Viewport */}
-        <main className="flex-1 px-4 pt-3 pb-4">
+        <main className={`flex-1 px-4 pt-3 pb-4 lg:px-6 lg:pt-6 ${activeScreen === 'home' ? '' : 'lg:max-w-md lg:mx-auto lg:w-full'}`}>
           {activeScreen === 'home' && (
             <HomeScreen
               onSearchFocus={() => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, User, Settings, LogOut } from 'lucide-react';
+import type { ActiveScreen } from '../types';
 import { OvoPriceLogo } from './OvoPriceLogo';
 import { authProvider } from '../services/authProvider';
 import { useAuthUser, userInitials } from '../services/useAuthUser';
@@ -13,6 +14,9 @@ interface HeaderProps {
   onOpenAlerts?: () => void;
   onOpenAuth?: (mode: 'sign-in' | 'create') => void;
   onOpenSettings?: () => void;
+  /** Wide screens show the main navigation here instead of the bottom bar. */
+  activeScreen?: ActiveScreen;
+  onNavigate?: (screen: ActiveScreen) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,12 +27,14 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAlerts,
   onOpenAuth,
   onOpenSettings,
+  activeScreen,
+  onNavigate,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const user = useAuthUser();
 
   return (
-    <header className="sticky top-0 z-40 bg-[#faf8ff]/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between gap-3 max-w-md mx-auto w-full transition-colors">
+    <header className="sticky top-0 z-40 bg-[#faf8ff]/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between gap-3 max-w-md lg:max-w-6xl lg:px-6 mx-auto w-full transition-colors">
       <div className="flex items-center gap-2.5 min-w-0">
         {showBack && (
           <button
@@ -51,6 +57,32 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2 shrink-0 relative">
+        {onNavigate && (
+          <nav aria-label={t("Main Navigation")} className="hidden lg:flex items-center gap-1 mr-2">
+            {([
+              ['home', t("Home")],
+              ['search', t("Search")],
+              ['saved', t("Saved")],
+              ['alerts', t("Alerts")],
+              ['product-reels', t("Reels")],
+            ] as [ActiveScreen, string][]).map(([screen, label]) => (
+              <button
+                key={screen}
+                type="button"
+                onClick={() => onNavigate(screen)}
+                aria-current={activeScreen === screen ? 'page' : undefined}
+                className={`h-10 px-3 rounded-lg text-sm font-semibold cursor-pointer transition-colors relative ${
+                  activeScreen === screen ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                {label}
+                {screen === 'alerts' && unreadAlertsCount > 0 && (
+                  <span className="ml-1.5 inline-flex min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 text-white text-[10px] font-bold">{unreadAlertsCount}</span>
+                )}
+              </button>
+            ))}
+          </nav>
+        )}
         {/* User profile avatar matching screenshot */}
         <button
           onClick={() => setShowProfileMenu((prev) => !prev)}

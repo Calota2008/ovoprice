@@ -304,3 +304,11 @@ The privacy notice now says fonts and images come from our own server.
 - Photo tab: a short note under "Analyze Photo with Gemini" says the photo is sent through our server to Google's Gemini service and is not stored (the privacy text already said this; now it is visible before the user taps).
 - Footer (`LegalFooter`): idealo-style price note: euros incl. VAT, plus shipping where it applies; prices, ranking and delivery times can change; the merchant's website price counts. EN/DE/RO.
 - Tests: `e2e_photo_errors.py` +3 checks. Not legal advice: the texts still need a specialist review before launch.
+
+## PC / wide-screen layout, step 1 (Oct 28)
+- Breakpoint: `lg` (1024 px and up). Below that (phones, tablets) nothing changes.
+- `App.tsx`: at `lg` the phone frame is gone and the page is up to `max-w-6xl`; Home uses the full width, every other screen stays a centered phone-width column for now (next steps).
+- `Header.tsx`: top navigation (Home, Search, Saved, Alerts with unread badge, Reels) shown from `lg`; `BottomNav` is hidden from `lg`.
+- `HomeScreen.tsx`: two columns (headline + search | Scan card), Reels strip with up to 6 thumbnails, "Price drops" / "New products" as a 4-column grid, larger headline.
+- Tests: new `tests/e2e_wide_layout.py` (1280 / 390 / 768 px); `e2e_i18n_settings` and `e2e_reels_v1` adapted (hidden header nav and extra thumbnails).
+- Next steps: Search, product page with offers table, comparison, Saved/Alerts grids.

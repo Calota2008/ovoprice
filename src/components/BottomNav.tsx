@@ -21,7 +21,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
   return (
     <nav
-      className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 max-w-md mx-auto w-full transition-all"
+      className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 max-w-md mx-auto w-full transition-all lg:hidden"
       aria-label={t("Main Navigation")}
     >
       <div className="grid grid-cols-4 h-16 items-center px-2">

@@ -37,7 +37,7 @@ const ProductRail: React.FC<{
   testId: string;
   onSeeAll?: () => void;
 }> = ({ title, items, onSelect, testId, onSeeAll }) => (
-  <section aria-label={title} data-testid={testId}>
+  <section aria-label={title} data-testid={testId} className="lg:col-span-12">
     <div className="flex items-center justify-between mb-2">
       <h3 className="text-sm font-bold text-slate-900">{title}</h3>
       <div className="flex items-center gap-2">
@@ -55,15 +55,15 @@ const ProductRail: React.FC<{
         )}
       </div>
     </div>
-    <ul className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scroll-pl-4 snap-x scrollbar-none">
+    <ul className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scroll-pl-4 snap-x scrollbar-none lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible lg:mx-0 lg:px-0 lg:[&>li:nth-child(n+5)]:hidden">
       {items.map((item) => (
-        <li key={item.id} className="snap-start shrink-0 w-[150px]">
+        <li key={item.id} className="snap-start shrink-0 w-[150px] lg:w-auto">
           <button
             type="button"
             onClick={() => onSelect(item)}
             className="w-full h-full text-left bg-white rounded-xl border border-slate-200 p-2 shadow-2xs hover:border-slate-300 flex flex-col gap-1.5 transition-colors cursor-pointer"
           >
-            <span className="relative block h-[84px] rounded-lg bg-slate-100 border border-slate-200 overflow-hidden">
+            <span className="relative block h-[84px] lg:h-40 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden">
               <img src={item.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               <span
                 className={`absolute left-1.5 top-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
@@ -183,10 +183,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const { data: newProducts } = usePriceData<PopularSearchItem[]>(() => priceProvider.getNewProducts(), [], []);
   const { data: homeReels } = usePriceData<ReelItem[]>(() => priceProvider.getReels(), [], []);
   // Only reels that have a picture are shown as thumbnails.
-  const reelThumbs = homeReels.filter((r) => !!r.image).slice(0, 3);
+  const reelThumbs = homeReels.filter((r) => !!r.image).slice(0, 6); // phone shows the first 3, wide screens up to 6
 
   return (
-    <div className="pb-24 space-y-4">
+    <div className="pb-24 space-y-4 lg:pb-8 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-8">
+      <div className="space-y-4 lg:col-span-7 lg:self-center lg:space-y-5">
       {/* LANDED COST TRUTH Pill & Main Headline */}
       <div className="pt-1">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold rounded-md uppercase tracking-wider mb-2">
@@ -195,7 +196,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
 
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-2xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
             {t("Find & compare best total prices across all stores.")}
           </h1>
           <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-1">
@@ -259,8 +260,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       )}
 
+      </div>
+
       {/* Scan / Find Product Hero Banner */}
-      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
+      <div className="lg:col-span-5 bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
         {/* Background decorative grid */}
         <div className="absolute -right-4 -bottom-6 w-36 h-36 border border-emerald-500/20 rounded-full" />
         <div className="absolute right-6 -top-6 w-28 h-28 border border-emerald-500/15 rounded-full" />
@@ -343,7 +346,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <button
         type="button"
         onClick={onOpenReels}
-        className="w-full text-left bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl p-3 border border-slate-800 hover:border-cyan-500/50 transition-all shadow-xs cursor-pointer group"
+        className="lg:col-span-12 w-full text-left bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl p-3 border border-slate-800 hover:border-cyan-500/50 transition-all shadow-xs cursor-pointer group"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
@@ -370,9 +373,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         </div>
         {reelThumbs.length > 0 && (
-          <div className="mt-2.5 grid grid-cols-3 gap-2" data-testid="home-reel-thumbs">
-            {reelThumbs.map((r) => (
-              <div key={r.id} className="rounded-lg overflow-hidden bg-black border border-slate-800">
+          <div className="mt-2.5 grid grid-cols-3 lg:grid-cols-6 gap-2" data-testid="home-reel-thumbs">
+            {reelThumbs.map((r, i) => (
+              <div key={r.id} className={`rounded-lg overflow-hidden bg-black border border-slate-800 ${i >= 3 ? 'hidden lg:block' : ''}`}>
                 <div className="aspect-[4/5] flex items-center justify-center">
                   <img src={r.image} alt="" className="max-h-full max-w-full object-contain" referrerPolicy="no-referrer" />
                 </div>
@@ -385,7 +388,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
       {/* Data source indicator (no fake "live" feed) */}
       {priceProvider.isDemo && (
-        <div className="flex items-center justify-between text-xs py-1.5 px-3 bg-amber-50 rounded-lg border border-amber-200">
+        <div className="lg:col-span-12 flex items-center justify-between text-xs py-1.5 px-3 bg-amber-50 rounded-lg border border-amber-200">
           <div className="flex items-center gap-2">
             <DemoBadge />
             <span className="text-amber-900 font-medium text-[11px]">{t("Example catalog")}</span>
@@ -403,7 +406,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       )}
 
       {/* Paste link from clipboard (read only when the user taps) */}
-      <div className="bg-slate-900 text-white rounded-xl p-3 shadow-xl border border-slate-700 flex items-center justify-between gap-3">
+      <div className="lg:col-span-12 bg-slate-900 text-white rounded-xl p-3 shadow-xl border border-slate-700 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center shrink-0">
             <Clipboard className="w-4 h-4 text-emerald-400" />
@@ -420,7 +423,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {t("Paste and analyze")}
         </button>
       </div>
-      {pasteError && <p className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">{pasteError}</p>}
+      {pasteError && <p className="lg:col-span-12 text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">{pasteError}</p>}
     </div>
   );
 };

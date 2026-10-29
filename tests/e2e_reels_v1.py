@@ -16,7 +16,7 @@ with sync_playwright() as p:
     pg.add_init_script("localStorage.setItem('ovoprice_lang_v1','en')")
     pg.goto(U); pg.wait_for_timeout(700)
     thumbs = pg.get_by_test_id('home-reel-thumbs')
-    check('Home shows 3 reel thumbnails', thumbs.count() == 1 and thumbs.locator('img').count() == 3)
+    check('Home shows 3 reel thumbnails', thumbs.count() == 1 and thumbs.locator('img:visible').count() == 3)
     check('thumbnails are inside the one Reels button', pg.get_by_role('button', name=re.compile('Discover Reels')).get_by_test_id('home-reel-thumbs').count() == 1)
     pg.get_by_role('button', name=re.compile('Discover Reels')).click(); pg.wait_for_timeout(900)
     check('no "Add Reel" button for visitors', pg.get_by_role('button', name='Add Reel').count() == 0)
