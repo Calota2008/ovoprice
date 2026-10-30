@@ -209,7 +209,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onOpenAuth }) =>
               <div>
                 <p className="text-sm font-semibold text-slate-900">{t("You're browsing as a guest")}</p>
                 <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                  {t('Sign in to sync saved products, alerts and Reels across your devices.')}
+                  {t('Sign in to sync saved products, alerts and collections across your devices.')}
                 </p>
               </div>
               <div className="flex gap-2">

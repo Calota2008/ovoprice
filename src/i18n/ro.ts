@@ -426,7 +426,7 @@ export const ro: Record<string, string> = {
   "Language and country are saved on this device.": "Limba și țara sunt salvate pe acest dispozitiv.",
   "Account": "Cont",
   "You're browsing as a guest": "Navighezi ca invitat",
-  "Sign in to sync saved products, alerts and Reels across your devices.": "Autentifică-te ca să sincronizezi produsele salvate, alertele și Reels între dispozitive.",
+  "Sign in to sync saved products, alerts and collections across your devices.": "Autentifică-te ca să sincronizezi produsele salvate, alertele și colecțiile între dispozitive.",
   "Language": "Limbă",
   "Country": "Țară",
   "Search {name} on MediaMarkt.de": "Caută {name} pe MediaMarkt.de",
@@ -847,4 +847,6 @@ export const ro: Record<string, string> = {
   "Your target": "Ținta ta",
   "Status": "Stare",
   "{amount} to go": "mai sunt {amount}",
+  "Back to the comparison": "Înapoi la comparație",
+  "Settings and legal": "Setări și informații legale",
 };

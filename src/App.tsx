@@ -47,9 +47,10 @@ import {
 import { Smartphone, Monitor } from 'lucide-react';
 
 import { t } from './i18n';
+import { useIsDesktop } from './hooks/useIsDesktop';
 
 /** Screens that use the full width on PC (lg). All others stay a centered phone-width column there. */
-const WIDE_SCREENS: ActiveScreen[] = ['home', 'product-overview', 'search', 'saved', 'alerts'];
+const WIDE_SCREENS: ActiveScreen[] = ['home', 'product-overview', 'offers-comparison', 'breakdown', 'price-history', 'set-alert', 'search', 'saved', 'alerts', 'product-reels', 'settings', 'legal'];
 
 const DEV_NAV =
   typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('devnav');
@@ -57,6 +58,7 @@ const DEV_NAV =
 export default function App() {
   // Subscribing here re-renders the whole tree when language or country changes.
   const language = useLanguage();
+  const isDesktop = useIsDesktop();
   useCountry();
   useEffect(() => {
     document.title = t('OvoPrice - Compare prices');
@@ -364,6 +366,27 @@ export default function App() {
     navigateTo(selectedProduct ? 'set-alert' : 'search');
   };
 
+
+  // Product page (also used on PC for the offers comparison: the PC product page already holds the full offers table).
+  const productOverview = (
+    <ProductOverviewScreen
+      product={selectedProduct}
+      onCompareOffers={() => navigateTo('offers-comparison')}
+      onRescan={handleBack}
+      onOpenSetAlert={() => navigateTo('set-alert')}
+      onOpenHistory={() => navigateTo('price-history')}
+      isSaved={selectedProduct ? isProductSaved(selectedProduct.id) : false}
+      onToggleSave={() => selectedProduct && handleToggleSaveProduct(selectedProduct)}
+      onRedirectStore={(offer) => setSelectedOfferForRedirect(offer)}
+      onSelectOffer={(offer) => {
+        setActiveOffer(offer);
+        navigateTo('breakdown');
+      }}
+      onQuickAlert={handleConfirmAlert}
+      existingAlertPrice={selectedProduct ? alerts.find((a) => a.productId === selectedProduct.id)?.targetPrice : undefined}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-[#faf8ff] text-[#131b2e] flex flex-col items-center">
       {DEV_NAV && (
@@ -511,26 +534,10 @@ export default function App() {
             />
           )}
 
-          {activeScreen === 'product-overview' && (
-            <ProductOverviewScreen
-              product={selectedProduct}
-              onCompareOffers={() => navigateTo('offers-comparison')}
-              onRescan={handleBack}
-              onOpenSetAlert={() => navigateTo('set-alert')}
-              onOpenHistory={() => navigateTo('price-history')}
-              isSaved={selectedProduct ? isProductSaved(selectedProduct.id) : false}
-              onToggleSave={() => selectedProduct && handleToggleSaveProduct(selectedProduct)}
-              onRedirectStore={(offer) => setSelectedOfferForRedirect(offer)}
-              onSelectOffer={(offer) => {
-                setActiveOffer(offer);
-                navigateTo('breakdown');
-              }}
-              onQuickAlert={handleConfirmAlert}
-              existingAlertPrice={selectedProduct ? alerts.find((a) => a.productId === selectedProduct.id)?.targetPrice : undefined}
-            />
-          )}
+          {activeScreen === 'product-overview' && productOverview}
 
-          {activeScreen === 'offers-comparison' && selectedProduct && (
+          {activeScreen === 'offers-comparison' && selectedProduct && isDesktop && productOverview}
+          {activeScreen === 'offers-comparison' && selectedProduct && !isDesktop && (
             <OffersComparisonScreen
               product={selectedProduct}
               onSelectOffer={(offer) => {
@@ -548,6 +555,8 @@ export default function App() {
               offer={activeOffer ?? selectedProduct.offers.find((o) => o.isBestPrice) ?? selectedProduct.offers[0]}
               onOpenHistory={() => navigateTo('price-history')}
               onRedirectStore={(offer) => setSelectedOfferForRedirect(offer)}
+              onSelectOffer={(offer) => setActiveOffer(offer)}
+              onBackToComparison={() => navigateTo('product-overview')}
             />
           )}
 
@@ -646,8 +655,43 @@ export default function App() {
               onViewChange={setReelsView}
             />
           )}
-          {activeScreen === 'settings' && <SettingsScreen onOpenAuth={(mode) => setAuthMode(mode)} />}
-          {activeScreen === 'legal' && <LegalScreen page={legalPage} />}
+          {!isDesktop && activeScreen === 'settings' && <SettingsScreen onOpenAuth={(mode) => setAuthMode(mode)} />}
+          {!isDesktop && activeScreen === 'legal' && <LegalScreen page={legalPage} />}
+          {isDesktop && (activeScreen === 'settings' || activeScreen === 'legal') && (
+            <div className="grid grid-cols-[230px_minmax(0,760px)] gap-8 justify-center items-start pb-8" data-testid="settings-legal-desktop">
+              <nav aria-label={t('Settings and legal')} className="bg-white rounded-2xl border border-slate-200 p-2 text-sm">
+                {(
+                  [
+                    ['settings', null, t('Account settings')],
+                    ['legal', 'impressum', 'Impressum'],
+                    ['legal', 'privacy', t('Privacy')],
+                    ['legal', 'terms', t('Terms')],
+                  ] as const
+                ).map(([screen, page, label]) => {
+                  const current = activeScreen === screen && (page === null || page === legalPage);
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => (page ? openLegal(page) : navigateTo('settings'))}
+                      aria-current={current ? 'page' : undefined}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl cursor-pointer ${
+                        current ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </nav>
+              <div className={`bg-white rounded-2xl border border-slate-200 px-10 py-8 min-w-0 ${activeScreen === 'legal' ? '[&_p]:text-[15px] [&_p]:leading-7 [&_h2]:text-base' : ''}`}>
+                {activeScreen === 'settings' ? (
+                  <SettingsScreen onOpenAuth={(mode) => setAuthMode(mode)} />
+                ) : (
+                  <LegalScreen page={legalPage} />
+                )}
+              </div>
+            </div>
+          )}
           {activeScreen === 'shared-list' && sharedList && (
             <SharedListScreen
               list={sharedList}

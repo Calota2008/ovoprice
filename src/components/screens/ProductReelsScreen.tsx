@@ -325,6 +325,17 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     return result;
   };
 
+  // PC: the mouse wheel moves to the next / previous reel (one step per scroll gesture).
+  const lastWheel = useRef(0);
+  const onWheel = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaY) < 20 || showAddReel || showCompare) return;
+    const now = Date.now();
+    if (now - lastWheel.current < 600) return;
+    lastWheel.current = now;
+    if (e.deltaY > 0) goNext();
+    else goPrev();
+  };
+
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0]?.clientY ?? null;
   };
@@ -343,7 +354,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   /* ------------------------------ Header ------------------------------ */
 
   const header = (
-    <div className="relative z-30 p-3.5 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between gap-2">
+    <div className="relative z-30 p-3.5 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between gap-2 lg:col-span-3">
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-cyan-400 border border-slate-700/60 backdrop-blur-md transition-all cursor-pointer text-xs font-semibold"
@@ -388,16 +399,16 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   );
 
   const filterBar = (
-    <div className="relative z-30 px-3.5 pb-2 space-y-2">
-      <div className="flex items-center gap-1.5">
-      <div className="flex flex-1 min-w-0 items-center gap-1.5 overflow-x-auto scrollbar-none" role="tablist" aria-label={t("Reel filters")}>
+    <div className="relative z-30 px-3.5 pb-2 space-y-2 lg:col-start-1 lg:row-start-2 lg:pt-2 lg:space-y-4" data-testid="reels-filters">
+      <div className="flex items-center gap-1.5 lg:flex-col lg:items-stretch lg:gap-3">
+      <div className="flex flex-1 min-w-0 items-center gap-1.5 overflow-x-auto scrollbar-none lg:flex-col lg:items-stretch lg:overflow-visible" role="tablist" aria-label={t("Reel filters")}>
         {FILTERS.map((f) => (
           <button
             key={f.id}
             role="tab"
             aria-selected={filter === f.id}
             onClick={() => changeFilter(f.id)}
-            className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer ${
+            className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer lg:text-left lg:py-2 lg:text-xs ${
               filter === f.id
                 ? 'bg-cyan-400 text-slate-950 border-cyan-300'
                 : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:text-cyan-300'
@@ -418,7 +429,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       </button>
       </div>
       {filter === 'categories' && (
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none" aria-label={t("Categories")}>
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none lg:flex-col lg:items-stretch lg:overflow-visible" aria-label={t("Categories")}>
           <button
             onClick={() => changeCategory(null)}
             className={`shrink-0 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border cursor-pointer ${
@@ -448,7 +459,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   );
 
   const shell = (children: React.ReactNode) => (
-    <div className="relative w-full rounded-2xl overflow-hidden bg-[#070b12] text-slate-100 flex flex-col min-h-[580px] sm:min-h-[640px] shadow-2xl border border-slate-800 select-none">
+    <div data-testid="reels-shell" className="relative w-full rounded-2xl overflow-hidden bg-[#070b12] text-slate-100 flex flex-col min-h-[580px] sm:min-h-[640px] shadow-2xl border border-slate-800 select-none lg:grid lg:grid-cols-[220px_minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:min-h-[700px] lg:gap-x-6 lg:items-start">
       {header}
       {filterBar}
       {children}
@@ -477,7 +488,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   if (reelsLoading) {
     return shell(
-      <div className="flex-1 flex items-center justify-center text-sm text-slate-400" role="status">
+      <div className="flex-1 flex items-center justify-center text-sm text-slate-400 lg:col-start-2 lg:col-span-2 lg:row-start-2 lg:min-h-[500px]" role="status">
         {t("Loading reels…")}
       </div>
     );
@@ -485,7 +496,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   if (reelsError) {
     return shell(
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300" role="alert">
+      <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300 lg:col-start-2 lg:col-span-2 lg:row-start-2 lg:min-h-[500px]" role="alert">
         <AlertTriangle className="w-6 h-6 text-amber-400" />
         <p>{t("Reels could not be loaded. Please try again later.")}</p>
       </div>
@@ -494,7 +505,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   if (allReels.length === 0) {
     return shell(
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300">
+      <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300 lg:col-start-2 lg:col-span-2 lg:row-start-2 lg:min-h-[500px]">
         <VideoOff className="w-6 h-6 text-slate-500" />
         <p>{t("No reels available yet.")}</p>
       </div>
@@ -503,7 +514,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   if (!currentReel) {
     return shell(
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-300">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-300 lg:col-start-2 lg:col-span-2 lg:row-start-2 lg:min-h-[500px]">
         <Bookmark className="w-6 h-6 text-slate-500" />
         <p>{filter === 'saved' ? t("You haven't saved any products from Reels yet.") : t("No reels in this category.")}</p>
         <button
@@ -520,7 +531,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
   if (layout === 'grid') {
     return shell(
-      <ul className="grid grid-cols-2 gap-2.5 p-3.5 pt-1" aria-label={t('All reels')}>
+      <ul className="grid grid-cols-2 gap-2.5 p-3.5 pt-1 lg:col-start-2 lg:col-span-2 lg:row-start-2 lg:grid-cols-4 lg:pr-6" aria-label={t('All reels')}>
         {visibleReels.map((r, idx) => (
           <li key={r.id}>
             <button
@@ -557,7 +568,8 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   return shell(
     <>
       <div
-        className="relative flex-1 flex items-center justify-center overflow-hidden bg-radial from-slate-900 via-[#070b12] to-black min-h-[400px] sm:min-h-[460px] touch-pan-x"
+        className="relative flex-1 flex items-center justify-center overflow-hidden bg-radial from-slate-900 via-[#070b12] to-black min-h-[400px] sm:min-h-[460px] touch-pan-x lg:col-start-2 lg:row-start-2 lg:rounded-2xl lg:min-h-[620px] lg:mb-4"
+        onWheel={onWheel}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -718,7 +730,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       </div>
 
       {/* Product card */}
-      <div className="z-30 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-slate-900/80 border-t border-slate-800/80 backdrop-blur-xl space-y-3">
+      <div className="z-30 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-slate-900/80 border-t border-slate-800/80 backdrop-blur-xl space-y-3 lg:col-start-3 lg:row-start-2 lg:border lg:rounded-2xl lg:mr-4 lg:mt-2 lg:bg-slate-900/80" data-testid="reels-product-panel">
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800/90 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold uppercase tracking-wider truncate">
             <Store className="w-3 h-3 text-cyan-400" />

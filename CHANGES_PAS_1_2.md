@@ -360,3 +360,15 @@ Only for wide screens (1024 px and up, `useIsDesktop` = Tailwind `lg`). Phones a
 - Tables fit without horizontal scrolling at 1024 and 1280 px in EN/DE/RO (checked).
 - New tests: `e2e_pc_product.py`, `e2e_pc_search.py`, `e2e_pc_saved.py`, `e2e_pc_alerts.py` (each also checks the phone layout is unchanged). `unit_i18n.ts`: 'Total' and 'Status' allowed identical. EN/DE/RO texts added.
 - Full suite run: all pass (e2e_reels_video skipped: needs a local video fixture).
+
+## PC layout step 3: offer details, comparison, history, alert, Reels, settings/legal (Oct 30)
+Only for wide screens (1024 px+); phones and tablets keep the old screens (separate branches, same data and handlers).
+- **Comparison** (`App.tsx`): on PC "offers-comparison" shows the PC product page, which already contains the full offers table. On phones the comparison screen stays as it was.
+- **Offer details** (`BreakdownScreen.tsx`): two columns: product, price breakdown and store details on the left; final price with "Go to store", other offers (click switches the offer, "Back to the comparison") and a mini history on the right. No fixed bottom bar on PC. New optional props `onSelectOffer`, `onBackToComparison`.
+- **Price history** (`PriceHistoryScreen.tsx`): metrics + larger chart on the left, alert slider and "versus history" on the right (same sections as on the phone, rearranged).
+- **Set alert** (`SetPriceAlertScreen.tsx`): product picture, best price, lowest in history on the left; target price, quick levels, notification note and buttons on the right.
+- **Reels** (`ProductReelsScreen.tsx`): three columns via CSS grid (filters and categories on the left, reel in the middle, product panel on the right), grid view 4 per row; the mouse wheel moves one reel per scroll gesture (repeats within 600 ms ignored). Arrows and keyboard keep working.
+- **Settings and legal** (`App.tsx`): side menu (Account settings, Impressum, Privacy, Terms) and the page in a white card; legal text in a readable column (max ~720 px).
+- Text fix (`SettingsScreen.tsx`, DE/RO): "Sign in to sync saved products, alerts and collections…" (Reels are not synced; it said Reels before).
+- `WIDE_SCREENS` now: home, product-overview, offers-comparison, breakdown, price-history, set-alert, search, saved, alerts, product-reels, settings, legal. Remaining phone-width screens on PC: see-all, visual-result, shared-list.
+- New tests: `e2e_pc_details.py`, `e2e_pc_reels.py`, `e2e_pc_settings_legal.py`. Full suite: all pass (e2e_reels_video skipped: needs a local video fixture). `server.ts` unchanged since the security update.

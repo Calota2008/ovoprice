@@ -16,11 +16,15 @@ import { Product, StoreOffer } from '../../types';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 
 import { t } from '../../i18n';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 interface BreakdownScreenProps {
   product: Product;
   offer: StoreOffer;
   onOpenHistory: () => void;
   onRedirectStore: (offer: StoreOffer) => void;
+  /** PC: switch to another offer / go back to the comparison. */
+  onSelectOffer?: (offer: StoreOffer) => void;
+  onBackToComparison?: () => void;
 }
 
 export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
@@ -28,11 +32,133 @@ export const BreakdownScreen: React.FC<BreakdownScreenProps> = ({
   offer,
   onOpenHistory,
   onRedirectStore,
+  onSelectOffer,
+  onBackToComparison,
 }) => {
+  const isDesktop = useIsDesktop();
   const avgTotal = product.offers.length
     ? product.offers.reduce((sum, o) => sum + o.totalLandedPrice, 0) / product.offers.length
     : 0;
   const savingVsAvg = avgTotal - offer.totalLandedPrice;
+  const eur = (n: number) => `${n.toFixed(2).replace('.', ',')} €`;
+
+  if (isDesktop) {
+    const others = [...product.offers].sort((a, b) => a.totalLandedPrice - b.totalLandedPrice);
+    const bestId = others[0]?.id;
+    const hist = product.history || [];
+    const hMin = hist.length ? Math.min(...hist.map((h) => h.price)) : 0;
+    const hMax = hist.length ? Math.max(...hist.map((h) => h.price)) : 0;
+    const pts = hist
+      .map((h, i) => `${(10 + (i * 280) / Math.max(1, hist.length - 1)).toFixed(1)},${(10 + ((hMax - h.price) * 60) / (hMax - hMin || 1)).toFixed(1)}`)
+      .join(' ');
+    const line = (label: string, value: React.ReactNode, strong = false) => (
+      <div className="flex justify-between gap-4 py-2.5 border-b border-slate-100 text-sm">
+        <span className="text-slate-500">{label}</span>
+        <span className={strong ? 'font-extrabold text-slate-900 tnum' : 'text-slate-900 text-right'}>{value}</span>
+      </div>
+    );
+    return (
+      <div className="pb-8 grid grid-cols-[minmax(0,1fr)_340px] gap-6 items-start" data-testid="breakdown-desktop">
+        <div className="space-y-4 min-w-0">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-5">
+            <img src={product.image} alt={product.title} className="w-28 h-24 rounded-xl object-cover border border-slate-200" referrerPolicy="no-referrer" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold uppercase">{offer.storeName}</span>
+                <DemoBadge />
+                {offer.isBestPrice && <span className="text-[11px] font-bold text-emerald-700">{t("Lowest price in the demo")}</span>}
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900 mt-1.5 truncate">{product.title}</h1>
+              <p className="text-sm text-slate-500 truncate">{product.subtitle}</p>
+            </div>
+          </div>
+          <section className="bg-white rounded-2xl border border-slate-200 p-5">
+            <h2 className="text-lg font-bold text-slate-900 mb-1">{t("Price comparison breakdown")}</h2>
+            {line(t("Base product price"), eur(offer.basePrice))}
+            {line(t("Shipping cost"), offer.shippingPrice === 0 ? t("Free delivery") : eur(offer.shippingPrice))}
+            {line(t("Taxes & Surcharges"), t("Included (19% German VAT)"))}
+            {line(t("Total Landed Price"), eur(offer.totalLandedPrice), true)}
+            {savingVsAvg > 0.005 && (
+              <p className="text-sm font-semibold text-emerald-700 mt-3 flex items-center gap-1.5">
+                <TrendingDown className="w-4 h-4" />
+                {savingVsAvg.toFixed(2).replace('.', ',')} {t("€ below the average of the demo offers (")}
+                {avgTotal.toFixed(2).replace('.', ',')} €)
+              </p>
+            )}
+          </section>
+          <section className="bg-white rounded-2xl border border-slate-200 p-5">
+            <h2 className="text-lg font-bold text-slate-900 mb-1">{t("Store Details")}</h2>
+            <div className="grid grid-cols-2 gap-x-8">
+              {line(t("Retailer Listing"), offer.storeName)}
+              {line(t("Delivery Estimate"), t(offer.deliveryEstimate))}
+              {line(t("Return Information"), t(offer.returnPolicy))}
+              {line(t("Stock Status"), t(offer.stockStatus))}
+              {line(t("Warranty:").replace(/:$/, ''), t(offer.warranty))}
+            </div>
+          </section>
+        </div>
+
+        <aside className="space-y-4">
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-5">
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
+              {t("FINAL PRICE AT")} {offer.storeName.toUpperCase()}
+            </p>
+            <p className="text-4xl font-black text-emerald-700 tnum my-2" data-testid="breakdown-final-price">{eur(offer.totalLandedPrice)}</p>
+            <button
+              onClick={() => onRedirectStore(offer)}
+              className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {t("Go to store")} <ExternalLink className="w-4 h-4" />
+            </button>
+            <p className="text-xs text-slate-600 mt-3 leading-snug">
+              {t("You buy directly from")} {offer.storeName}{t(". OvoPrice does not process payments or take orders. Check the final price and delivery on the merchant's website.")}
+            </p>
+          </div>
+          {others.length > 1 && (
+            <section className="bg-white rounded-2xl border border-slate-200 p-4" aria-labelledby="bd-other-offers">
+              <h2 id="bd-other-offers" className="text-sm font-bold text-slate-900 mb-2">{t("Other offers")}</h2>
+              <ul className="space-y-0.5">
+                {others.map((o) => (
+                  <li key={o.id}>
+                    <button
+                      onClick={() => onSelectOffer?.(o)}
+                      disabled={o.id === offer.id || !onSelectOffer}
+                      aria-current={o.id === offer.id ? 'true' : undefined}
+                      className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-sm text-left ${
+                        o.id === offer.id ? 'bg-slate-100 font-bold' : 'hover:bg-slate-50 cursor-pointer'
+                      }`}
+                    >
+                      <span className="truncate">{o.storeName}</span>
+                      <span className="flex items-center gap-1.5 tnum shrink-0">
+                        {eur(o.totalLandedPrice)}
+                        {o.id === bestId && <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-600 text-white">{t('BEST')}</span>}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {onBackToComparison && (
+                <button onClick={onBackToComparison} className="mt-2 text-sm font-bold text-emerald-700 hover:underline cursor-pointer">
+                  ← {t("Back to the comparison")}
+                </button>
+              )}
+            </section>
+          )}
+          {hist.length > 1 && (
+            <section className="bg-white rounded-2xl border border-slate-200 p-4">
+              <h2 className="text-sm font-bold text-slate-900">{t("Price history")}</h2>
+              <svg viewBox="0 0 300 80" className="w-full h-20" aria-hidden="true">
+                <polyline fill="none" stroke="#059669" strokeWidth="3" strokeLinejoin="round" points={pts} />
+              </svg>
+              <button onClick={onOpenHistory} className="text-sm font-bold text-emerald-700 hover:underline flex items-center gap-1 cursor-pointer">
+                {t("See full history")} <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </section>
+          )}
+        </aside>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-24 space-y-4">

@@ -426,7 +426,7 @@ export const de: Record<string, string> = {
   "Language and country are saved on this device.": "Sprache und Land werden auf diesem Gerät gespeichert.",
   "Account": "Konto",
   "You're browsing as a guest": "Du nutzt die App als Gast",
-  "Sign in to sync saved products, alerts and Reels across your devices.": "Melde dich an, um gespeicherte Produkte, Alarme und Reels geräteübergreifend zu synchronisieren.",
+  "Sign in to sync saved products, alerts and collections across your devices.": "Melde dich an, um gespeicherte Produkte, Alarme und Sammlungen geräteübergreifend zu synchronisieren.",
   "Language": "Sprache",
   "Country": "Land",
   "Search {name} on MediaMarkt.de": "{name} bei MediaMarkt.de suchen",
@@ -847,4 +847,6 @@ export const de: Record<string, string> = {
   "Your target": "Dein Wunschpreis",
   "Status": "Status",
   "{amount} to go": "noch {amount}",
+  "Back to the comparison": "Zurück zum Vergleich",
+  "Settings and legal": "Einstellungen und Rechtliches",
 };

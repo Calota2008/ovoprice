@@ -13,6 +13,7 @@ import { Product } from '../../types';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 
 import { t } from '../../i18n';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 interface SetPriceAlertScreenProps {
   product: Product;
   initialTargetPrice?: number;
@@ -30,6 +31,7 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
     initialTargetPrice ?? Math.floor(product.bestPrice * 0.95)
   );
   const [confirmed, setConfirmed] = useState(false);
+  const isDesktop = useIsDesktop();
 
   const bestPrice = product.bestPrice;
   const savingsIfHit = Math.max(0, bestPrice - targetPrice);
@@ -69,8 +71,8 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
     }, 800);
   };
 
-  return (
-    <div className="pb-8 space-y-4">
+  const headerText = (
+    <>
       {/* Top Header Text */}
       <div>
         <div className="flex items-center gap-1.5 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-1">
@@ -85,6 +87,11 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
         </p>
       </div>
 
+    </>
+  );
+
+  const miniCard = (
+    <>
       {/* Mini Product Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex items-center gap-3">
         <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
@@ -109,6 +116,11 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  const targetSection = (
+    <>
       {/* Target Price Section */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3.5">
         <div className="flex items-center justify-between">
@@ -201,6 +213,11 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
         )}
       </div>
 
+    </>
+  );
+
+  const notifSection = (
+    <>
       {/* Notification channel Section */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
         <h3 className="text-sm font-bold text-slate-900">{t("Notification channel")}</h3>
@@ -234,6 +251,11 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  const actions = (
+    <>
       {/* Action Buttons */}
       <div className="space-y-2 pt-1">
         <button
@@ -261,6 +283,44 @@ export const SetPriceAlertScreen: React.FC<SetPriceAlertScreenProps> = ({
           <span>{t("Save without alert")}</span>
         </button>
       </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <div className="pb-8 grid grid-cols-[360px_minmax(0,1fr)] gap-6 items-start" data-testid="set-alert-desktop">
+        <aside className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+          <img src={product.image} alt={product.title} className="w-full h-56 object-cover rounded-xl border border-slate-200" referrerPolicy="no-referrer" />
+          <h2 className="text-lg font-bold text-slate-900 leading-snug">{product.title}</h2>
+          <p className="text-sm text-slate-600">
+            {t("Best price:")} <b className="text-slate-900 tnum">{fmt(bestPrice)} €</b>{bestStore && ` (${bestStore})`}
+          </p>
+          {lowestPrice !== null && (
+            <p className="text-sm text-slate-600 flex justify-between border-t border-slate-100 pt-2">
+              <span>{t("Lowest")}</span>
+              <span className="tnum text-slate-900">{fmt(lowestPrice)} € · {t(lowestDate)}</span>
+            </p>
+          )}
+          {storeNames && <p className="text-xs text-slate-500 border-t border-slate-100 pt-2">{storeNames}</p>}
+        </aside>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 min-w-0">
+          {headerText}
+          {targetSection}
+          {notifSection}
+          <div className="max-w-md">{actions}</div>
+          <DemoFootnote />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-8 space-y-4">
+      {headerText}
+      {miniCard}
+      {targetSection}
+      {notifSection}
+      {actions}
       <DemoFootnote />
     </div>
   );

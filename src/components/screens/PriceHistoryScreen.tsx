@@ -4,6 +4,7 @@ import { Product } from '../../types';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 
 import { t } from '../../i18n';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 interface PriceHistoryScreenProps {
   product: Product;
   onSetAlertWithPrice: (targetPrice: number) => void;
@@ -45,6 +46,7 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
     ? [history[0], history[Math.floor((history.length - 1) / 2)], history[history.length - 1]]
     : [];
   const [alertCreated, setAlertCreated] = useState(false);
+  const isDesktop = useIsDesktop();
 
   const handleCreateAlert = () => {
     setAlertCreated(true);
@@ -53,8 +55,8 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
     }, 800);
   };
 
-  return (
-    <div className="pb-8 space-y-4">
+  const bar = (
+    <>
       {/* Product Mini Bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex items-center gap-3">
         <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
@@ -89,6 +91,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  const metrics = (
+    <>
       {/* 3 Metrics Cards */}
       <div className="grid grid-cols-3 gap-2">
         {/* Current */}
@@ -134,6 +141,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  const chart = (
+    <>
       {/* Price Movement Chart Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
         <div className="flex items-center justify-between mb-2">
@@ -236,6 +248,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  const verdict = (
+    <>
       {/* Good Price to Buy Recommendation Card */}
       <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-4 shadow-xs">
         <div className="flex items-start gap-3">
@@ -254,6 +271,11 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  const alertCard = (
+    <>
       {/* Target Price Alert Slider Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3.5">
         <div className="flex items-center justify-between">
@@ -313,6 +335,35 @@ export const PriceHistoryScreen: React.FC<PriceHistoryScreenProps> = ({
           )}
         </button>
       </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <div className="pb-8 space-y-5" data-testid="history-desktop">
+        {bar}
+        <div className="grid grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
+          <div className="space-y-4 min-w-0 [&_.h-48]:h-72">
+            {metrics}
+            {chart}
+          </div>
+          <div className="space-y-4">
+            {alertCard}
+            {verdict}
+          </div>
+        </div>
+        <DemoFootnote />
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-8 space-y-4">
+      {bar}
+      {metrics}
+      {chart}
+      {verdict}
+      {alertCard}
       <DemoFootnote />
     </div>
   );
