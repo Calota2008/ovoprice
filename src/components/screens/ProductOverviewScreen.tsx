@@ -1,6 +1,8 @@
 import React from 'react';
 import { CheckCircle2, TrendingDown, Camera, Truck, ShieldCheck, Shield, ArrowRight, RefreshCw, AlertCircle, HelpCircle, Bell, Bookmark } from 'lucide-react';
-import { Product } from '../../types';
+import { Product, StoreOffer } from '../../types';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
+import { ProductDesktopView } from './ProductDesktopView';
 import { StoresForProduct } from '../StoresForProduct';
 
 import { t } from '../../i18n';
@@ -12,6 +14,11 @@ interface ProductOverviewScreenProps {
   onOpenHistory?: () => void;
   isSaved?: boolean;
   onToggleSave?: () => void;
+  /** PC layout only: open the store / offer details / set an alert directly on the page. */
+  onRedirectStore?: (offer: StoreOffer) => void;
+  onSelectOffer?: (offer: StoreOffer) => void;
+  onQuickAlert?: (targetPrice: number) => void;
+  existingAlertPrice?: number;
 }
 
 export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
@@ -22,7 +29,12 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
   onOpenHistory,
   isSaved = false,
   onToggleSave,
+  onRedirectStore,
+  onSelectOffer,
+  onQuickAlert,
+  existingAlertPrice,
 }) => {
+  const isDesktop = useIsDesktop();
   if (!product) {
     return (
       <div className="pb-8 space-y-4">
@@ -67,6 +79,23 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (isDesktop && onRedirectStore && onSelectOffer && onQuickAlert) {
+    return (
+      <ProductDesktopView
+        product={product}
+        isSaved={isSaved}
+        onToggleSave={onToggleSave}
+        onOpenHistory={onOpenHistory}
+        onOpenSetAlert={onOpenSetAlert}
+        onRescan={onRescan}
+        onRedirectStore={onRedirectStore}
+        onSelectOffer={onSelectOffer}
+        onQuickAlert={onQuickAlert}
+        existingAlertPrice={existingAlertPrice}
+      />
     );
   }
 

@@ -50,7 +50,7 @@ const SAME = new Set([
   'Möbelix Österreich', 'ASIN',
 ]);
 // Entries that legitimately read the same in German/Romanian as in English.
-const OK_IDENTICAL = new Set(['Impressum', 'Reels', 'Details', 'Model', '(Demo)', 'Total:', 'Barcode', 'PNG, JPG, WEBP', 'Max 5 MB', 'MediaMarkt, OTTO, Amazon', 'MediaMarkt, OTTO, Amazon, eBay',
+const OK_IDENTICAL = new Set(['Impressum', 'Total', 'Status', 'Reels', 'Details', 'Model', '(Demo)', 'Total:', 'Barcode', 'PNG, JPG, WEBP', 'Max 5 MB', 'MediaMarkt, OTTO, Amazon', 'MediaMarkt, OTTO, Amazon, eBay',
   'OvoPrice Visual Matcher', 'EAN / Barcode', 'DHL Express', 'Click & Collect', 'Top Rated Plus', 'TV', 'SMARTPHONE', 'SMART TV', 'Instant',
   'KAFFEEVOLLAUTOMATEN', 'AUDIO & KOPFHÖRER', 'BEAMER & PROJEKTOREN', 'FERNSEHER & HOME CINEMA', 'STAUBSAUGER & BODENPFLEGE', 'Gemini 3.8 Flash Vision Model']);
 

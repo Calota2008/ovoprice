@@ -4,6 +4,7 @@ import { Product, PopularSearchItem } from '../../types';
 import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 import {
   clearRecentSearches,
   loadRecentSearches,
@@ -20,6 +21,8 @@ interface SearchScreenProps {
 }
 
 const fmt = (n: number) => n.toFixed(2).replace('.', ',');
+/** "AUDIO & KOPFHÖRER" -> "Audio & kopfhörer" (category names come in capitals). */
+const sentence = (v: string) => (v ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : v);
 const savingsPct = (p: Product) => (p.msrp && p.msrp > p.bestPrice ? ((p.msrp - p.bestPrice) / p.msrp) * 100 : 0);
 
 export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpenVisualMatcher, initialQuery }) => {
@@ -32,6 +35,12 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
   const [sortBy, setSortBy] = useState<'lowest' | 'savings'>('lowest');
   const [recent, setRecent] = useState<string[]>(() => loadRecentSearches());
   const inputRef = useRef<HTMLInputElement>(null);
+  const isDesktop = useIsDesktop();
+  // PC-only filters (sidebar). Empty = no filtering, so phones are not affected.
+  const [cats, setCats] = useState<string[]>([]);
+  const [stores, setStores] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
 
   const { data: popular } = usePriceData<PopularSearchItem[]>(() => priceProvider.getPopularSearches(), [], []);
 
@@ -79,13 +88,48 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
     };
   }, [debounced]);
 
+  // New results: drop sidebar choices that no longer exist in them.
+  useEffect(() => {
+    setCats((prev) => prev.filter((c) => results.some((p) => p.category === c)));
+    setStores((prev) => prev.filter((st) => results.some((p) => p.offers.some((o) => o.storeName === st))));
+  }, [results]);
+
+  const facets = useMemo(() => {
+    const catList = Array.from(new Set(results.map((p) => p.category)));
+    const storeList = Array.from(new Set(results.flatMap((p) => p.offers.map((o) => o.storeName)))).sort((a, b) =>
+      a.localeCompare(b)
+    );
+    return { catList, storeList };
+  }, [results]);
+
+  const parsePrice = (v: string) => {
+    const n = Number(v.replace(',', '.'));
+    return v.trim() && Number.isFinite(n) ? n : null;
+  };
+  const minP = parsePrice(minPrice);
+  const maxP = parsePrice(maxPrice);
+  const sideFiltersActive = cats.length > 0 || stores.length > 0 || minP !== null || maxP !== null;
+
   const visible = useMemo(() => {
-    const filtered =
+    let filtered =
       filter === 'freeShipping' ? results.filter((p) => p.offers.some((o) => o.shippingPrice === 0)) : results;
+    if (cats.length) filtered = filtered.filter((p) => cats.includes(p.category));
+    if (stores.length) filtered = filtered.filter((p) => p.offers.some((o) => stores.includes(o.storeName)));
+    if (minP !== null) filtered = filtered.filter((p) => p.bestPrice >= minP);
+    if (maxP !== null) filtered = filtered.filter((p) => p.bestPrice <= maxP);
     return [...filtered].sort((a, b) =>
       sortBy === 'lowest' ? a.bestPrice - b.bestPrice : savingsPct(b) - savingsPct(a)
     );
-  }, [results, filter, sortBy]);
+  }, [results, filter, sortBy, cats, stores, minP, maxP]);
+
+  const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+  const clearSideFilters = () => {
+    setCats([]);
+    setStores([]);
+    setMinPrice('');
+    setMaxPrice('');
+    setFilter('all');
+  };
 
   const freeShippingCount = results.filter((p) => p.offers.some((o) => o.shippingPrice === 0)).length;
   const hasQuery = debounced.length > 0;
@@ -109,7 +153,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("Product, model or EAN code…")}
               aria-label={t("Search product")}
-              className="w-full text-sm font-semibold text-slate-900 bg-transparent focus:outline-none"
+              className="w-full text-sm font-semibold text-slate-900 bg-transparent focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
           </div>
           {query && (
@@ -198,8 +242,113 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
         </div>
       )}
 
+      {/* Results on PC: filters on the left, products in a grid */}
+      {hasQuery && isDesktop && !error && !loading && results.length > 0 && (
+        <div className="grid grid-cols-[250px_minmax(0,1fr)] gap-6 items-start" data-testid="search-desktop">
+          <aside className="bg-white rounded-2xl border border-slate-200 p-4 space-y-5" aria-label={t('Filters')}>
+            <fieldset>
+              <legend className="text-sm font-bold text-slate-900 mb-2">{t('Category')}</legend>
+              {facets.catList.map((c) => (
+                <label key={c} className="flex items-center gap-2 py-1 text-sm text-slate-700 cursor-pointer">
+                  <input type="checkbox" className="accent-emerald-600 w-4 h-4" checked={cats.includes(c)} onChange={() => setCats((prev) => toggle(prev, c))} />
+                  <span className="truncate min-w-0" title={sentence(t(c))}>{sentence(t(c))}</span>
+                  <span className="ml-auto text-xs text-slate-400">{results.filter((p) => p.category === c).length}</span>
+                </label>
+              ))}
+            </fieldset>
+            <fieldset>
+              <legend className="text-sm font-bold text-slate-900 mb-2">{t('Price')}</legend>
+              <div className="flex gap-2">
+                <input inputMode="decimal" value={minPrice} onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9.,]/g, ''))} placeholder={t('min €')} aria-label={t('Minimum price')} className="w-full h-9 rounded-lg border border-slate-200 px-2.5 text-sm" />
+                <input inputMode="decimal" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9.,]/g, ''))} placeholder={t('max €')} aria-label={t('Maximum price')} className="w-full h-9 rounded-lg border border-slate-200 px-2.5 text-sm" />
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend className="text-sm font-bold text-slate-900 mb-2">{t('Delivery')}</legend>
+              <label className="flex items-center gap-2 py-1 text-sm text-slate-700 cursor-pointer">
+                <input type="checkbox" className="accent-emerald-600 w-4 h-4" checked={filter === 'freeShipping'} onChange={() => setFilter(filter === 'freeShipping' ? 'all' : 'freeShipping')} />
+                {t('Free shipping only')}
+              </label>
+            </fieldset>
+            {facets.storeList.length > 0 && (
+              <fieldset>
+                <legend className="text-sm font-bold text-slate-900 mb-2">{t('Store')}</legend>
+                {facets.storeList.map((st) => (
+                  <label key={st} className="flex items-center gap-2 py-1 text-sm text-slate-700 cursor-pointer">
+                    <input type="checkbox" className="accent-emerald-600 w-4 h-4" checked={stores.includes(st)} onChange={() => setStores((prev) => toggle(prev, st))} />
+                    <span className="truncate">{st}</span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            {(sideFiltersActive || filter !== 'all') && (
+              <button onClick={clearSideFilters} className="text-sm font-bold text-emerald-700 hover:underline cursor-pointer">
+                {t('Clear filters')}
+              </button>
+            )}
+          </aside>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-lg font-bold text-slate-900">
+                {visible.length} {visible.length === 1 ? t('product') : t('products')} {t('found')}
+              </h2>
+              <label className="ml-auto flex items-center gap-2 text-sm text-slate-600">
+                <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                <span className="sr-only">{t('Sort')}</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'lowest' | 'savings')}
+                  className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-800 cursor-pointer"
+                  aria-label={t('Sort')}
+                >
+                  <option value="lowest">{t('Lowest price')}</option>
+                  <option value="savings">{t('Biggest discount')}</option>
+                </select>
+              </label>
+              <button onClick={() => onOpenVisualMatcher('photo')} className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-800 flex items-center gap-1.5 cursor-pointer">
+                <Camera className="w-4 h-4 text-blue-600" /> {t('Search by photo')}
+              </button>
+              <button onClick={() => onOpenVisualMatcher('barcode')} className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-800 flex items-center gap-1.5 cursor-pointer">
+                <Barcode className="w-4 h-4 text-purple-600" /> {t('Scan barcode')}
+              </button>
+            </div>
+            {visible.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-10">{t('No products match the selected filter.')}</p>
+            ) : (
+              <ul className="grid grid-cols-3 gap-4" data-testid="search-desktop-grid">
+                {visible.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      onClick={() => open(p)}
+                      className="w-full h-full text-left bg-white rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-sm p-3 flex flex-col cursor-pointer"
+                    >
+                      <div className="h-40 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden">
+                        <img src={p.image} alt={p.title} className="max-h-full max-w-full object-contain" referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-3">
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">{p.brand}</span>
+                        <DemoBadge />
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900 mt-1 line-clamp-2">{p.title}</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {p.offers.length} {t('demo offers')}
+                      </p>
+                      <p className="mt-auto pt-2">
+                        <span className="text-xs text-slate-500">{t('from')} </span>
+                        <span className="text-xl font-black text-emerald-700 tnum">{fmt(p.bestPrice)} €</span>
+                      </p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Results */}
-      {hasQuery && (
+      {hasQuery && !(isDesktop && !error && !loading && results.length > 0) && (
         <>
           {error && <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2.5">{error}</p>}
 

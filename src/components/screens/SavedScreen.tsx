@@ -26,6 +26,7 @@ import {
 } from '../../utils/collections';
 
 import { t } from '../../i18n';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 interface SavedScreenProps {
   items: SavedProductItem[];
   onSelectSavedItem: (item: SavedProductItem) => void;
@@ -46,6 +47,8 @@ interface SavedScreenProps {
   onRenameCollection?: (id: string, name: string) => void;
   onDeleteCollection?: (id: string) => void;
   onToggleInCollection?: (collectionId: string, productId: string) => void;
+  /** PC table: set a price alert for this saved product. */
+  onSetAlertFor?: (item: SavedProductItem) => void;
 }
 
 const chipClass = (active: boolean) =>
@@ -72,6 +75,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
   onRenameCollection,
   onDeleteCollection,
   onToggleInCollection,
+  onSetAlertFor,
 }) => {
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -84,6 +88,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
   const [shareFallback, setShareFallback] = useState<string | null>(null);
 
   const signedIn = !!useAuthUser();
+  const isDesktop = useIsDesktop();
   const activeCollection = collections.find((c) => c.id === activeCollectionId) ?? null;
   const visibleItems = activeCollection
     ? items.filter((i) => activeCollection.productIds.includes(i.productId ?? i.id))
@@ -141,107 +146,18 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
     resetNameForm();
   };
 
-  return (
-    <div className="pb-8 space-y-4">
-      {/* Title & tracked count */}
-      <div className="pt-1">
-        <div className="flex items-center justify-between mb-1">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("Saved products")}</h1>
-          {atLimit ? (
-            <span className="inline-flex items-center px-2.5 py-1 border rounded-md text-[11px] font-bold bg-amber-50 border-amber-300 text-amber-900">
-              {t('{n} of {limit} saved', { n: items.length, limit })}
-            </span>
-          ) : (
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-md text-[11px] font-bold ${
-              items.length > 0
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                : 'bg-slate-100 border-slate-200 text-slate-600'
-            }`}
-          >
-            {items.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-            <span>
-              {items.length} {items.length === 1 ? t("product") : t("products")}
-            </span>
-          </span>
-          )}
-        </div>
 
-        <p className="text-xs text-slate-500 flex items-center gap-1.5">
-          <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-          <span>
-            {syncStatus === 'synced'
-              ? t('Saved to your account · demo prices')
-              : syncStatus === 'syncing'
-                ? t('Syncing with your account… · demo prices')
-                : syncStatus === 'error'
-                  ? t('Could not reach your account. Your changes stay on this device and are sent when it works again.')
-                  : t("Saved on this device · demo prices")}
-          </span>
-          {syncStatus === 'error' && onRetrySync && (
-            <button type="button" onClick={onRetrySync} className="min-h-11 px-2 font-semibold text-emerald-800 hover:underline cursor-pointer">
-              {t('Try again')}
-            </button>
-          )}
-        </p>
-      </div>
+  const startCreating = () => {
+    if (collectionsLocked) {
+      onCollectionsLocked?.();
+      return;
+    }
+    resetNameForm();
+    setCreating(true);
+  };
 
-      {atLimit && (
-        <div role="status" className="rounded-2xl border border-emerald-300 bg-white p-3.5 space-y-1.5">
-          <p className="text-sm font-extrabold text-slate-900 leading-snug">{t('You have reached the limit of saved products: {n}', { n: limit })}</p>
-          <p className="text-xs text-slate-700 leading-snug">
-            {onOpenAuth && !signedIn
-              ? t('Remove the saved product to save another one, or create a free account to save up to {n}.', { n: ACCOUNT_LIMITS.savedProducts })
-              : t('Remove a product you no longer need to save a new one.')}
-          </p>
-          {onOpenAuth && !signedIn && (
-            <button type="button" onClick={() => onOpenAuth('create')} className="min-h-11 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold cursor-pointer">
-              {t('Create an account')}
-            </button>
-          )}
-          <p className="text-[11px] text-slate-600 leading-snug">{t('You can still search, compare and open everything. Nothing you saved is deleted.')}</p>
-        </div>
-      )}
-
-      {onOpenAuth && items.length > 0 && (
-        <AuthNudge onOpenAuth={() => onOpenAuth()} message={t("Saved on this device only.")} />
-      )}
-
-      {/* Collections bar */}
-      {canManageCollections && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label={t("Collections")}>
-            <button role="tab" aria-selected={activeCollectionId === null} onClick={() => selectCollection(null)} className={chipClass(activeCollectionId === null)}>
-              {t("All (")}{items.length})
-            </button>
-            {collections.map((c) => (
-              <button
-                key={c.id}
-                role="tab"
-                aria-selected={activeCollectionId === c.id}
-                onClick={() => selectCollection(c.id)}
-                className={chipClass(activeCollectionId === c.id)}
-              >
-                {c.name} ({items.filter((i) => c.productIds.includes(i.productId ?? i.id)).length})
-              </button>
-            ))}
-            {collections.length < COLLECTION_LIMITS.maxCollections && (
-              <button
-                onClick={() => {
-                  if (collectionsLocked) {
-                    onCollectionsLocked?.();
-                    return;
-                  }
-                  resetNameForm();
-                  setCreating(true);
-                }}
-                className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-slate-400 text-slate-600 hover:bg-slate-50 flex items-center gap-1 cursor-pointer"
-              >
-                <FolderPlus className="w-3.5 h-3.5" /> {t("New collection")}
-              </button>
-            )}
-          </div>
-
+  const nameForm = (
+    <>
           {(creating || renaming) && (
             <form onSubmit={submitName} className="flex flex-wrap items-start gap-2" noValidate>
               <div className="flex-1 min-w-[160px]">
@@ -271,7 +187,11 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
               </button>
             </form>
           )}
+    </>
+  );
 
+  const collectionTools = (
+    <>
           {activeCollection && !creating && !renaming && (
             <div className="flex items-center gap-3 text-xs">
               <button
@@ -324,6 +244,309 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
               />
             </div>
           )}
+    </>
+  );
+
+  const limitAndNudge = (
+    <>
+      {atLimit && (
+        <div role="status" className="rounded-2xl border border-emerald-300 bg-white p-3.5 space-y-1.5">
+          <p className="text-sm font-extrabold text-slate-900 leading-snug">{t('You have reached the limit of saved products: {n}', { n: limit })}</p>
+          <p className="text-xs text-slate-700 leading-snug">
+            {onOpenAuth && !signedIn
+              ? t('Remove the saved product to save another one, or create a free account to save up to {n}.', { n: ACCOUNT_LIMITS.savedProducts })
+              : t('Remove a product you no longer need to save a new one.')}
+          </p>
+          {onOpenAuth && !signedIn && (
+            <button type="button" onClick={() => onOpenAuth('create')} className="min-h-11 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold cursor-pointer">
+              {t('Create an account')}
+            </button>
+          )}
+          <p className="text-[11px] text-slate-600 leading-snug">{t('You can still search, compare and open everything. Nothing you saved is deleted.')}</p>
+        </div>
+      )}
+
+      {onOpenAuth && items.length > 0 && (
+        <AuthNudge onOpenAuth={() => onOpenAuth()} message={t("Saved on this device only.")} />
+      )}
+    </>
+  );
+
+  const syncText =
+    syncStatus === 'synced'
+      ? t('Saved to your account · demo prices')
+      : syncStatus === 'syncing'
+        ? t('Syncing with your account… · demo prices')
+        : syncStatus === 'error'
+          ? t('Could not reach your account. Your changes stay on this device and are sent when it works again.')
+          : t("Saved on this device · demo prices");
+
+  if (isDesktop) {
+    return (
+      <div className="pb-8 grid grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)] gap-6 items-start" data-testid="saved-desktop">
+        <aside className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3" aria-label={t("Collections")}>
+          <h2 className="text-sm font-bold text-slate-900">{t("Collections")}</h2>
+          <div role="tablist" aria-orientation="vertical" aria-label={t("Collections")} className="space-y-0.5">
+            <button
+              role="tab"
+              aria-selected={activeCollectionId === null}
+              onClick={() => selectCollection(null)}
+              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm text-left cursor-pointer ${
+                activeCollectionId === null ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <span className="flex-1 truncate">{t("All products")}</span>
+              <span className="text-xs text-slate-400">{items.length}</span>
+            </button>
+            {collections.map((c) => (
+              <button
+                key={c.id}
+                role="tab"
+                aria-selected={activeCollectionId === c.id}
+                onClick={() => selectCollection(c.id)}
+                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm text-left cursor-pointer ${
+                  activeCollectionId === c.id ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <span className="flex-1 truncate">{c.name}</span>
+                <span className="text-xs text-slate-400">{items.filter((i) => c.productIds.includes(i.productId ?? i.id)).length}</span>
+              </button>
+            ))}
+          </div>
+          {onCreateCollection && collections.length < COLLECTION_LIMITS.maxCollections && (
+            <button onClick={startCreating} className="flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:underline cursor-pointer">
+              <FolderPlus className="w-4 h-4" /> {t("New collection")}
+            </button>
+          )}
+          {nameForm}
+          {limit !== undefined && (
+            <div className="pt-3 border-t border-slate-100">
+              <p className="text-xs text-slate-500">{t('{n} of {limit} saved', { n: items.length, limit })}</p>
+              <div className="h-1.5 rounded-full bg-slate-100 mt-1.5" aria-hidden="true">
+                <div className={`h-1.5 rounded-full ${atLimit ? 'bg-amber-500' : 'bg-emerald-600'}`} style={{ width: `${Math.min(100, (items.length / Math.max(1, limit)) * 100)}%` }} />
+              </div>
+            </div>
+          )}
+        </aside>
+
+        <div className="min-w-0 space-y-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("Saved products")}</h1>
+            <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+              <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+              <span>{syncText}</span>
+              {syncStatus === 'error' && onRetrySync && (
+                <button type="button" onClick={onRetrySync} className="px-2 font-semibold text-emerald-800 hover:underline cursor-pointer">
+                  {t('Try again')}
+                </button>
+              )}
+            </p>
+          </div>
+          {limitAndNudge}
+          {collectionTools}
+
+          {items.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-3">
+              <Bookmark className="w-8 h-8 text-slate-300 mx-auto" />
+              <h2 className="text-base font-bold text-slate-900">{t("You haven't saved any products yet")}</h2>
+              <p className="text-sm text-slate-500">{t("Save products from their detail page or from Reels to find them easily and track their price.")}</p>
+              {onDiscover && (
+                <button onClick={onDiscover} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm cursor-pointer">
+                  <Sparkles className="w-4 h-4 text-cyan-400" /> {t("Discover products in Reels")}
+                </button>
+              )}
+            </div>
+          ) : visibleItems.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
+              {t("No products in this collection yet. Use \"Collections\" on a saved product to add it here.")}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+              <table className="w-full text-sm [&_th]:whitespace-nowrap" data-testid="saved-desktop-table">
+                <thead>
+                  <tr className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 text-left">
+                    <th className="px-3 py-2.5 font-bold">{t("Product")}</th>
+                    <th className="px-3 py-2.5 font-bold text-right">{t("Price now")}</th>
+                    <th className="px-3 py-2.5 font-bold text-right">{t("Since you saved")}</th>
+                    <th className="px-3 py-2.5 font-bold">{t("Alert")}</th>
+                    <th className="px-3 py-2.5" aria-label={t("Actions")} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleItems.map((item) => {
+                    const productKey = item.productId ?? item.id;
+                    const change = item.savedPrice !== undefined ? Math.round((item.currentPrice - item.savedPrice) * 100) / 100 : 0;
+                    return (
+                      <React.Fragment key={item.id}>
+                      <tr className="border-t border-slate-100 align-middle">
+                        <td className="px-3 py-3">
+                          <button onClick={() => onSelectSavedItem(item)} className="flex items-center gap-3 text-left cursor-pointer group">
+                            <span className="w-12 h-12 rounded-lg border border-slate-200 bg-white overflow-hidden shrink-0">
+                              <img src={item.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-bold text-slate-900 group-hover:text-emerald-800 truncate max-w-[150px] xl:max-w-[240px]" title={item.title}>{item.title}</span>
+                              <span className="block text-xs text-slate-500">{item.storeName}</span>
+                            </span>
+                          </button>
+                        </td>
+                        <td className="px-3 py-3 text-right font-black text-base tnum whitespace-nowrap">{item.currentPrice.toFixed(2).replace('.', ',')} €</td>
+                        <td className="px-3 py-3 text-right whitespace-nowrap tnum">
+                          {change < 0 ? (
+                            <span className="font-bold text-emerald-700">▼ {Math.abs(change).toFixed(2).replace('.', ',')} €</span>
+                          ) : change > 0 ? (
+                            <span className="font-bold text-red-700">▲ {change.toFixed(2).replace('.', ',')} €</span>
+                          ) : (
+                            <span className="text-slate-400">{t("unchanged")}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {item.targetPrice !== undefined ? (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${item.isTargetReached ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
+                              {item.isTargetReached ? t("TARGET REACHED") : t('below {price}', { price: `${item.targetPrice.toFixed(2).replace('.', ',')} €` })}
+                            </span>
+                          ) : (
+                            <button onClick={() => (onSetAlertFor ? onSetAlertFor(item) : onQuickAlert())} className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer">+ {t("Set alert")}</button>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-right whitespace-nowrap">
+                          {onToggleInCollection && (
+                            <button
+                              onClick={() => setOpenPanelFor(openPanelFor === item.id ? null : item.id)}
+                              aria-expanded={openPanelFor === item.id}
+                              className="mr-1 p-1.5 text-slate-500 hover:text-slate-900 cursor-pointer align-middle"
+                              aria-label={t("Collections")}
+                              title={t("Collections")}
+                            >
+                              <FolderOpen className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button onClick={() => onSelectSavedItem(item)} aria-label={t("View product")} title={t("View product")} className="h-8 w-8 inline-grid place-items-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer align-middle">
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                          {onRemoveSavedItem && (
+                            <button onClick={() => onRemoveSavedItem(item.id)} className="ml-1 p-1.5 text-slate-400 hover:text-red-600 cursor-pointer align-middle" aria-label={t("Remove from saved")} title={t("Remove from saved")}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {openPanelFor === item.id && (
+                        <tr>
+                          <td colSpan={5} className="px-3 pb-3">
+                            <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex flex-wrap gap-4" role="group" aria-label={`Collections for ${item.title}`}>
+                              {collections.length === 0 ? (
+                                <p className="text-xs text-slate-500">{t("Create a collection first (New collection above).")}</p>
+                              ) : (
+                                collections.map((c) => (
+                                  <label key={c.id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                    <input type="checkbox" checked={c.productIds.includes(productKey)} onChange={() => onToggleInCollection?.(c.id, productKey)} />
+                                    {c.name}
+                                  </label>
+                                ))
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="text-xs text-slate-400">{t("Demo data · prices refresh when you open the app")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-8 space-y-4">
+      {/* Title & tracked count */}
+      <div className="pt-1">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("Saved products")}</h1>
+          {atLimit ? (
+            <span className="inline-flex items-center px-2.5 py-1 border rounded-md text-[11px] font-bold bg-amber-50 border-amber-300 text-amber-900">
+              {t('{n} of {limit} saved', { n: items.length, limit })}
+            </span>
+          ) : (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-md text-[11px] font-bold ${
+              items.length > 0
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-slate-100 border-slate-200 text-slate-600'
+            }`}
+          >
+            {items.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+            <span>
+              {items.length} {items.length === 1 ? t("product") : t("products")}
+            </span>
+          </span>
+          )}
+        </div>
+
+        <p className="text-xs text-slate-500 flex items-center gap-1.5">
+          <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+          <span>
+            {syncStatus === 'synced'
+              ? t('Saved to your account · demo prices')
+              : syncStatus === 'syncing'
+                ? t('Syncing with your account… · demo prices')
+                : syncStatus === 'error'
+                  ? t('Could not reach your account. Your changes stay on this device and are sent when it works again.')
+                  : t("Saved on this device · demo prices")}
+          </span>
+          {syncStatus === 'error' && onRetrySync && (
+            <button type="button" onClick={onRetrySync} className="min-h-11 px-2 font-semibold text-emerald-800 hover:underline cursor-pointer">
+              {t('Try again')}
+            </button>
+          )}
+        </p>
+      </div>
+
+      {limitAndNudge}
+
+      {/* Collections bar */}
+      {canManageCollections && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label={t("Collections")}>
+            <button role="tab" aria-selected={activeCollectionId === null} onClick={() => selectCollection(null)} className={chipClass(activeCollectionId === null)}>
+              {t("All (")}{items.length})
+            </button>
+            {collections.map((c) => (
+              <button
+                key={c.id}
+                role="tab"
+                aria-selected={activeCollectionId === c.id}
+                onClick={() => selectCollection(c.id)}
+                className={chipClass(activeCollectionId === c.id)}
+              >
+                {c.name} ({items.filter((i) => c.productIds.includes(i.productId ?? i.id)).length})
+              </button>
+            ))}
+            {collections.length < COLLECTION_LIMITS.maxCollections && (
+              <button
+                onClick={() => {
+                  if (collectionsLocked) {
+                    onCollectionsLocked?.();
+                    return;
+                  }
+                  resetNameForm();
+                  setCreating(true);
+                }}
+                className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-slate-400 text-slate-600 hover:bg-slate-50 flex items-center gap-1 cursor-pointer"
+              >
+                <FolderPlus className="w-3.5 h-3.5" /> {t("New collection")}
+              </button>
+            )}
+          </div>
+
+          {nameForm}
+
+          {collectionTools}
         </div>
       )}
 

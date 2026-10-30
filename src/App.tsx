@@ -48,6 +48,9 @@ import { Smartphone, Monitor } from 'lucide-react';
 
 import { t } from './i18n';
 
+/** Screens that use the full width on PC (lg). All others stay a centered phone-width column there. */
+const WIDE_SCREENS: ActiveScreen[] = ['home', 'product-overview', 'search', 'saved', 'alerts'];
+
 const DEV_NAV =
   typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('devnav');
 
@@ -458,7 +461,7 @@ export default function App() {
         <DemoBanner />
 
         {/* Content Viewport */}
-        <main className={`flex-1 px-4 pt-3 pb-4 lg:px-6 lg:pt-6 ${activeScreen === 'home' ? '' : 'lg:max-w-md lg:mx-auto lg:w-full'}`}>
+        <main className={`flex-1 px-4 pt-3 pb-4 lg:px-6 lg:pt-6 ${WIDE_SCREENS.includes(activeScreen) ? '' : 'lg:max-w-md lg:mx-auto lg:w-full'}`}>
           {activeScreen === 'home' && (
             <HomeScreen
               onSearchFocus={() => {
@@ -517,6 +520,13 @@ export default function App() {
               onOpenHistory={() => navigateTo('price-history')}
               isSaved={selectedProduct ? isProductSaved(selectedProduct.id) : false}
               onToggleSave={() => selectedProduct && handleToggleSaveProduct(selectedProduct)}
+              onRedirectStore={(offer) => setSelectedOfferForRedirect(offer)}
+              onSelectOffer={(offer) => {
+                setActiveOffer(offer);
+                navigateTo('breakdown');
+              }}
+              onQuickAlert={handleConfirmAlert}
+              existingAlertPrice={selectedProduct ? alerts.find((a) => a.productId === selectedProduct.id)?.targetPrice : undefined}
             />
           )}
 
@@ -602,6 +612,7 @@ export default function App() {
               }
               onDeleteCollection={(id) => setCollections((prev) => prev.filter((c) => c.id !== id))}
               onToggleInCollection={(cid, pid) => setCollections((prev) => toggleInCollection(prev, cid, pid))}
+              onSetAlertFor={(item) => handleOpenProduct(item.productId ?? item.id, 'set-alert')}
             />
           )}
 
