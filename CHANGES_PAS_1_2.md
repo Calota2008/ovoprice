@@ -372,3 +372,9 @@ Only for wide screens (1024 px+); phones and tablets keep the old screens (separ
 - Text fix (`SettingsScreen.tsx`, DE/RO): "Sign in to sync saved products, alerts and collections…" (Reels are not synced; it said Reels before).
 - `WIDE_SCREENS` now: home, product-overview, offers-comparison, breakdown, price-history, set-alert, search, saved, alerts, product-reels, settings, legal. Remaining phone-width screens on PC: see-all, visual-result, shared-list.
 - New tests: `e2e_pc_details.py`, `e2e_pc_reels.py`, `e2e_pc_settings_legal.py`. Full suite: all pass (e2e_reels_video skipped: needs a local video fixture). `server.ts` unchanged since the security update.
+
+## Photo analysis: fallback model when Google is overloaded (Oct 30, owner OK for server.ts)
+- Render log showed `503 UNAVAILABLE "This model is currently experiencing high demand"` from Google for `gemini-3.8-flash`: an overload on Google's side, not a bug in the app.
+- `server.ts`: models are tried in order `gemini-3.8-flash` → `gemini-3.6-flash` → `gemini-3.5-flash-lite` (stable models listed on ai.google.dev/gemini-api/docs/models). Only a temporary error (503/429/UNAVAILABLE/RESOURCE_EXHAUSTED) moves to the next model; other errors stop. The order can be changed in Render with `GEMINI_MODELS=modelA,modelB` without code changes. `/api/health` now also shows `fallbackModels`.
+- When all models are busy the server answers `503 {code: "GEMINI_BUSY"}` (was a 500 with Google's raw JSON); the app retries and then shows its "very busy" message.
+- For local tests only: `GEMINI_TEST_BASE_URL` points the server at a fake Gemini, and only with a key starting with `test-` (a real key is never sent there). New `tests/e2e_gemini_fallback.py`.

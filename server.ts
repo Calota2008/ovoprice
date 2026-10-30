@@ -117,12 +117,29 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return express.json({ limit: '100kb' })(req, res, next);
 });
 
+// Gemini models, in order of preference. If one is overloaded, the next is used.
+// Can be changed in Render with GEMINI_MODELS (comma separated) without touching the code.
+const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite')
+  .split(',')
+  .map((m) => m.trim())
+  .filter(Boolean);
+
+// A test base URL is only honoured with an obviously fake key, so a real key can never be sent to it.
+const IS_PRODUCTION_KEY = (key: string) => !key.startsWith('test-');
+
+function isTemporaryGeminiError(err: unknown): boolean {
+  const e = err as { status?: number; code?: number; message?: string };
+  const status = e?.status ?? e?.code;
+  return status === 503 || status === 429 || /UNAVAILABLE|high demand|RESOURCE_EXHAUSTED|overloaded/i.test(String(e?.message ?? ''));
+}
+
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
-    model: 'gemini-3.8-flash',
+    model: GEMINI_MODELS[0],
+    fallbackModels: GEMINI_MODELS.slice(1),
   });
 });
 
@@ -164,14 +181,16 @@ app.post('/api/analyze-image', photoRateLimit, photoJson, async (req: Request, r
     const ai = new GoogleGenAI({
       apiKey,
       httpOptions: {
+        // Only for local tests (a fake Gemini server); never set in Render.
+        ...(process.env.GEMINI_TEST_BASE_URL && !IS_PRODUCTION_KEY(apiKey) ? { baseUrl: process.env.GEMINI_TEST_BASE_URL } : {}),
         headers: {
           'User-Agent': 'aistudio-build',
         },
       },
     });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+    const request = {
+      model: GEMINI_MODELS[0],
       contents: [
         {
           role: 'user',
@@ -252,7 +271,22 @@ app.post('/api/analyze-image', photoRateLimit, photoJson, async (req: Request, r
           ],
         },
       },
-    });
+    };
+
+    // Google is sometimes overloaded for one model (503 UNAVAILABLE / 429): try the next model in the list.
+    let response: Awaited<ReturnType<typeof ai.models.generateContent>> | undefined;
+    let lastErr: unknown;
+    for (const model of GEMINI_MODELS) {
+      try {
+        response = await ai.models.generateContent({ ...request, model });
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (!isTemporaryGeminiError(err)) throw err;
+        console.warn(`Gemini model ${model} is busy, trying the next one`);
+      }
+    }
+    if (!response) throw lastErr;
 
     if (!response.text) {
       res.status(502).json({
@@ -289,6 +323,11 @@ app.post('/api/analyze-image', photoRateLimit, photoJson, async (req: Request, r
     res.json(parsed);
   } catch (err: any) {
     console.error('Error analyzing image with Gemini:', err);
+    if (isTemporaryGeminiError(err)) {
+      // All models busy: a clear 503 so the app can retry and then show its "very busy" message.
+      res.status(503).json({ error: 'UNAVAILABLE: the image analysis service is very busy right now.', code: 'GEMINI_BUSY' });
+      return;
+    }
     res.status(500).json({
       error: err?.message || 'Internal server error while analyzing image with Gemini.',
     });
