@@ -756,6 +756,16 @@ export default function App() {
         initialTab={visualMatcherInitialTab}
         initialUrl={pendingLinkText}
         onClose={() => setIsVisualMatcherOpen(false)}
+        photosPerDay={limits.photosPerDay}
+        onOpenAuth={(mode) => {
+          setIsVisualMatcherOpen(false);
+          setAuthMode(mode);
+        }}
+        onSearchByName={() => {
+          setIsVisualMatcherOpen(false);
+          setSpokenQuery('');
+          navigateTo('search');
+        }}
         onPhotoAnalysisComplete={(result) => {
           setVisualAnalysisResult(result);
           setRecognizedRetailerLink(null);

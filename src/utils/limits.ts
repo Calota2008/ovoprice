@@ -10,10 +10,12 @@ export interface PlanLimits {
   alerts: number;
   /** Whether new collections (and sharing them) are allowed. */
   collections: boolean;
+  /** Photo analyses per day (each one is a paid call to Google). Visitors: none; search, link and barcode are free. */
+  photosPerDay: number;
 }
 
-export const GUEST_LIMITS: PlanLimits = { savedProducts: 1, alerts: 1, collections: false };
-export const ACCOUNT_LIMITS: PlanLimits = { savedProducts: 10, alerts: 3, collections: true };
+export const GUEST_LIMITS: PlanLimits = { savedProducts: 1, alerts: 1, collections: false, photosPerDay: 0 };
+export const ACCOUNT_LIMITS: PlanLimits = { savedProducts: 10, alerts: 3, collections: true, photosPerDay: 3 };
 
 export type LimitKind = 'saved' | 'alerts' | 'collections';
 

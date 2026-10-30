@@ -47,7 +47,7 @@ with sync_playwright() as p:
     pg.keyboard.press('Escape')
     # --- barcode manual
     pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(500)
-    pg.get_by_role('button', name=re.compile('Barcode')).first.click(); pg.wait_for_timeout(300)
+    pg.get_by_role('button', name=re.compile('Barcode|Scan barcode', re.I)).first.click(); pg.wait_for_timeout(300)
     ean=pg.get_by_placeholder(re.compile('EAN'))
     ean.fill('4548736132581'); pg.get_by_role('dialog').get_by_role('button', name=re.compile('^Search$')).click()
     check('ean bad checksum', pg.get_by_text('The check digit does not match').is_visible())

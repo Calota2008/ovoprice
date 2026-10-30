@@ -47,15 +47,20 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
 
 /* ------------------------- Rate limit for photo analysis ------------------------- */
 // Every analysis is a paid call to Google Gemini, so one visitor (IP address) may only do a few.
+// Numbers can be changed in Render (Environment) without new code.
+const envInt = (name: string, fallback: number) => {
+  const n = Number.parseInt(process.env[name] || '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
 const PHOTO_LIMITS = [
-  { windowMs: 60_000, max: 8 }, // per minute
-  { windowMs: 24 * 60 * 60_000, max: 100 }, // per day
+  { windowMs: 60_000, max: envInt('PHOTO_PER_MINUTE', 5) }, // per visitor per minute
+  { windowMs: 24 * 60 * 60_000, max: envInt('PHOTO_PER_VISITOR_DAY', 10) }, // per visitor per day (the app allows 3 per account)
 ];
 const photoHits = new Map<string, number[]>();
 
 // Safety net for the whole site: at most this many analyses per day from all visitors together,
 // so even someone who hides their address cannot run up the Gemini bill.
-const PHOTO_DAILY_TOTAL = 500;
+const PHOTO_DAILY_TOTAL = envInt('PHOTO_SITE_PER_DAY', 300);
 let totalDay = '';
 let totalCount = 0;
 

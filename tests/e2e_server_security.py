@@ -42,7 +42,7 @@ check('other routes accept only small bodies (413)', st == 413)
 
 codes = [req('/api/analyze-image', {'imageBase64': png, 'mimeType': 'image/png'})[0] for _ in range(10)]
 st, h, b = req('/api/analyze-image', {'imageBase64': png, 'mimeType': 'image/png'})
-check('rate limit: after 8 photos per minute -> 429 RATE_LIMIT with Retry-After',
+check('rate limit: after 5 photos per minute -> 429 RATE_LIMIT with Retry-After',
       st == 429 and json.loads(b).get('code') == 'RATE_LIMIT' and h.get('Retry-After'))
 st, h, b = req('/api/health')
 check('health still works', st == 200 and json.loads(b).get('status') == 'ok')

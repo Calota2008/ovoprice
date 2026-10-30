@@ -8,6 +8,8 @@ import { digitsOnly, explainInvalidGtin, isValidGtin, normalizeGtin } from '../u
 import { DemoBadge } from './DemoBadge';
 
 import { t, tr } from '../i18n';
+import { countPhotoUsed, photosUsedToday } from '../utils/photoQuota';
+import { ACCOUNT_LIMITS } from '../utils/limits';
 const CAMERA_MESSAGES: Record<CameraProblem, string> = {
   denied: tr('Camera access was denied. Allow the camera in your browser settings or enter the code manually.'),
   'no-camera': tr('No camera was found on this device. Enter the code manually.'),
@@ -25,6 +27,12 @@ interface VisualMatcherModalProps {
   initialTab?: 'link' | 'photo' | 'barcode';
   /** Text already pasted (e.g. from Home): prefilled and validated. */
   initialUrl?: string;
+  /** Photo analysis costs money per call: only for accounts, a few per day. 0 = not available (visitors). */
+  photosPerDay?: number;
+  /** Opens sign-in / sign-up (photo analysis needs a free account). */
+  onOpenAuth?: (mode: 'sign-in' | 'create') => void;
+  /** "I'll type the name": close and go to search. */
+  onSearchByName?: () => void;
 }
 
 export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
@@ -35,7 +43,12 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
   onBarcodeProduct,
   initialTab = 'link',
   initialUrl = '',
+  photosPerDay = 3,
+  onOpenAuth,
+  onSearchByName,
 }) => {
+  const [photosUsed, setPhotosUsed] = useState(() => photosUsedToday());
+  const photosLeft = Math.max(0, photosPerDay - photosUsed);
   const [activeTab, setActiveTab] = useState<'link' | 'photo' | 'barcode'>(initialTab);
   const [inputUrl, setInputUrl] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -69,6 +82,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
+      setPhotosUsed(photosUsedToday());
       setScanning(false);
       setInputUrl(initialUrl);
       if (initialUrl) {
@@ -322,6 +336,8 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
         throw new Error(raw || t('Server error while analyzing photograph.'));
       }
 
+      setPhotosUsed(countPhotoUsed());
+
       const visualResult: VisualAnalysisResult = {
         objectName: data.objectName,
         category: data.category,
@@ -387,20 +403,6 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
           </button>
           <button
             onClick={() => {
-              setActiveTab('photo');
-              setUrlError(null);
-            }}
-            className={`py-2 px-3 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-all ${
-              activeTab === 'photo'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Camera className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{t("Scan Photo")}</span>
-          </button>
-          <button
-            onClick={() => {
               setActiveTab('barcode');
               setUrlError(null);
             }}
@@ -412,6 +414,20 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
           >
             <Barcode className="w-3.5 h-3.5 text-purple-600" />
             <span>{t("Barcode")}</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('photo');
+              setUrlError(null);
+            }}
+            className={`py-2 px-3 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-all ${
+              activeTab === 'photo'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{t("Scan Photo")}</span>
           </button>
         </div>
 
@@ -569,8 +585,50 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                   </div>
                 ) : (
                   <>
+                    {/* Free ways first: photo analysis costs money per call */}
+                    {!previewBase64 && (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3" data-testid="photo-tip">
+                        <p className="text-xs font-bold text-slate-900">{t("Faster without a photo")}</p>
+                        <p className="text-[11px] text-slate-600 mt-0.5">
+                          {t("The name on the product (e.g. \"Samsung QE55Q60\") or the barcode give more exact results.")}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          {onSearchByName && (
+                            <button type="button" onClick={onSearchByName} className="py-2 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-800 cursor-pointer">
+                              {t("I'll type the name")}
+                            </button>
+                          )}
+                          <button type="button" onClick={() => setActiveTab('barcode')} className="py-2 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-800 cursor-pointer">
+                            {t("Scan the barcode")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Upload / Preview Area */}
-                    {!previewBase64 ? (
+                    {photosPerDay === 0 ? (
+                      <div className="rounded-xl border border-slate-200 bg-white p-4 text-center space-y-2" data-testid="photo-needs-account">
+                        <p className="text-sm font-bold text-slate-900">{t("Photo search needs a free account")}</p>
+                        <p className="text-xs text-slate-600">
+                          {t("With a free account you can analyze {n} photos a day. Searching by name, link or barcode is always free.", { n: ACCOUNT_LIMITS.photosPerDay })}
+                        </p>
+                        {onOpenAuth && (
+                          <div className="flex gap-2 justify-center pt-1">
+                            <button type="button" onClick={() => onOpenAuth('create')} className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer">
+                              {t("Create an account")}
+                            </button>
+                            <button type="button" onClick={() => onOpenAuth('sign-in')} className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-800 cursor-pointer">
+                              {t("I already have an account")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : photosLeft === 0 && !previewBase64 ? (
+                      <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-center" role="status" data-testid="photo-limit-reached">
+                        <p className="text-sm font-bold text-amber-900">{t("You have used today's {n} photo analyses", { n: photosPerDay })}</p>
+                        <p className="text-xs text-amber-900 mt-1">{t("Search by name, link or barcode, or try photos again tomorrow.")}</p>
+                      </div>
+                    ) : !previewBase64 ? (
                       <>
                       <div className="grid grid-cols-2 gap-2">
                         <button
@@ -592,6 +650,9 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           {t("Choose from gallery")}
                         </button>
                       </div>
+                      <p className="text-[11px] text-slate-500 text-center" data-testid="photo-left">
+                        {t("{left} of {n} photo analyses left today", { left: photosLeft, n: photosPerDay })}
+                      </p>
                       <div
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
@@ -726,6 +787,23 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                   </div>
                 ) : (
                   <>
+                    {!cameraOn && (
+                      <div className="rounded-xl border border-purple-200 bg-purple-50/60 p-3 flex gap-3 items-center" data-testid="barcode-help">
+                        <div className="shrink-0" aria-hidden="true">
+                          <div className="flex items-end gap-[2px] h-8">
+                            {[2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 2].map((w, i) => (
+                              <span key={i} className="block h-8 bg-slate-900" style={{ width: w }} />
+                            ))}
+                          </div>
+                          <p className="font-mono text-[10px] text-slate-700 mt-0.5">4 006381 333931</p>
+                        </div>
+                        <div className="text-[11px] text-slate-700 leading-snug">
+                          <p className="font-bold text-slate-900">{t("Which code?")}</p>
+                          <p>{t("The code with vertical lines (EAN) on the product box or on the price label in the store.")}</p>
+                          <p className="mt-0.5 text-slate-500">{t("8 or 13 digits · QR codes do not work")}</p>
+                        </div>
+                      </div>
+                    )}
                     {cameraOn ? (
                       <div className="space-y-2">
                         <BarcodeScanner

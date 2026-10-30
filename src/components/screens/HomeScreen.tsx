@@ -5,6 +5,7 @@ import { usePriceData } from '../../services/usePriceData';
 import { PopularSearchItem, ReelItem } from '../../types';
 import { DemoBadge } from '../DemoBadge';
 
+import { ACCOUNT_LIMITS } from '../../utils/limits';
 import { t, useLanguage, LANGUAGES, Lang } from '../../i18n';
 import { useCountry } from '../../i18n/country';
 import {
@@ -279,65 +280,41 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </span>
           </div>
 
-          <p className="text-xs text-emerald-100/90 leading-relaxed max-w-[280px] mb-3.5">
-            {t("Have a store link, a photo or a barcode? Identify the product.")}
+          <p className="text-xs text-emerald-100/90 leading-relaxed max-w-[320px] mb-3.5">
+            {t("No name at hand? Use a store link or the barcode. A photo is the last option.")}
           </p>
 
-          {/* 3 Integrated Entry Points */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => onOpenVisualMatcher('link')}
-              className="bg-white hover:bg-emerald-50/90 active:bg-slate-100 text-slate-900 rounded-xl p-2.5 sm:p-3 text-left transition-colors shadow-xs flex flex-col justify-between h-[92px] sm:h-24 cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                <Link2 className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-bold text-slate-900 block leading-tight">
-                  {t("Paste Link")}
+          {/* Free ways first, photo last (each photo analysis is a paid call) */}
+          <div className="space-y-2" data-testid="home-find-options">
+            {(
+              [
+                ['link', Link2, 'bg-blue-100 text-blue-700', t("Paste Link"), t("From Amazon, MediaMarkt, OTTO…"), 'free'],
+                ['barcode', Barcode, 'bg-purple-100 text-purple-700', t("Scan barcode"), t("The code with lines on the box or the store label"), 'free'],
+                ['photo', Camera, 'bg-emerald-100 text-emerald-700', t("Take a photo"), t("Only if you don't know the name and have no code"), 'limited'],
+              ] as const
+            ).map(([tab, Icon, iconClass, title, sub, kind]) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => onOpenVisualMatcher(tab)}
+                className="w-full bg-white hover:bg-emerald-50/90 active:bg-slate-100 text-slate-900 rounded-xl p-2.5 text-left transition-colors shadow-xs flex items-center gap-3 cursor-pointer"
+              >
+                <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconClass}`}>
+                  <Icon className="w-4 h-4" />
                 </span>
-                <span className="text-[10px] text-slate-500 block truncate">
-                  {t("MediaMarkt, OTTO, Amazon")}
+                <span className="min-w-0 flex-1">
+                  <span className="text-sm font-bold text-slate-900 block leading-tight">{title}</span>
+                  <span className="text-[11px] text-slate-500 block leading-snug">{sub}</span>
                 </span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onOpenVisualMatcher('photo')}
-              className="bg-white hover:bg-emerald-50/90 active:bg-slate-100 text-slate-900 rounded-xl p-2.5 sm:p-3 text-left transition-colors shadow-xs flex flex-col justify-between h-[92px] sm:h-24 cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <Camera className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-bold text-slate-900 block leading-tight">
-                  {t("Scan / Photo")}
+                <span
+                  className={`shrink-0 text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
+                    kind === 'free' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}
+                >
+                  {kind === 'free' ? t("FREE") : t("{n} / DAY", { n: ACCOUNT_LIMITS.photosPerDay })}
                 </span>
-                <span className="text-[10px] text-slate-500 block truncate">
-                  {t("Screenshot, pic")}
-                </span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onOpenVisualMatcher('barcode')}
-              className="bg-white hover:bg-emerald-50/90 active:bg-slate-100 text-slate-900 rounded-xl p-2.5 sm:p-3 text-left transition-colors shadow-xs flex flex-col justify-between h-[92px] sm:h-24 cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                <Barcode className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-bold text-slate-900 block leading-tight">
-                  {t("Barcode")}
-                </span>
-                <span className="text-[10px] text-slate-500 block truncate">
-                  {t("In retail store")}
-                </span>
-              </div>
-            </button>
+              </button>
+            ))}
           </div>
         </div>
       </div>
