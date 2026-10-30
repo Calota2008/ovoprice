@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Link2, Barcode, X, ArrowRight, Sparkles, CheckCircle2, Scan, AlertCircle, Loader2, Trash2 } from 'lucide-react';
+import { Camera, Link2, Barcode, X, ArrowRight, Sparkles, CheckCircle2, Scan, AlertCircle, Loader2, Trash2, ImageIcon } from 'lucide-react';
 import { RecognizedRetailerLink, VisualAnalysisResult, Product } from '../types';
 import { priceProvider } from '../services/priceProvider';
 import { BarcodeScanner, CameraProblem } from './BarcodeScanner';
@@ -48,6 +48,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
 
   // Photo analysis state
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewBase64, setPreviewBase64] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -159,17 +160,70 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
     onRecognizedLink?.({ ...parsed.link, matchedProduct });
   };
 
-  const handleFileSelect = (file: File) => {
-    setPhotoError(null);
-    const validMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-    const validExtensions = /\.(png|jpe?g|webp)$/i;
+  // Phone cameras make photos of several MB. We shrink them in the browser (longest side 1600 px, JPEG) before
+  // sending: faster upload, cheaper analysis, and big camera photos no longer fail the 5 MB limit.
+  const MAX_INPUT_BYTES = 25 * 1024 * 1024;
+  const MAX_SIDE = 1600;
+  const shrinkPhoto = (file: File): Promise<File> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          reject(new Error('canvas'));
+          return;
+        }
+        ctx.fillStyle = '#ffffff'; // transparent PNGs get a white background in JPEG
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error('encode'));
+            const base = (file.name || 'photo').replace(/\.[^.]+$/, '');
+            resolve(new File([blob], `${base}.jpg`, { type: 'image/jpeg' }));
+          },
+          'image/jpeg',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('decode'));
+      };
+      img.src = url;
+    });
 
-    if (!validMimeTypes.includes(file.type) && !validExtensions.test(file.name)) {
+  const handleFileSelect = async (original: File) => {
+    setPhotoError(null);
+    const looksLikeImage = original.type.startsWith('image/') || /\.(png|jpe?g|webp|heic|heif|gif)$/i.test(original.name);
+    if (!looksLikeImage) {
+      setPhotoError(t('Unsupported format. Please select a PNG, JPG, or WEBP image.'));
+      return;
+    }
+    if (original.size > MAX_INPUT_BYTES) {
+      setPhotoError(t('This photo is too large. Please choose a smaller photo.'));
+      return;
+    }
+
+    let file: File;
+    try {
+      file = await shrinkPhoto(original);
+    } catch {
+      // The browser cannot open this picture (for example some HEIC files).
       setPhotoError(t('Unsupported format. Please select a PNG, JPG, or WEBP image.'));
       return;
     }
 
-    // Check size limit: 5MB
+    // Check size limit: 5MB (after shrinking this practically never happens)
     if (file.size > 5 * 1024 * 1024) {
       setPhotoError(t('Image exceeds the 5 MB limit. Please select a smaller photo.'));
       return;
@@ -244,6 +298,8 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
         // A proxy or hosting error can answer with HTML instead of JSON: treat that as a failed request.
         data = await response.json().catch(() => null);
         const raw = typeof data?.error === 'string' ? data.error : '';
+        // Our own server limit (too many analyses from this device): waiting a few seconds does not help.
+        if (data?.code === 'RATE_LIMIT') break;
         if (response.ok || !isBusy(response.status, raw) || attempt === 2) break;
         setPhotoScanStep(t('The analysis service is busy, trying again...'));
         await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
@@ -254,6 +310,12 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
 
       if (!response || !response.ok || !data) {
         const raw = typeof data?.error === 'string' ? data.error : '';
+        if (data?.code === 'RATE_LIMIT') {
+          throw new Error(t('You have analyzed many photos in a short time. Please wait a little and try again, or search by name.'));
+        }
+        if (response && response.status === 413) {
+          throw new Error(t('Image exceeds the 5 MB limit. Please select a smaller photo.'));
+        }
         if (response && isBusy(response.status, raw)) {
           throw new Error(t('The analysis service is very busy right now. Please try again in a minute, or search by name.'));
         }
@@ -444,16 +506,32 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
 
             {activeTab === 'photo' && (
               <div className="space-y-3">
-                {/* Hidden file input */}
+                {/* Hidden file inputs: one opens the gallery / files, the other opens the camera directly on phones */}
                 <input
                   type="file"
                   ref={fileInputRef}
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  data-testid="photo-gallery-input"
+                  accept="image/*"
                   className="hidden"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       handleFileSelect(e.target.files[0]);
                     }
+                    e.target.value = '';
+                  }}
+                />
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  data-testid="photo-camera-input"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileSelect(e.target.files[0]);
+                    }
+                    e.target.value = '';
                   }}
                 />
 
@@ -493,12 +571,33 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                   <>
                     {/* Upload / Preview Area */}
                     {!previewBase64 ? (
+                      <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          data-testid="photo-take"
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <Camera className="w-4 h-4" />
+                          {t("Take a photo")}
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="photo-gallery"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <ImageIcon className="w-4 h-4 text-emerald-700" />
+                          {t("Choose from gallery")}
+                        </button>
+                      </div>
                       <div
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
+                        className={`hidden pointer-fine:block border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
                           isDragging
                             ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-200'
                             : 'border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300'
@@ -517,10 +616,9 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
                             {t("PNG, JPG, WEBP")}
                           </span>
-                          <span className="text-[10px] text-slate-400">•</span>
-                          <span className="text-[10px] text-slate-400">{t("Max 5 MB")}</span>
                         </div>
                       </div>
+                      </>
                     ) : (
                       <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-3">
                         <div className="flex items-center gap-3">

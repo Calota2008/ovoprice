@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
@@ -7,10 +8,114 @@ dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-// Body parser with 10MB limit for image payloads
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Render sits behind one proxy: trust it so req.ip is the visitor's address (needed for the rate limit).
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+/* ----------------------------- Security headers ----------------------------- */
+// The app only talks to its own server and to Supabase. Images and videos of products/reels may come from https.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  if (IS_PRODUCTION) {
+    // Only in production: the dev server (Vite) needs inline scripts and its own websocket.
+    res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+/* ------------------------- Rate limit for photo analysis ------------------------- */
+// Every analysis is a paid call to Google Gemini, so one visitor (IP address) may only do a few.
+const PHOTO_LIMITS = [
+  { windowMs: 60_000, max: 8 }, // per minute
+  { windowMs: 24 * 60 * 60_000, max: 100 }, // per day
+];
+const photoHits = new Map<string, number[]>();
+
+// Safety net for the whole site: at most this many analyses per day from all visitors together,
+// so even someone who hides their address cannot run up the Gemini bill.
+const PHOTO_DAILY_TOTAL = 500;
+let totalDay = '';
+let totalCount = 0;
+
+// Behind Cloudflare the visitor's address is in CF-Connecting-IP; otherwise Render's proxy gives req.ip.
+const visitorKey = (req: Request) => {
+  const cf = req.headers['cf-connecting-ip'];
+  return (typeof cf === 'string' && cf.trim()) || req.ip || 'unknown';
+};
+
+function photoRateLimit(req: Request, res: Response, next: NextFunction) {
+  const key = visitorKey(req);
+  const now = Date.now();
+  const today = new Date(now).toISOString().slice(0, 10);
+  if (today !== totalDay) {
+    totalDay = today;
+    totalCount = 0;
+  }
+  if (totalCount >= PHOTO_DAILY_TOTAL) {
+    res.setHeader('Retry-After', '3600');
+    res.status(429).json({ error: 'Photo analysis is paused for today. Please search by name.', code: 'RATE_LIMIT', retryAfter: 3600 });
+    return;
+  }
+  const longest = Math.max(...PHOTO_LIMITS.map((l) => l.windowMs));
+  const hits = (photoHits.get(key) || []).filter((t) => now - t < longest);
+  for (const limit of PHOTO_LIMITS) {
+    const inWindow = hits.filter((t) => now - t < limit.windowMs);
+    if (inWindow.length >= limit.max) {
+      const retryAfter = Math.ceil((inWindow[0] + limit.windowMs - now) / 1000);
+      photoHits.set(key, hits);
+      res.setHeader('Retry-After', String(retryAfter));
+      res.status(429).json({ error: 'Too many photo analyses. Please wait and try again later.', code: 'RATE_LIMIT', retryAfter });
+      return;
+    }
+  }
+  hits.push(now);
+  photoHits.set(key, hits);
+  totalCount += 1;
+  next();
+}
+
+// Forget old entries once an hour so the memory does not grow.
+setInterval(() => {
+  const now = Date.now();
+  const longest = Math.max(...PHOTO_LIMITS.map((l) => l.windowMs));
+  for (const [key, hits] of photoHits) {
+    const recent = hits.filter((t) => now - t < longest);
+    if (recent.length) photoHits.set(key, recent);
+    else photoHits.delete(key);
+  }
+}, 60 * 60_000).unref();
+
+/* ------------------------------ Request bodies ------------------------------ */
+// Small limit everywhere; only the photo route accepts a larger body (a 5 MB photo is about 6.7 MB as base64).
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif']);
+const photoJson = express.json({ limit: '8mb' });
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.path === '/api/analyze-image') return next();
+  return express.json({ limit: '100kb' })(req, res, next);
+});
 
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -22,7 +127,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // POST /api/analyze-image
-app.post('/api/analyze-image', async (req: Request, res: Response) => {
+app.post('/api/analyze-image', photoRateLimit, photoJson, async (req: Request, res: Response) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -41,8 +146,20 @@ app.post('/api/analyze-image', async (req: Request, res: Response) => {
     }
 
     // Strip data URL scheme prefix if present
-    const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
-    const validMimeType = mimeType || 'image/jpeg';
+    const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z+.-]+;base64,/, '');
+    const validMimeType = typeof mimeType === 'string' && mimeType ? mimeType.toLowerCase() : 'image/jpeg';
+    if (!ALLOWED_IMAGE_TYPES.has(validMimeType)) {
+      res.status(400).json({ error: 'Only photos (JPEG, PNG, WebP, HEIC) can be analyzed.' });
+      return;
+    }
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(cleanBase64)) {
+      res.status(400).json({ error: 'The photo could not be read.' });
+      return;
+    }
+    if (Math.floor((cleanBase64.length * 3) / 4) > PHOTO_MAX_BYTES) {
+      res.status(413).json({ error: 'Image exceeds the 5 MB limit. Please select a smaller photo.' });
+      return;
+    }
 
     const ai = new GoogleGenAI({
       apiKey,
@@ -178,9 +295,23 @@ app.post('/api/analyze-image', async (req: Request, res: Response) => {
   }
 });
 
+// Body errors (too large, broken JSON) answer as JSON, never with an HTML error page.
+app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  if (!err) return next();
+  if (err.type === 'entity.too.large') {
+    res.status(413).json({ error: 'Image exceeds the 5 MB limit. Please select a smaller photo.' });
+    return;
+  }
+  if (err.type === 'entity.parse.failed') {
+    res.status(400).json({ error: 'Invalid request.' });
+    return;
+  }
+  next(err);
+});
+
 // Start server with Vite middleware in dev or static files in production
 async function startServer() {
-  if (process.env.NODE_ENV === 'production') {
+  if (IS_PRODUCTION) {
     app.use(express.static('dist'));
   } else {
     const vite = await createViteServer({

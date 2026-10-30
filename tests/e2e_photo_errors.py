@@ -19,7 +19,7 @@ def run(b, lang, handler, expect):
     pg.add_init_script(f"localStorage.setItem('ovoprice_lang_v1','{lang}')")
     pg.route('**/api/analyze-image', handler)
     pg.goto('http://127.0.0.1:5199/'); pg.wait_for_timeout(600)
-    pg.locator('input[type=file]').count()
+    pg.get_by_test_id('photo-gallery-input').count()
     return ctx, pg, errs
 
 with sync_playwright() as p:
@@ -36,7 +36,7 @@ with sync_playwright() as p:
         pg.wait_for_timeout(300)
         # open the Photo tab
         pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
-        pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+        pg.get_by_test_id('photo-gallery-input').set_input_files(tmp); pg.wait_for_timeout(500)
         pg.get_by_role('button', name='Analyze Photo with Gemini').click(); pg.wait_for_timeout(1500)
         notice = pg.get_by_text('Analysis Notice')
         check(f'{name}: a notice is shown', notice.count() == 1)
@@ -50,7 +50,7 @@ with sync_playwright() as p:
         pg.get_by_role('button', name='Scan or find product').first.click() if pg.get_by_role('button', name='Scan or find product').count() else None
         pg.wait_for_timeout(300)
         pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
-        pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+        pg.get_by_test_id('photo-gallery-input').set_input_files(tmp); pg.wait_for_timeout(500)
         pg.get_by_role('button', name='Analyze Photo with Gemini').click()
     calls = {'n': 0}
     def always_busy(r):
@@ -73,19 +73,45 @@ with sync_playwright() as p:
     pg.get_by_role('button', name='Scan or find product').first.click() if pg.get_by_role('button', name='Scan or find product').count() else None
     pg.wait_for_timeout(300)
     pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
-    pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+    pg.get_by_test_id('photo-gallery-input').set_input_files(tmp); pg.wait_for_timeout(500)
     check('photo: note says the photo goes to Google Gemini and is not stored', pg.get_by_test_id('photo-privacy-note').count() == 1 and 'Google' in pg.get_by_test_id('photo-privacy-note').inner_text() and 'do not store' in pg.get_by_test_id('photo-privacy-note').inner_text())
     ctx.close()
     ctx, pg, errs = run(b, 'en', lambda r: r.abort(), '')
     check('footer: price note shown (VAT, shipping, merchant price counts)', pg.get_by_test_id('price-note').count() == 1 and 'VAT' in pg.get_by_test_id('price-note').inner_text())
     check('footer: no horizontal overflow', pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth'))
     ctx.close()
+    # Phone camera: a "Take a photo" button opens the camera directly (capture), "Choose from gallery" the gallery.
+    # A big camera photo (over 5 MB) is shrunk in the browser and sent as a small JPEG.
+    from PIL import Image as _I
+    import numpy as _np
+    big = os.path.join(tempfile.mkdtemp(), 'camera.jpg')
+    _I.fromarray((_np.random.rand(3000, 4000, 3) * 255).astype('uint8')).save(big, quality=100)
+    sent = {}
+    def capture_body(r):
+        sent['body'] = r.request.post_data_json; r.fulfill(status=200, content_type='application/json', body=json.dumps(OK))
+    ctx, pg, errs = run(b, 'en', capture_body, '')
+    pg.get_by_role('button', name='Scan or find product').first.click() if pg.get_by_role('button', name='Scan or find product').count() else None
+    pg.wait_for_timeout(300)
+    pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
+    cam = pg.get_by_test_id('photo-camera-input')
+    check('camera: "Take a photo" and "Choose from gallery" buttons shown', pg.get_by_test_id('photo-take').is_visible() and pg.get_by_test_id('photo-gallery').is_visible())
+    check('camera: camera input opens the back camera (capture=environment, any image)', cam.get_attribute('capture') == 'environment' and cam.get_attribute('accept') == 'image/*')
+    check('gallery: gallery input accepts any image, no capture', pg.get_by_test_id('photo-gallery-input').get_attribute('accept') == 'image/*' and pg.get_by_test_id('photo-gallery-input').get_attribute('capture') is None)
+    with pg.expect_file_chooser() as fc:
+        pg.get_by_test_id('photo-take').click()
+    check('camera: the button opens the camera/file chooser', fc.value is not None)
+    fc.value.set_files(big); pg.wait_for_timeout(2500)
+    check(f'big camera photo ({os.path.getsize(big)//(1024*1024)} MB) accepted, no size error', pg.get_by_role('button', name='Analyze Photo with Gemini').count() == 1 and pg.get_by_text('5 MB limit').count() == 0)
+    pg.get_by_role('button', name='Analyze Photo with Gemini').click(); pg.wait_for_timeout(1500)
+    b64 = (sent.get('body') or {}).get('imageBase64', '')
+    check('big photo sent shrunk as JPEG under 1.5 MB', (sent.get('body') or {}).get('mimeType') == 'image/jpeg' and 0 < len(b64) * 3 / 4 < 1.5 * 1024 * 1024)
+    check('big photo: result shown, no page errors', pg.get_by_text('Test kettle').count() >= 1 and not errs); ctx.close()
     # German translation of the network failure
     ctx, pg, errs = run(b, 'de', lambda r: r.abort(), '')
     pg.get_by_role('button', name='Produkt scannen oder suchen').first.click() if pg.get_by_role('button', name='Produkt scannen oder suchen').count() else None
     pg.wait_for_timeout(300)
     pg.get_by_role('button', name='Foto', exact=False).first.click(); pg.wait_for_timeout(200)
-    pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+    pg.get_by_test_id('photo-gallery-input').set_input_files(tmp); pg.wait_for_timeout(500)
     pg.get_by_role('button', name='Foto mit Gemini analysieren').click(); pg.wait_for_timeout(1500)
     check('German: network failure message is German', pg.get_by_text('Verbindung zum Bildanalyse-Dienst fehlgeschlagen.', exact=True).count() == 1 and pg.get_by_text('Failed to fetch').count() == 0)
     ctx.close()
@@ -94,7 +120,7 @@ with sync_playwright() as p:
     pg.get_by_role('button', name='Scan or find product').first.click() if pg.get_by_role('button', name='Scan or find product').count() else None
     pg.wait_for_timeout(300)
     pg.get_by_role('button', name='Photo', exact=False).first.click(); pg.wait_for_timeout(200)
-    pg.locator('input[type=file]').set_input_files(tmp); pg.wait_for_timeout(500)
+    pg.get_by_test_id('photo-gallery-input').set_input_files(tmp); pg.wait_for_timeout(500)
     pg.get_by_role('button', name='Analyze Photo with Gemini').click(); pg.wait_for_timeout(1500)
     check('success: result screen shows the recognized object', pg.get_by_text('Test kettle').count() >= 1)
     check('success: no page errors', not errs); ctx.close(); b.close()

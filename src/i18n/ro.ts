@@ -150,7 +150,6 @@ export const ro: Record<string, string> = {
   "Take photo or drop product image": "Fă o fotografie sau trage aici imaginea produsului",
   "Click to browse from your device or drag & drop here": "Fă clic ca să alegi de pe dispozitiv sau trage fișierul aici",
   "PNG, JPG, WEBP": "PNG, JPG, WEBP",
-  "Max 5 MB": "Max. 5 MB",
   "Upload preview": "Previzualizare încărcare",
   "· Ready for AI analysis": "· Gata pentru analiza AI",
   "Choose different image": "Alege altă imagine",
@@ -800,4 +799,8 @@ export const ro: Record<string, string> = {
   "When you analyze, the photo is sent through our server to Google's Gemini service to identify the product. We do not store it.": "La analiză, poza este trimisă prin serverul nostru către serviciul Gemini al Google pentru a identifica produsul. Nu o păstrăm.",
   "Prices are in euros including VAT, plus shipping where it applies. Prices, ranking and delivery times can change; the price on the merchant's website is the one that counts.": "Prețurile sunt în euro, cu TVA inclus, plus transport acolo unde se aplică. Prețurile, ordinea și timpii de livrare se pot schimba; contează prețul de pe site-ul magazinului.",
   "Reels": "Reels",
+  "You have analyzed many photos in a short time. Please wait a little and try again, or search by name.": "Ai analizat multe fotografii într-un timp scurt. Te rog așteaptă puțin și încearcă din nou, sau caută după nume.",
+  "Take a photo": "Fă o poză",
+  "Choose from gallery": "Alege din galerie",
+  "This photo is too large. Please choose a smaller photo.": "Fotografia este prea mare. Te rog alege una mai mică.",
 };

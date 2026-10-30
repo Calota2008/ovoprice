@@ -150,7 +150,6 @@ export const de: Record<string, string> = {
   "Take photo or drop product image": "Foto aufnehmen oder Produktbild hierher ziehen",
   "Click to browse from your device or drag & drop here": "Klicke, um eine Datei auszuwählen, oder ziehe sie hierher",
   "PNG, JPG, WEBP": "PNG, JPG, WEBP",
-  "Max 5 MB": "Max. 5 MB",
   "Upload preview": "Vorschau des Uploads",
   "· Ready for AI analysis": "· Bereit für die KI-Analyse",
   "Choose different image": "Anderes Bild wählen",
@@ -800,4 +799,8 @@ export const de: Record<string, string> = {
   "When you analyze, the photo is sent through our server to Google's Gemini service to identify the product. We do not store it.": "Beim Analysieren wird das Foto über unseren Server an Googles Gemini-Dienst gesendet, um das Produkt zu erkennen. Wir speichern es nicht.",
   "Prices are in euros including VAT, plus shipping where it applies. Prices, ranking and delivery times can change; the price on the merchant's website is the one that counts.": "Preise in Euro inkl. MwSt., ggf. zzgl. Versand. Preise, Rangfolge und Lieferzeiten können sich ändern; maßgeblich ist der Preis auf der Website des Händlers.",
   "Reels": "Reels",
+  "You have analyzed many photos in a short time. Please wait a little and try again, or search by name.": "Du hast in kurzer Zeit viele Fotos analysiert. Bitte warte kurz und versuche es erneut, oder suche nach dem Namen.",
+  "Take a photo": "Foto aufnehmen",
+  "Choose from gallery": "Aus Galerie wählen",
+  "This photo is too large. Please choose a smaller photo.": "Dieses Foto ist zu groß. Bitte wähle ein kleineres Foto.",
 };

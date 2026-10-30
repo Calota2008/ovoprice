@@ -330,3 +330,21 @@ The privacy notice now says fonts and images come from our own server.
 - `src/components/screens/ProductReelsScreen.tsx`: the two arrow buttons are hidden on touch screens (`hidden pointer-fine:flex`); phones and tablets switch reels by swiping. On PC (mouse) the arrows stay, because a mouse cannot swipe; the keyboard arrows also keep working.
 - `tests/e2e_reels.py`: navigation on the touch test uses the keyboard; new checks: arrows hidden on touch, visible and working on PC, a real finger swipe up/down changes the reel.
 - All Reels buttons were clicked through on a phone-size screen (Back, For You / Categories / Saved Products, category chips, grid view, Save, Alert, Share, Compare prices, Buy at, See all offers, Close, View Details): all work.
+
+## Datenschutz: account section matches the sync (Oct 29)
+- `src/data/legalContent.ts` (EN/DE/RO), section "4. Account": the old sentence "saved products, alerts and Reels are not synced" was wrong since account sync. Now: when signed in, saved products, price alerts and collections are stored so they match on all devices; Reels added by the user stay on the device; without an account everything stays on the device. Deleting the account also removes the synced lists (the `user_lists` row is deleted with the account).
+
+## Security before launch: server.ts (Oct 30, with the owner's OK to change server.ts)
+- **Security headers** on every response: X-Content-Type-Options, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy (camera/microphone only for this site), Cross-Origin-Opener-Policy. In production also Content-Security-Policy (scripts only from the site itself; network only to the site and Supabase; no framing) and HSTS. `X-Powered-By` removed. The dev server gets no CSP (Vite needs inline scripts).
+- **Photo analysis protected** (each call costs Gemini money): max 8 per minute and 100 per day per visitor, plus max 500 per day for the whole site. Visitor = Cloudflare `CF-Connecting-IP`, otherwise the address given by Render's proxy (`trust proxy 1`). Over the limit: HTTP 429 `{code: "RATE_LIMIT"}` with `Retry-After`.
+- **Upload checks**: only JPEG/PNG/WebP/HEIC/GIF, content must be base64, max 5 MB (same as the app). Body limit 8 MB only on the photo route, 100 KB everywhere else (was 10 MB everywhere). Too-large or broken bodies answer with JSON, not an HTML error page.
+- Imports of express types are now `import type` (the server also starts with plain `node server.ts` on Node 22).
+- App (`VisualMatcherModal.tsx`): on our own limit it does not retry and says "You have analyzed many photos in a short time…" (EN/DE/RO); a 413 shows the 5 MB message.
+- New `tests/e2e_server_security.py` (17 checks; needs `npm run build` and `NODE_ENV=production PORT=5302 GEMINI_API_KEY=fake node server.ts`).
+- Still recommended (owner, outside the code): a budget/quota limit for the Gemini key in Google Cloud / AI Studio.
+
+## Photo: camera opens directly on phones (Oct 30)
+- Problem: on the phone, "photo" only opened the gallery. The file input had a fixed list of types and no `capture`, so Android offered only files/photos.
+- `VisualMatcherModal.tsx`: two buttons, **Take a photo** (opens the back camera directly: `accept="image/*" capture="environment"`) and **Choose from gallery** (`accept="image/*"`). On PC the drag & drop area stays; on touch screens it is hidden (the two buttons are enough).
+- Big camera photos (often 5–20 MB) are shrunk in the browser before sending (longest side 1600 px, JPEG 85%), usually to a few hundred KB: faster, cheaper, and they no longer fail the 5 MB limit. Pictures the browser cannot open show the "unsupported format" message; originals over 25 MB get "This photo is too large…".
+- `tests/e2e_photo_errors.py`: uses the gallery input by test id; new checks for both buttons, `capture=environment`, the camera chooser opening, and a 22 MB camera photo being sent as a JPEG under 1.5 MB. Translations EN/DE/RO added ("Max 5 MB" label removed).
