@@ -50,7 +50,13 @@ import { t } from './i18n';
 import { useIsDesktop } from './hooks/useIsDesktop';
 
 /** Screens that use the full width on PC (lg). All others stay a centered phone-width column there. */
-const WIDE_SCREENS: ActiveScreen[] = ['home', 'product-overview', 'offers-comparison', 'breakdown', 'price-history', 'set-alert', 'search', 'saved', 'alerts', 'product-reels', 'settings', 'legal'];
+const WIDE_SCREENS: ActiveScreen[] = ['home', 'product-overview', 'offers-comparison', 'breakdown', 'price-history', 'set-alert', 'search', 'saved', 'alerts', 'product-reels', 'settings', 'legal', 'see-all'];
+
+/** Screens that are mostly text or a short list: on PC a comfortable reading width instead of full width. */
+const MEDIUM_SCREENS: Partial<Record<ActiveScreen, string>> = {
+  'visual-result': 'lg:max-w-3xl lg:mx-auto lg:w-full',
+  'shared-list': 'lg:max-w-4xl lg:mx-auto lg:w-full',
+};
 
 const DEV_NAV =
   typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('devnav');
@@ -484,7 +490,7 @@ export default function App() {
         <DemoBanner />
 
         {/* Content Viewport */}
-        <main className={`flex-1 px-4 pt-3 pb-4 lg:px-6 lg:pt-6 ${WIDE_SCREENS.includes(activeScreen) ? '' : 'lg:max-w-md lg:mx-auto lg:w-full'}`}>
+        <main className={`flex-1 px-4 pt-3 pb-4 lg:px-6 lg:pt-6 ${WIDE_SCREENS.includes(activeScreen) ? '' : MEDIUM_SCREENS[activeScreen] ?? 'lg:max-w-md lg:mx-auto lg:w-full'}`}>
           {activeScreen === 'home' && (
             <HomeScreen
               onSearchFocus={() => {

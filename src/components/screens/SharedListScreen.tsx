@@ -56,7 +56,7 @@ export const SharedListScreen: React.FC<Props> = ({ list, savedIds, onOpenProduc
 
           {products.length > 0 && (
             <>
-              <ul className="space-y-3">
+              <ul className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3" data-testid="shared-list-items">
                 {products.map((p) => (
                   <li key={p.id}>
                     <button

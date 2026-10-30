@@ -394,3 +394,9 @@ Goal: most people search for free (name, link, barcode); photo analysis (a paid 
 - **Home "Price drops" and "See all"**: the demo badges ("-24%", "SAVE 42 €") are shown as a neutral "Price drop" label; the demo data stay unchanged (still used for ordering in "See all").
 - **Store badges** (`StoreBadge.tsx`): initials next to the store name in the phone offers list and the PC offers table. If a data source later provides an official store logo (`StoreOffer.storeLogo`, e.g. from Awin with the store's permission), the logo is shown instead; a broken or unsafe logo URL falls back to the initials.
 - Tests: `e2e_home_rails.py` now checks the neutral badge and that no "-x%" is shown. Full suite: all pass.
+
+## PC layout: last screens (Oct 30)
+- **See all** (Home → "See all" for Price drops / New products, `SeeAllScreen.tsx`): full width on PC, cards in 3 columns; sort chips aligned. Phones: list as before.
+- **Photo / link result** (`visual-result`) and **shared list**: a comfortable reading width on PC (max ~768 px and ~896 px; the shared list in 2 columns) instead of a phone column (`MEDIUM_SCREENS` in `App.tsx`).
+- Now no screen stays phone-width on PC.
+- New `tests/e2e_pc_rest.py`. Related tests pass.

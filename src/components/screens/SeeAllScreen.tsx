@@ -73,7 +73,7 @@ export const SeeAllScreen: React.FC<SeeAllScreenProps> = ({ kind, onCompare, onD
         <DemoBadge label={t('Example')} />
       </div>
 
-      <div role="group" aria-label={t('Sort by')} className="flex gap-2 overflow-x-auto -mx-4 px-4 scrollbar-none">
+      <div role="group" aria-label={t('Sort by')} className="flex gap-2 overflow-x-auto -mx-4 px-4 scrollbar-none lg:mx-0 lg:px-0">
         {sorts.map((s) => (
           <button
             key={s.key}
@@ -91,11 +91,11 @@ export const SeeAllScreen: React.FC<SeeAllScreenProps> = ({ kind, onCompare, onD
 
       <p className="text-xs text-slate-600">{t('{n} products · example items, not real offers', { n: sorted.length })}</p>
 
-      <ul className="space-y-3">
+      <ul className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4" data-testid="see-all-list">
         {sorted.map((item) => {
           const hasDetails = !!item.productId;
           return (
-            <li key={item.id} className="bg-white border border-slate-200 rounded-2xl p-3 space-y-3">
+            <li key={item.id} className="bg-white border border-slate-200 rounded-2xl p-3 space-y-3 lg:flex lg:flex-col lg:justify-between">
               <div className="flex gap-3">
                 <div className="shrink-0 w-[84px] h-[84px] rounded-xl bg-slate-100 border border-slate-200 overflow-hidden">
                   <img src={item.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
