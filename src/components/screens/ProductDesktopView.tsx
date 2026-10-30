@@ -3,6 +3,7 @@ import { ArrowRight, Bell, Bookmark, ExternalLink, LineChart, RefreshCw } from '
 import { Product, StoreOffer } from '../../types';
 import { StoresForProduct } from '../StoresForProduct';
 import { DemoBadge } from '../DemoBadge';
+import { StoreBadge } from '../StoreBadge';
 import { t, tr } from '../../i18n';
 
 /**
@@ -27,17 +28,6 @@ const AFFILIATE_NOTE = tr(
 );
 
 const eur = (n: number) => `${n.toFixed(2).replace('.', ',')} €`;
-
-const initials = (name: string) =>
-  name
-    .replace(/\.(de|at|com)$/i, '')
-    .split(/[\s-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 3);
 
 export const ProductDesktopView: React.FC<ProductDesktopViewProps> = ({
   product,
@@ -204,9 +194,7 @@ export const ProductDesktopView: React.FC<ProductDesktopViewProps> = ({
                           className="flex items-center gap-2.5 font-semibold text-slate-900 hover:text-emerald-800 cursor-pointer text-left"
                           title={t('Offer details')}
                         >
-                          <span className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 grid place-items-center text-[10px] font-extrabold text-slate-600 shrink-0">
-                            {initials(o.storeName)}
-                          </span>
+                          <StoreBadge name={o.storeName} logo={o.storeLogo} />
                           <span className="flex flex-col items-start gap-0.5">
                             <span>{o.storeName}</span>
                             {isBest && (

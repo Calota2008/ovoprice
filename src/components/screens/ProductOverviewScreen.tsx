@@ -240,21 +240,13 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
             <span className="text-3xl font-bold text-emerald-800 tracking-tight tnum">
               {product.bestPrice.toFixed(2).replace('.', ',')} €
             </span>
-            {product.originalPrice && (
-              <span className="text-sm text-slate-400 line-through tnum">
-                {product.originalPrice.toFixed(2).replace('.', ',')} €
-              </span>
-            )}
+
           </div>
 
-          {product.savingsPercent && (
-            <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1 rounded">
-              <span>-{product.savingsPercent}{t("% OFF")}</span>
-              <span className="text-emerald-100">·</span>
-              <span className="font-normal">
-                {t("You save")} {product.savingsAmount?.toFixed(2).replace('.', ',')} €
-              </span>
-            </div>
+          {product.msrp && product.msrp > product.bestPrice && (
+            <p className="text-[11px] text-slate-500 mt-1" data-testid="uvp-note">
+              {t("Manufacturer's recommended price (RRP):")} <span className="tnum">{product.msrp.toFixed(2).replace('.', ',')} €</span>
+            </p>
           )}
         </div>
 

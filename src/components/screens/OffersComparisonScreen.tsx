@@ -4,6 +4,7 @@ import { Product, StoreOffer } from '../../types';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 
 import { t } from '../../i18n';
+import { StoreBadge } from '../StoreBadge';
 interface OffersComparisonScreenProps {
   product: Product;
   onSelectOffer: (offer: StoreOffer) => void;
@@ -127,6 +128,7 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
         {/* Merchant Info */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
+            <StoreBadge name={winnerOffer.storeName} logo={winnerOffer.storeLogo} />
             <h3 className="text-base font-bold text-slate-900">
               {winnerOffer.storeName}
             </h3>
@@ -241,6 +243,7 @@ export const OffersComparisonScreen: React.FC<OffersComparisonScreenProps> = ({
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <div>
                   <div className="flex items-center gap-2">
+                    <StoreBadge name={offer.storeName} logo={offer.storeLogo} size="sm" />
                     <span className="text-sm font-bold text-slate-900">
                       {offer.storeName}
                     </span>

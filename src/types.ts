@@ -43,6 +43,8 @@ export interface StoreOffer {
   affiliateUrl: string;
   /** True only when the link is a confirmed affiliate link. Never set for demo data. */
   isAffiliate?: boolean;
+  /** Official store logo from the data source (affiliate network), used only with the store's permission. */
+  storeLogo?: string;
 }
 
 export interface PriceHistoryPoint {

@@ -23,6 +23,9 @@ interface SearchScreenProps {
 const fmt = (n: number) => n.toFixed(2).replace('.', ',');
 /** "AUDIO & KOPFHÖRER" -> "Audio & kopfhörer" (category names come in capitals). */
 const sentence = (v: string) => (v ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : v);
+/** Store with the lowest total price for this product. */
+const cheapestStore = (p: Product) =>
+  [...p.offers].sort((a, b) => a.totalLandedPrice - b.totalLandedPrice)[0]?.storeName ?? '';
 const savingsPct = (p: Product) => (p.msrp && p.msrp > p.bestPrice ? ((p.msrp - p.bestPrice) / p.msrp) * 100 : 0);
 
 export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpenVisualMatcher, initialQuery }) => {
@@ -303,7 +306,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
                   aria-label={t('Sort')}
                 >
                   <option value="lowest">{t('Lowest price')}</option>
-                  <option value="savings">{t('Biggest discount')}</option>
+                  <option value="savings">{t('Furthest below the RRP')}</option>
                 </select>
               </label>
               <button onClick={() => onOpenVisualMatcher('photo')} className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-800 flex items-center gap-1.5 cursor-pointer">
@@ -334,6 +337,9 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
                       <p className="text-xs text-slate-500 mt-0.5">
                         {p.offers.length} {t('demo offers')}
                       </p>
+                      {cheapestStore(p) && (
+                        <p className="text-xs font-semibold text-emerald-700 mt-0.5">{t('cheapest at {store}', { store: cheapestStore(p) })}</p>
+                      )}
                       <p className="mt-auto pt-2">
                         <span className="text-xs text-slate-500">{t('from')} </span>
                         <span className="text-xl font-black text-emerald-700 tnum">{fmt(p.bestPrice)} €</span>
@@ -369,7 +375,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
                   className="flex items-center gap-1 font-bold text-slate-800 uppercase tracking-tight hover:text-emerald-700 cursor-pointer"
                 >
                   <ArrowUpDown className="w-3 h-3 text-slate-500" />
-                  <span>{sortBy === 'lowest' ? t("Lowest price") : t("Biggest discount")}</span>
+                  <span>{sortBy === 'lowest' ? t("Lowest price") : t("Furthest below the RRP")}</span>
                 </button>
               </div>
 
@@ -398,7 +404,6 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
 
               <div className="space-y-2.5">
                 {visible.map((p) => {
-                  const pct = savingsPct(p);
                   return (
                     <button
                       key={p.id}
@@ -417,7 +422,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
                         <p className="text-[11px] text-slate-500 truncate">{p.subtitle}</p>
                         <div className="mt-0.5 flex items-center gap-2 text-xs">
                           <span className="font-bold text-slate-900 tnum">{t("from")} {fmt(p.bestPrice)} €</span>
-                          {pct >= 1 && <span className="text-rose-600 font-semibold">-{pct.toFixed(0)}{t("% vs. list price")}</span>}
+                          {cheapestStore(p) && <span className="text-emerald-700 font-semibold">{t('cheapest at {store}', { store: cheapestStore(p) })}</span>}
                         </div>
                         <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                           <Truck className="w-3 h-3 text-slate-400" />

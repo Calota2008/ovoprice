@@ -387,3 +387,10 @@ Goal: most people search for free (name, link, barcode); photo analysis (a paid 
 - **Server limits** (`server.ts`), now changeable in Render without new code: `PHOTO_PER_MINUTE` (default 5), `PHOTO_PER_VISITOR_DAY` (default 10), `PHOTO_SITE_PER_DAY` (default 300; was 500). These protect the costs even if someone bypasses the app.
 - Later: more photos per day as part of a paid plan (only the numbers in `limits.ts` and Render change).
 - Tests: `e2e_photo_errors.py` signs in with the local test account and checks the counter, the daily limit, a new day, and the visitor gate; `e2e_pasii_3_5.py` and `e2e_pasul_7_toate_produsele.py` use the new barcode button name; `e2e_server_security.py` updated to 5 per minute. Full suite: all pass.
+
+## Results show the cheapest store; store badges; no UVP-based discount claims (Oct 30)
+- **Search results** (`SearchScreen.tsx`, phone list and PC grid): each product shows "cheapest at <store>" (the offer with the lowest total). The red "-x% vs. list price" is gone. The sort option is now named "Furthest below the RRP" (it compares with the manufacturer's price, so it says so).
+- **Product page, phone** (`ProductOverviewScreen.tsx`): no struck-through "old price" and no "-24% OFF · You save 90 €". If the product has a manufacturer price, it is shown neutrally: "Manufacturer's recommended price (RRP / UVP): 419,00 €". Reason: the Ovosearch plan does not use UVP or "old prices" as proof of a reduction (PAngV §11); real drops will be computed against our own 30-day history.
+- **Home "Price drops" and "See all"**: the demo badges ("-24%", "SAVE 42 €") are shown as a neutral "Price drop" label; the demo data stay unchanged (still used for ordering in "See all").
+- **Store badges** (`StoreBadge.tsx`): initials next to the store name in the phone offers list and the PC offers table. If a data source later provides an official store logo (`StoreOffer.storeLogo`, e.g. from Awin with the store's permission), the logo is shown instead; a broken or unsafe logo URL falls back to the initials.
+- Tests: `e2e_home_rails.py` now checks the neutral badge and that no "-x%" is shown. Full suite: all pass.

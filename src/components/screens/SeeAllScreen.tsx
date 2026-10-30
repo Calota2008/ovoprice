@@ -110,7 +110,7 @@ export const SeeAllScreen: React.FC<SeeAllScreenProps> = ({ kind, onCompare, onD
                         item.badgeType === 'new' ? 'bg-sky-100 text-sky-900' : 'bg-emerald-100 text-emerald-900'
                       }`}
                     >
-                      {t(item.badgeText)}
+                      {item.badgeType === 'new' ? t(item.badgeText) : t('Price drop')}
                     </span>
                   </div>
                   <p className="text-[15px] font-bold text-slate-900 leading-tight">{item.title}</p>

@@ -71,7 +71,7 @@ const ProductRail: React.FC<{
                   item.badgeType === 'new' ? 'bg-sky-100 text-sky-900' : item.badgeType === 'discount' ? 'bg-emerald-100 text-emerald-900' : 'bg-emerald-700 text-white'
                 }`}
               >
-                {t(item.badgeText)}
+                {item.badgeType === 'new' ? t(item.badgeText) : t('Price drop')}
               </span>
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-600 truncate">{t(item.category)}</span>

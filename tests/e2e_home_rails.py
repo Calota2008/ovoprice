@@ -17,7 +17,7 @@ with sync_playwright() as p:
     check('"New products" row is shown', new.count() == 1 and new.get_by_role('heading', name='New products').count() == 1)
     check('both rows are marked as examples', drops.get_by_text('Example').count() >= 1 and new.get_by_text('Example').count() >= 1)
     check('old "Popular searches" list is gone', pg.get_by_role('heading', name='Popular searches').count() == 0)
-    check('price drop cards show discount badges and a price', drops.locator('li button').count() == 3 and drops.get_by_text('-24%', exact=True).count() == 1 and drops.get_by_text(re.compile(r'From\s+289,00')).count() == 1)
+    check('price drop cards show a neutral "Price drop" badge (no % or UVP claim) and a price', drops.locator('li button').count() == 3 and drops.get_by_text('Price drop', exact=True).count() >= 1 and drops.get_by_text(re.compile(r'-\d+%')).count() == 0 and drops.get_by_text(re.compile(r'From\s+289,00')).count() == 1)
     check('new cards show NEW and the number of stores, no price', new.locator('li button').count() == 2 and new.get_by_text('NEW', exact=True).count() == 2 and new.get_by_text(re.compile(r'€')).count() == 0)
     order = pg.evaluate("""() => { const ids = ['home-price-drops','home-new-products']; const y = ids.map(i => document.querySelector('[data-testid='+i+']').getBoundingClientRect().top); const reels = [...document.querySelectorAll('button')].find(b => b.innerText.includes('Discover Reels')).getBoundingClientRect().top; return [reels, y[0], y[1]]; }""")
     check('order: Reels strip, Price drops, New products', order[0] < order[1] < order[2])
