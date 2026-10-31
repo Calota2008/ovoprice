@@ -400,3 +400,9 @@ Goal: most people search for free (name, link, barcode); photo analysis (a paid 
 - **Photo / link result** (`visual-result`) and **shared list**: a comfortable reading width on PC (max ~768 px and ~896 px; the shared list in 2 columns) instead of a phone column (`MEDIUM_SCREENS` in `App.tsx`).
 - Now no screen stays phone-width on PC.
 - New `tests/e2e_pc_rest.py`. Related tests pass.
+
+## Ovosearch step 1 groundwork: Awin feed reader (Oct 31) – not used by the app yet
+- `src/feeds/awinFeed.ts`: reads an Awin product feed (CSV) into clean offers and groups them by EAN. Handles quoted CSV (commas, quotes, new lines), BOM/CRLF, German and English price formats, and different column names. Keeps only EUR prices > 0, in-stock rows and safe http(s) links. Total = price + delivery; a missing delivery cost stays unknown (never shown as free). The store's RRP is kept only as information (no discount claims). Matching only by a valid EAN/GTIN (GTIN-14/UPC normalized); rows without a valid code are kept apart, never matched by title. One offer per store (the cheapest if listed twice); `mergeFeedProducts` combines several stores.
+- `scripts/try-feed.ts`: try a downloaded feed file locally (`npx tsx scripts/try-feed.ts feed.csv.gz`).
+- `tests/unit_awin_feed.ts` (18 checks, invented test data).
+- Nothing in the live app, `server.ts` or Supabase changes. Next (after the first Awin approval and the owner's OK): a scheduled job that downloads the feeds, stores only price changes in Supabase, and `priceProvider` switches from demo to real data.
