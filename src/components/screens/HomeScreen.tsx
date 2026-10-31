@@ -4,6 +4,8 @@ import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
 import { PopularSearchItem, ReelItem } from '../../types';
 import { DemoBadge } from '../DemoBadge';
+import { Iri } from '../Iri';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 
 import { ACCOUNT_LIMITS } from '../../utils/limits';
 import { t, useLanguage, LANGUAGES, Lang } from '../../i18n';
@@ -185,6 +187,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const { data: homeReels } = usePriceData<ReelItem[]>(() => priceProvider.getReels(), [], []);
   // Only reels that have a picture are shown as thumbnails.
   const reelThumbs = homeReels.filter((r) => !!r.image).slice(0, 6); // phone shows the first 3, wide screens up to 6
+  // Example chips: only in the demo, only products that exist in the catalog (no invented names).
+  const examples = priceProvider.isDemo
+    ? [...priceDrops, ...newProducts].filter((item, i, all) => all.findIndex((o) => o.title === item.title) === i).slice(0, 4)
+    : [];
+  const isDesktop = useIsDesktop();
 
   return (
     <div className="pb-24 space-y-4 lg:pb-8 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-8">
@@ -260,6 +267,32 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </p>
         </div>
       )}
+
+      {/* Iri greets and, in the demo, offers products that really exist in the catalog (a search for anything else finds nothing). */}
+      <div data-testid="home-iri" className="relative rounded-2xl bg-gradient-to-br from-emerald-100 via-sky-100 to-violet-100 border border-emerald-200/70 pl-4 pr-1 pt-3 flex items-end gap-2 overflow-visible">
+        <div className="flex-1 min-w-0 pb-3">
+          <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">{t('Iri asks:')}</p>
+          <p className="text-lg lg:text-xl font-black text-slate-900 leading-tight">{t('What are we hunting today?')}</p>
+          {examples.length > 0 && (
+            <>
+              <p className="text-xs font-semibold text-slate-700 mt-2 mb-1.5">{t('Try an example:')}</p>
+              <div className="flex flex-wrap gap-1.5" data-testid="home-examples">
+                {examples.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelectPopularItem(item)}
+                    className="min-h-9 px-3 rounded-full bg-white/90 border border-emerald-200 text-emerald-900 text-xs font-bold shadow-[0_3px_0_#a7f3d0] hover:bg-white active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                  >
+                    {item.title}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        <Iri pose="cart" size={isDesktop ? 170 : 128} className="shrink-0 -mb-1" />
+      </div>
 
       </div>
 

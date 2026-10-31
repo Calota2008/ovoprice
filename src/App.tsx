@@ -21,6 +21,8 @@ import { AlertsScreen } from './components/screens/AlertsScreen';
 import { SavedScreen } from './components/screens/SavedScreen';
 import { VisualMatchResultScreen } from './components/screens/VisualMatchResultScreen';
 import { LimitSheet } from './components/LimitSheet';
+import { IriToast, IriPose } from './components/Iri';
+import { WelcomeSheet, shouldShowWelcome } from './components/WelcomeSheet';
 import { MergeSheet } from './components/MergeSheet';
 import { limitsFor, roomLeft, LimitKind, ACCOUNT_LIMITS } from './utils/limits';
 import { useAuthUser } from './services/useAuthUser';
@@ -79,6 +81,11 @@ export default function App() {
   const authUser = useAuthUser();
   const limits = limitsFor(!!authUser);
   const [limitNotice, setLimitNotice] = useState<LimitKind | null>(null);
+  // First-visit guide with Iri (not over a shared list someone opened from a link).
+  const [showWelcome, setShowWelcome] = useState(() => !sharedList && shouldShowWelcome());
+  // Short message with Iri after saving a product or setting an alert.
+  const [iriToast, setIriToast] = useState<{ id: number; pose: IriPose; title: string; text: string } | null>(null);
+  const showIriToast = (pose: IriPose, title: string, text: string) => setIriToast({ id: Date.now(), pose, title, text });
   const [seeAllKind, setSeeAllKind] = useState<SeeAllKind>('drops');
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>(sharedList ? 'shared-list' : 'home');
   const [spokenQuery, setSpokenQuery] = useState('');
@@ -327,6 +334,7 @@ export default function App() {
     }
     const newAlert = buildAlert(selectedProduct, targetPrice);
     setAlerts((prev) => [newAlert, ...prev.filter((a) => a.productId !== selectedProduct.id)]);
+    showIriToast('bell', t('Alert set!'), t("Iri will tell you when the price drops."));
     navigateTo('alerts');
   };
 
@@ -339,11 +347,14 @@ export default function App() {
       setLimitNotice('saved');
       return;
     }
+    const adding = !isProductSaved(product.id);
     setSavedItems((prev) =>
       prev.some((i) => (i.productId ?? i.id) === product.id || i.id === `save-${product.id}`)
         ? prev.filter((i) => (i.productId ?? i.id) !== product.id && i.id !== `save-${product.id}`)
         : [savedFromProduct(product), ...prev]
     );
+    // Not in Reels: there the heart on the video already shows it, and Iri stays out of the videos.
+    if (adding && activeScreen !== 'product-reels') showIriToast('heart', t('Saved!'), t('Iri keeps an eye on it for you.'));
   };
 
   // Used by Reels: resolves the catalog product by id so the saved entry matches the Saved screen.
@@ -723,6 +734,9 @@ export default function App() {
         <LegalFooter onOpen={openLegal} />
 
         {mergeOffer && <MergeSheet offer={mergeOffer} onAccept={acceptMergeOffer} onDecline={declineMergeOffer} />}
+
+        {iriToast && <IriToast key={iriToast.id} pose={iriToast.pose} title={iriToast.title} text={iriToast.text} onDone={() => setIriToast(null)} />}
+        {showWelcome && <WelcomeSheet onClose={() => setShowWelcome(false)} />}
 
         {limitNotice && (
           <LimitSheet

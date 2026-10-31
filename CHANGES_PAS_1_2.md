@@ -414,3 +414,17 @@ Only below 1024 px (`max-lg:`); the PC three-column Reels stay as they were.
 - At the bottom over the picture: category, name (larger), "from X €" and one big "Compare N prices" button; "Compare" opens the existing bottom sheet with the stores. Subtitle, Brand/Model/Color chips and the old "View details" button are hidden on phones (the catalog facts are on the product page). Own reels keep their "this device only" label and their own spec chips. "n of m" stays for screen readers only. The delete button of an own reel moved below the top bar.
 - While Reels are open on a phone the page behind does not scroll; it is unlocked again when leaving.
 - `tests/e2e_reels.py`: leaves Reels with Back before opening Saved; new checks for full screen, info at the bottom, Compare visible without scrolling, side Details button, scroll unlocked. Reels tests (with and without "add reel"), add-reel, demo reel, PC reels, wide layout: all pass.
+
+## Iri, mascota OvoPrice (fix17)
+
+- Pozele lui Iri (9 poziții, fundal transparent, WebP de ~50–75 KB) în `public/mascot/`.
+- `src/components/Iri.tsx`: Iri se mișcă din CSS (respiră, sare, intră cu „pop”, se clatină). La atingere sau click se gâdilă: se strânge, râde o clipă și spune ceva în balonaș. La 5 atingeri la rând sare în confetti. Pe Android telefonul vibrează scurt. Cine a cerut „mai puține animații” vede un Iri nemișcat.
+- `IriToast`: mesaj jos, timp de 3 secunde, după „Salvează” (Iri cu inima) și după ce setezi o alertă (Iri cu clopoțelul). Nu apare în Reels și nu blochează click-urile.
+- `src/components/WelcomeSheet.tsx`: ghidul de la prima vizită, cu 3 ecrane care se pot sări. Apare o singură dată pe browser și nu apare peste o listă partajată. Pe PC e o fereastră pe mijloc. Browserele automate (testele) nu îl primesc decât cu `?welcome=1`.
+- Acasă: cardul „Iri întreabă: Ce vânăm azi?” cu Iri și căruciorul. Exemplele apar doar în demo și sunt numai produse care există în catalog.
+- Căutare: Iri cu lupa cât timp caută. Când nu găsește nimic apare Iri nedumerit.
+- Salvate și Alerte goale: Iri doarme.
+- Produs, pe telefon și PC: Iri sare în confetti lângă cel mai mic preț.
+- Unde nu apare Iri: tabelul de oferte, detaliile de preț, istoricul prețului, setările, paginile legale, Reels.
+- Texte noi în DE și RO.
+- Test nou: `tests/e2e_iri.py`. Rulează pe serverul offline de dezvoltare.

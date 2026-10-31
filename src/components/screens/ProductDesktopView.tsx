@@ -4,6 +4,7 @@ import { Product, StoreOffer } from '../../types';
 import { StoresForProduct } from '../StoresForProduct';
 import { DemoBadge } from '../DemoBadge';
 import { StoreBadge } from '../StoreBadge';
+import { Iri } from '../Iri';
 import { t, tr } from '../../i18n';
 
 /**
@@ -110,6 +111,7 @@ export const ProductDesktopView: React.FC<ProductDesktopViewProps> = ({
           </dl>
 
           <div className="mt-auto pt-5 border-t border-slate-100 flex items-end gap-6 flex-wrap">
+            <Iri pose="celebrate" motion="bounce" size={110} className="-mb-2 -mr-3" />
             <div>
               <p className="text-xs text-slate-500">
                 {t('Best total price')} · {t('{n} stores', { n: offers.length })}

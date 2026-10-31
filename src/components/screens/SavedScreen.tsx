@@ -4,7 +4,6 @@ import {
   RefreshCw,
   ArrowRight,
   CheckCircle2,
-  Bookmark,
   Trash2,
   Sparkles,
   FolderPlus,
@@ -27,6 +26,7 @@ import {
 
 import { t } from '../../i18n';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
+import { Iri } from '../Iri';
 interface SavedScreenProps {
   items: SavedProductItem[];
   onSelectSavedItem: (item: SavedProductItem) => void;
@@ -346,8 +346,9 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
           {collectionTools}
 
           {items.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-3">
-              <Bookmark className="w-8 h-8 text-slate-300 mx-auto" />
+            <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-3" data-testid="saved-empty">
+              <Iri pose="sleep" size={170} className="mx-auto" />
+              <p className="text-lg font-black text-slate-900">{t("Iri is bored…")}</p>
               <h2 className="text-base font-bold text-slate-900">{t("You haven't saved any products yet")}</h2>
               <p className="text-sm text-slate-500">{t("Save products from their detail page or from Reels to find them easily and track their price.")}</p>
               {onDiscover && (
@@ -553,8 +554,9 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
       {/* Empty state */}
       {items.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-4 shadow-xs">
-          <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-            <Bookmark className="w-6 h-6 stroke-[1.7]" />
+          <div data-testid="saved-empty">
+            <Iri pose="sleep" size={150} className="mx-auto" />
+            <p className="text-lg font-black text-slate-900 mt-1">{t("Iri is bored…")}</p>
           </div>
           <div className="space-y-1.5 max-w-xs mx-auto">
             <h2 className="text-base font-bold text-slate-900">{t("You haven't saved any products yet")}</h2>

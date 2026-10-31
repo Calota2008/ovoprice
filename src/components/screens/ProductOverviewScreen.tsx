@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, TrendingDown, Camera, Truck, ShieldCheck, Shield, ArrowRight, RefreshCw, AlertCircle, HelpCircle, Bell, Bookmark } from 'lucide-react';
 import { Product, StoreOffer } from '../../types';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
+import { Iri } from '../Iri';
 import { ProductDesktopView } from './ProductDesktopView';
 import { StoresForProduct } from '../StoresForProduct';
 
@@ -232,7 +233,8 @@ export const ProductOverviewScreen: React.FC<ProductOverviewScreenProps> = ({
           </span>
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3 relative pr-24">
+          <Iri pose="celebrate" motion="bounce" size={96} className="absolute right-0 -top-4" />
           <p className="text-xs text-slate-600 font-medium">
             {t("Best final price in the demo comparison:")}
           </p>

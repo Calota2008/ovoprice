@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, X, ArrowUpDown, Check, ChevronRight, Clock, Trash2, Truck, Barcode, Camera, SearchX } from 'lucide-react';
+import { Search, X, ArrowUpDown, Check, ChevronRight, Clock, Trash2, Truck, Barcode, Camera } from 'lucide-react';
 import { Product, PopularSearchItem } from '../../types';
 import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
 import { DemoBadge, DemoFootnote } from '../DemoBadge';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
+import { Iri } from '../Iri';
 import {
   clearRecentSearches,
   loadRecentSearches,
@@ -438,10 +439,11 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
           )}
 
           {!error && !loading && results.length === 0 && (
-            <div className="text-center py-8 space-y-3">
-              <SearchX className="w-8 h-8 text-slate-400 mx-auto" />
+            <div className="text-center py-6 space-y-3" data-testid="search-empty">
+              <Iri pose="puzzled" motion="wobble" size={150} className="mx-auto" />
               <div>
-                <p className="text-sm font-bold text-slate-900">{t("No results for “")}{debounced}”</p>
+                <p className="text-base font-black text-slate-900">{t("Iri found nothing… yet")}</p>
+                <p className="text-sm font-bold text-slate-700 mt-0.5">{t("No results for “")}{debounced}”</p>
                 <p className="text-xs text-slate-500 mt-1">
                   {t("Check the spelling or try the brand and model.")} {priceProvider.isDemo && t("The demo catalog contains only 5 products.")}
                 </p>
@@ -463,7 +465,12 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onOpenProduct, onOpe
             </div>
           )}
 
-          {loading && <p className="text-xs text-slate-500 text-center py-4">{t("Searching…")}</p>}
+          {loading && (
+            <div className="flex flex-col items-center py-4" role="status" data-testid="search-loading">
+              <Iri pose="search" size={110} tickle={false} />
+              <p className="text-xs font-semibold text-slate-600 mt-1">{t("Iri is searching the stores…")}</p>
+            </div>
+          )}
         </>
       )}
 
