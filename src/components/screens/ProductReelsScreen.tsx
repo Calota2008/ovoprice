@@ -16,6 +16,7 @@ import {
   Volume2,
   VolumeX,
   ChevronUp,
+  Info,
   ChevronDown,
   Sparkles,
   Share2,
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 
 import { t, tr } from '../../i18n';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 type ReelFilter = 'for-you' | 'categories' | 'saved';
 type ReelLayout = 'feed' | 'grid';
 
@@ -225,6 +227,17 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
     return () => window.removeEventListener('keydown', onKey);
   }, [goNext, goPrev, showAddReel, showCompare]);
 
+  // Phones/tablets: Reels cover the whole screen, so the page behind must not scroll.
+  const isDesktop = useIsDesktop();
+  useEffect(() => {
+    if (isDesktop) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isDesktop]);
+
   const changeFilter = (next: ReelFilter) => {
     setFilter(next);
     if (next !== 'categories') setCategory(null);
@@ -354,14 +367,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   /* ------------------------------ Header ------------------------------ */
 
   const header = (
-    <div className="relative z-30 p-3.5 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between gap-2 lg:col-span-3">
+    <div className="relative z-30 p-3.5 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between gap-2 lg:col-span-3 max-lg:absolute max-lg:top-0 max-lg:inset-x-0 max-lg:pb-1">
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-cyan-400 border border-slate-700/60 backdrop-blur-md transition-all cursor-pointer text-xs font-semibold"
         aria-label={t("Back to OvoPrice")}
       >
         <ArrowLeft className="w-4 h-4" />
-        <span>{t("Back")}</span>
+        <span className="max-lg:sr-only">{t("Back")}</span>
       </button>
 
       <div className="flex items-center gap-1.5 bg-slate-900/90 border border-cyan-500/30 px-2.5 py-1 rounded-full backdrop-blur-md shadow-xs">
@@ -399,7 +412,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   );
 
   const filterBar = (
-    <div className="relative z-30 px-3.5 pb-2 space-y-2 lg:col-start-1 lg:row-start-2 lg:pt-2 lg:space-y-4" data-testid="reels-filters">
+    <div className="relative z-30 px-3.5 pb-2 space-y-2 lg:col-start-1 lg:row-start-2 lg:pt-2 lg:space-y-4 max-lg:absolute max-lg:top-14 max-lg:inset-x-0" data-testid="reels-filters">
       <div className="flex items-center gap-1.5 lg:flex-col lg:items-stretch lg:gap-3">
       <div className="flex flex-1 min-w-0 items-center gap-1.5 overflow-x-auto scrollbar-none lg:flex-col lg:items-stretch lg:overflow-visible" role="tablist" aria-label={t("Reel filters")}>
         {FILTERS.map((f) => (
@@ -459,7 +472,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   );
 
   const shell = (children: React.ReactNode) => (
-    <div data-testid="reels-shell" className="relative w-full rounded-2xl overflow-hidden bg-[#070b12] text-slate-100 flex flex-col min-h-[580px] sm:min-h-[640px] shadow-2xl border border-slate-800 select-none lg:grid lg:grid-cols-[220px_minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:min-h-[700px] lg:gap-x-6 lg:items-start">
+    <div data-testid="reels-shell" className={`relative w-full rounded-2xl overflow-hidden bg-[#070b12] text-slate-100 flex flex-col min-h-[580px] sm:min-h-[640px] shadow-2xl border border-slate-800 select-none max-lg:fixed max-lg:inset-0 max-lg:z-50 max-lg:rounded-none max-lg:border-0 max-lg:min-h-0 max-lg:h-[100dvh] ${layout === 'grid' ? 'max-lg:overflow-y-auto' : ''} lg:grid lg:grid-cols-[220px_minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:min-h-[700px] lg:gap-x-6 lg:items-start`}>
       {header}
       {filterBar}
       {children}
@@ -568,7 +581,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
   return shell(
     <>
       <div
-        className="relative flex-1 flex items-center justify-center overflow-hidden bg-radial from-slate-900 via-[#070b12] to-black min-h-[400px] sm:min-h-[460px] touch-pan-x lg:col-start-2 lg:row-start-2 lg:rounded-2xl lg:min-h-[620px] lg:mb-4"
+        className="relative flex-1 flex items-center justify-center overflow-hidden bg-radial from-slate-900 via-[#070b12] to-black min-h-[400px] sm:min-h-[460px] touch-pan-x lg:col-start-2 lg:row-start-2 lg:rounded-2xl lg:min-h-[620px] lg:mb-4 max-lg:absolute max-lg:inset-0 max-lg:min-h-0"
         onWheel={onWheel}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
@@ -576,14 +589,14 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
         <div className="absolute w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none -top-10 -right-10" />
 
         {/* Media: only the current reel is mounted, so only one video can play. */}
-        <div className="relative w-full h-full max-h-[480px] flex items-center justify-center p-4">
+        <div className="relative w-full h-full max-h-[480px] flex items-center justify-center p-4 max-lg:max-h-none max-lg:p-0">
           {showVideo ? (
             <video
               key={currentReel.id}
               ref={videoRef}
               src={currentReel.videoUrl}
               poster={currentReel.image}
-              className="max-h-[400px] max-w-[85%] rounded-xl object-contain"
+              className="max-h-[400px] max-w-[85%] rounded-xl object-contain max-lg:max-h-none max-lg:max-w-none max-lg:w-full max-lg:h-full max-lg:rounded-none max-lg:object-cover"
               autoPlay
               loop
               playsInline
@@ -597,7 +610,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             <img
               src={currentReel.image}
               alt={currentReel.title}
-              className="max-h-[340px] sm:max-h-[380px] max-w-[85%] object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
+              className="max-h-[340px] sm:max-h-[380px] max-w-[85%] object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)] max-lg:max-h-none max-lg:sm:max-h-none max-lg:max-w-none max-lg:w-full max-lg:h-full max-lg:object-cover max-lg:drop-shadow-none"
               referrerPolicy="no-referrer"
             />
           ) : (
@@ -622,7 +635,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             </button>
           )}
 
-          <div className="absolute top-2 left-4 flex flex-wrap gap-1.5 text-[10px] font-semibold">
+          <div className="absolute top-2 left-4 flex flex-wrap gap-1.5 text-[10px] font-semibold max-lg:top-28 max-lg:left-3.5 z-20">
             {!currentReel.videoUrl && !currentReel.isLocal && (
               <span className="bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-md text-slate-300 flex items-center gap-1">
                 <VideoOff className="w-3 h-3" /> {t("Demo preview · no video yet")}
@@ -633,7 +646,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
                 <AlertTriangle className="w-3 h-3" /> {t("Video unavailable")}
               </span>
             )}
-            <span className="bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-md text-slate-400 font-mono">
+            <span className={`bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-md text-slate-400 font-mono ${currentReel.isLocal ? '' : 'max-lg:hidden'}`}>
               {t(currentReel.creatorLabel)}
             </span>
           </div>
@@ -641,7 +654,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           {currentReel.isLocal && (
             <button
               onClick={handleDeleteLocal}
-              className={`absolute top-2 right-4 z-20 px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 border cursor-pointer ${
+              className={`absolute top-2 right-4 z-20 max-lg:top-28 max-lg:right-3.5 px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 border cursor-pointer ${
                 confirmDelete
                   ? 'bg-amber-950/90 border-amber-600 text-amber-200'
                   : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:text-amber-300'
@@ -655,7 +668,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
 
         {/* Save (needs a catalog product, so it can be kept in the Saved list) */}
         {isMatched && (
-        <div className="absolute right-3.5 bottom-6 z-20 flex flex-col items-center gap-3">
+        <div className="absolute right-3.5 bottom-6 z-20 flex flex-col items-center gap-3 max-lg:bottom-64 max-lg:right-2.5">
           <div className="flex flex-col items-center gap-1">
           <button
             onClick={handleToggleSave}
@@ -669,7 +682,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           >
             <Bookmark className="w-4 h-4 fill-current" />
           </button>
-          <span className="text-[10px] font-bold text-slate-300">{isCurrentSaved ? t("Saved") : t("Save")}</span>
+          <span className="text-[10px] font-bold text-slate-300 max-lg:text-white max-lg:text-[11px] max-lg:[text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">{isCurrentSaved ? t("Saved") : t("Save")}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <button
@@ -683,7 +696,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             >
               {hasAlert ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
             </button>
-            <span className="text-[10px] font-bold text-slate-300">{hasAlert ? t("Alert on") : t("Alert")}</span>
+            <span className="text-[10px] font-bold text-slate-300 max-lg:text-white max-lg:text-[11px] max-lg:[text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">{hasAlert ? t("Alert on") : t("Alert")}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <button
@@ -693,7 +706,18 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
             >
               <Share2 className="w-4 h-4" />
             </button>
-            <span className="text-[10px] font-bold text-slate-300">{t("Share")}</span>
+            <span className="text-[10px] font-bold text-slate-300 max-lg:text-white max-lg:text-[11px] max-lg:[text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">{t("Share")}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1 lg:hidden">
+            <button
+              onClick={handleDetails}
+              disabled={!productLoading && !product}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-md border bg-slate-900/85 text-slate-200 hover:text-cyan-400 border-slate-700 disabled:opacity-40"
+              aria-label={t("View Details")}
+            >
+              <Info className="w-4 h-4" />
+            </button>
+            <span className="text-[10px] font-bold text-slate-300 max-lg:text-white max-lg:text-[11px] max-lg:[text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">{t("Details")}</span>
           </div>
         </div>
         )}
@@ -730,28 +754,28 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
       </div>
 
       {/* Product card */}
-      <div className="z-30 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-slate-900/80 border-t border-slate-800/80 backdrop-blur-xl space-y-3 lg:col-start-3 lg:row-start-2 lg:border lg:rounded-2xl lg:mr-4 lg:mt-2 lg:bg-slate-900/80" data-testid="reels-product-panel">
+      <div className="z-30 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-slate-900/80 border-t border-slate-800/80 backdrop-blur-xl space-y-3 max-lg:absolute max-lg:inset-x-0 max-lg:bottom-0 max-lg:from-black/95 max-lg:via-black/60 max-lg:to-transparent max-lg:border-0 max-lg:backdrop-blur-none max-lg:pt-14 max-lg:pb-[max(1rem,env(safe-area-inset-bottom))] lg:col-start-3 lg:row-start-2 lg:border lg:rounded-2xl lg:mr-4 lg:mt-2 lg:bg-slate-900/80" data-testid="reels-product-panel">
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800/90 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold uppercase tracking-wider truncate">
             <Store className="w-3 h-3 text-cyan-400" />
             <span>{t(currentReel.category)}</span>
           </span>
-          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 max-lg:sr-only">
             {currentIndex + 1} {t("of")} {visibleReels.length}
           </span>
         </div>
 
         <div>
-          <h2 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug line-clamp-1">
+          <h2 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug line-clamp-1 max-lg:text-lg max-lg:line-clamp-2">
             {t(currentReel.title)}
           </h2>
           {currentReel.subtitle && (
-            <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5">{t(currentReel.subtitle)}</p>
+            <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5 max-lg:hidden">{t(currentReel.subtitle)}</p>
           )}
         </div>
 
         {specChips.length > 0 && (
-          <ul className="flex flex-wrap gap-1.5" aria-label={t("Specifications")}>
+          <ul className={`flex flex-wrap gap-1.5 ${currentReel.specs && currentReel.specs.length > 0 ? '' : 'max-lg:hidden'}`} aria-label={t("Specifications")}>
             {specChips.slice(0, 6).map((spec, i) => (
               <li
                 key={`${spec.label}-${i}`}
@@ -797,7 +821,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           <button
             onClick={handleCompare}
             disabled={!isMatched || !hasOffers}
-            className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.99] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+            className="w-full py-3 px-3 max-lg:py-4 max-lg:text-base rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.99] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <Layers className="w-4 h-4 stroke-[2.3]" />
             <span>{hasOffers && product ? t('Compare {n} prices', { n: product.offers.length }) : t("Compare Prices")}</span>
@@ -821,7 +845,7 @@ export const ProductReelsScreen: React.FC<ProductReelsScreenProps> = ({
           <button
             onClick={handleDetails}
             disabled={!productLoading && !product}
-            className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed max-lg:hidden"
           >
             <span>{t("View Details")}</span>
           </button>

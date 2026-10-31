@@ -142,13 +142,24 @@ with sync_playwright() as p:
     # Saved from Reel visible on Saved screen & corrupt storage
     pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(150)
     pg.get_by_role('button', name='Save product').click(); pg.wait_for_timeout(200)
-    pg.get_by_role('button', name=re.compile('^Saved$|Saved')).last.click(); pg.wait_for_timeout(500)
+    # Reels cover the whole phone screen: leave them with Back, then open Saved from the bottom bar
+    pg.get_by_role('button', name='Back to OvoPrice').click(); pg.wait_for_timeout(400)
+    pg.get_by_role('navigation', name='Main Navigation').get_by_role('button', name='Saved', exact=True).click(); pg.wait_for_timeout(500)
     check('Saved screen shows product saved from Reel', pg.get_by_text(re.compile('Sony')).first.is_visible())
     pg.evaluate("localStorage.setItem('ovoprice_saved_products_v1','{bad')")
     open_reels(pg)
     check('corrupt storage does not break Reels', pg.get_by_text('1 of 6').is_visible())
     check('no page errors', not errs)
     if errs: print(errs[:3])
+    # Phone: full screen like TikTok (no frame), product info over the picture, Details as a side button
+    sh = pg.get_by_test_id('reels-shell').bounding_box()
+    check('phone: Reels fill the whole screen', sh['x'] == 0 and sh['y'] == 0 and sh['width'] == 430 and sh['height'] >= 890)
+    pp = pg.get_by_test_id('reels-product-panel').bounding_box()
+    check('phone: product info sits at the bottom, over the picture', pp['y'] + pp['height'] >= 895 and pp['y'] > 450)
+    check('phone: "Compare" button fully visible without scrolling', pg.get_by_role('button', name=re.compile(r'Compare \d+ prices')).bounding_box()['y'] + 40 < 900)
+    pg.get_by_role('button', name='View Details').click(); pg.wait_for_timeout(500)
+    check('phone: side "Details" button opens the product', pg.get_by_test_id('reels-shell').count() == 0)
+    check('phone: page scroll is unlocked again after leaving Reels', pg.evaluate("document.body.style.overflow") in ('', 'visible'))
     ctx.close()
     # PC (mouse): the up/down arrows are shown and work
     ctx = b.new_context(viewport={'width': 1280, 'height': 900}); pg = ctx.new_page()

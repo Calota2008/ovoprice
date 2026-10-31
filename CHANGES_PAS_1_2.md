@@ -406,3 +406,11 @@ Goal: most people search for free (name, link, barcode); photo analysis (a paid 
 - `scripts/try-feed.ts`: try a downloaded feed file locally (`npx tsx scripts/try-feed.ts feed.csv.gz`).
 - `tests/unit_awin_feed.ts` (18 checks, invented test data).
 - Nothing in the live app, `server.ts` or Supabase changes. Next (after the first Awin approval and the owner's OK): a scheduled job that downloads the feeds, stores only price changes in Supabase, and `priceProvider` switches from demo to real data.
+
+## Reels on phones: full screen, like TikTok (Oct 31)
+Only below 1024 px (`max-lg:`); the PC three-column Reels stay as they were.
+- `ProductReelsScreen.tsx`: the Reels screen covers the whole phone screen (no frame, no margins); the picture/video fills it (`object-cover`). Back, the REELS/DEMO label, the filters and the grid button float transparently at the top; the "demo preview" label sits just below them.
+- On the right over the picture: Save, Alert, Share and a new **Details** button (opens the product). Labels have a shadow so they stay readable on light pictures.
+- At the bottom over the picture: category, name (larger), "from X €" and one big "Compare N prices" button; "Compare" opens the existing bottom sheet with the stores. Subtitle, Brand/Model/Color chips and the old "View details" button are hidden on phones (the catalog facts are on the product page). Own reels keep their "this device only" label and their own spec chips. "n of m" stays for screen readers only. The delete button of an own reel moved below the top bar.
+- While Reels are open on a phone the page behind does not scroll; it is unlocked again when leaving.
+- `tests/e2e_reels.py`: leaves Reels with Back before opening Saved; new checks for full screen, info at the bottom, Compare visible without scrolling, side Details button, scroll unlocked. Reels tests (with and without "add reel"), add-reel, demo reel, PC reels, wide layout: all pass.
