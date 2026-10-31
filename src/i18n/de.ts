@@ -233,9 +233,6 @@ export const de: Record<string, string> = {
   "Example": "Beispiel",
   "stores": "Shops",
   "From": "Ab",
-  "Copied a product link?": "Produktlink kopiert?",
-  "MediaMarkt, OTTO, Amazon, eBay": "MediaMarkt, OTTO, Amazon, eBay",
-  "Paste and analyze": "Einfügen und analysieren",
   "DIRECT MATCH": "DIREKTER TREFFER",
   "demo offers": "Demoangebote",
   "Landed Total": "Gesamt inkl. Versand",
@@ -893,4 +890,7 @@ export const de: Record<string, string> = {
   "We compare stores in Germany and Austria and show you where you pay the least.": "Wir vergleichen Shops in Deutschland und Österreich und zeigen dir, wo du am wenigsten bezahlst.",
   "Choose a photo": "Foto auswählen",
   "From your computer, only if you don't know the name and have no code": "Vom Computer, nur wenn du den Namen nicht kennst und keinen Code hast",
+  "Already copied a product link?": "Produktlink schon kopiert?",
+  "Copy the product link in the store, then tap the button: we paste it for you and show where it is cheaper.": "Kopiere den Produktlink im Shop und tippe dann auf den Button: Wir fügen ihn für dich ein und zeigen, wo es günstiger ist.",
+  "Paste copied link": "Kopierten Link einfügen",
 };

@@ -435,3 +435,10 @@ Only below 1024 px (`max-lg:`); the PC three-column Reels stay as they were.
 - Titlul nou e „Prețul real, cu livrare inclusă.”, cu rândul de sub el „Comparăm magazine din Germania și Austria și îți arătăm unde plătești cel mai puțin.”. Titlul vechi spunea „din toate magazinele”, ceea ce nu e adevărat.
 - Pe PC: pe Acasă, „Fă o poză” devine „Alege o poză”, cu textul „De pe calculator…”. În fereastra pentru poze nu mai apare butonul de cameră, rămâne un singur buton, „Alege o poză”. Pe telefon nu se schimbă nimic.
 - Teste: `e2e_photo_errors` are 3 verificări noi pentru PC. `e2e_wide_layout` caută titlul nou.
+
+## Bara „Ai copiat deja linkul unui produs?” mutată sus (fix19)
+
+- Bara stă acum imediat sub căutare, pe telefon și pe PC. Înainte era jos de tot pe Acasă.
+- Textele noi explică ce face: „Copiază linkul produsului din magazin, apoi apasă butonul: îl lipim noi și îți arătăm unde e mai ieftin.” Butonul se numește „Lipește linkul copiat”.
+- Pe telefon butonul e mare, pe toată lățimea, sub text.
+- `e2e_pasii_3_5` caută butonul după numele nou.

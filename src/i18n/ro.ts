@@ -233,9 +233,6 @@ export const ro: Record<string, string> = {
   "Example": "Exemplu",
   "stores": "magazine",
   "From": "De la",
-  "Copied a product link?": "Ai copiat un link de produs?",
-  "MediaMarkt, OTTO, Amazon, eBay": "MediaMarkt, OTTO, Amazon, eBay",
-  "Paste and analyze": "Lipește și analizează",
   "DIRECT MATCH": "POTRIVIRE DIRECTĂ",
   "demo offers": "oferte demo",
   "Landed Total": "Total cu livrare",
@@ -893,4 +890,7 @@ export const ro: Record<string, string> = {
   "We compare stores in Germany and Austria and show you where you pay the least.": "Comparăm magazine din Germania și Austria și îți arătăm unde plătești cel mai puțin.",
   "Choose a photo": "Alege o poză",
   "From your computer, only if you don't know the name and have no code": "De pe calculator, doar dacă nu știi numele și nu ai codul",
+  "Already copied a product link?": "Ai copiat deja linkul unui produs?",
+  "Copy the product link in the store, then tap the button: we paste it for you and show where it is cheaper.": "Copiază linkul produsului din magazin, apoi apasă butonul: îl lipim noi și îți arătăm unde e mai ieftin.",
+  "Paste copied link": "Lipește linkul copiat",
 };

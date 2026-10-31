@@ -266,6 +266,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       )}
 
+      {/* Paste link from clipboard, right under the search box (read only when the user taps) */}
+      <div className="bg-slate-900 text-white rounded-xl p-3 shadow-md border border-slate-700 flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between lg:gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center shrink-0">
+            <Clipboard className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-slate-100 leading-snug">{t("Already copied a product link?")}</p>
+            <p className="text-[11px] text-slate-300 leading-snug">{t("Copy the product link in the store, then tap the button: we paste it for you and show where it is cheaper.")}</p>
+          </div>
+        </div>
+        <button
+          onClick={handlePaste}
+          className="w-full lg:w-auto min-h-11 lg:min-h-0 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold text-sm lg:text-xs rounded-lg transition-colors cursor-pointer shrink-0"
+        >
+          {t("Paste copied link")}
+        </button>
+      </div>
+      {pasteError && <p className="-mt-2 text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">{pasteError}</p>}
+
       {/* Iri greets and, in the demo, offers products that really exist in the catalog (a search for anything else finds nothing). */}
       <div data-testid="home-iri" className="relative rounded-2xl bg-gradient-to-br from-emerald-100 via-sky-100 to-violet-100 border border-emerald-200/70 pl-4 pr-1 pt-3 flex items-end gap-2 overflow-visible">
         <div className="flex-1 min-w-0 pb-3">
@@ -415,25 +435,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <ProductRail title={t("New products")} items={newProducts} onSelect={onSelectPopularItem} testId="home-new-products" onSeeAll={onSeeAll ? () => onSeeAll('new') : undefined} />
       )}
 
-      {/* Paste link from clipboard (read only when the user taps) */}
-      <div className="lg:col-span-12 bg-slate-900 text-white rounded-xl p-3 shadow-xl border border-slate-700 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center shrink-0">
-            <Clipboard className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-slate-100 truncate">{t("Copied a product link?")}</p>
-            <p className="text-[11px] text-slate-400 truncate">{t("MediaMarkt, OTTO, Amazon, eBay")}</p>
-          </div>
-        </div>
-        <button
-          onClick={handlePaste}
-          className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold text-[11px] rounded-md transition-colors cursor-pointer shrink-0"
-        >
-          {t("Paste and analyze")}
-        </button>
-      </div>
-      {pasteError && <p className="lg:col-span-12 text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">{pasteError}</p>}
     </div>
   );
 };
