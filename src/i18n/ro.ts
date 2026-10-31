@@ -220,8 +220,6 @@ export const ro: Record<string, string> = {
   ". OvoPrice does not process payments or take orders. Check the final price and delivery on the merchant's website.": ". OvoPrice nu procesează plăți și nu preia comenzi. Verifică prețul final și livrarea pe site-ul comerciantului.",
   "The clipboard is empty. Copy a product link first.": "Clipboard-ul este gol. Copiază mai întâi un link de produs.",
   "Cannot read the clipboard (permission denied). Open \"Paste link\" in the scanner and paste manually.": "Clipboard-ul nu poate fi citit (permisiune refuzată). Deschide „Lipește link” în scaner și lipește manual.",
-  "TOTAL LANDED COST": "COST TOTAL CU LIVRARE",
-  "Find & compare best total prices across all stores.": "Găsește și compară cele mai bune prețuri totale din toate magazinele.",
   "What are you looking for?": "Ce cauți?",
   "Voice search": "Căutare vocală",
   "Scan / Find Product": "Scanează / găsește produs",
@@ -891,4 +889,8 @@ export const ro: Record<string, string> = {
   "Iri will tell you when the price drops.": "Iri te anunță când scade prețul.",
   "Saved!": "Salvat!",
   "Iri keeps an eye on it for you.": "Iri îl urmărește pentru tine.",
+  "The real price, delivery included.": "Prețul real, cu livrare inclusă.",
+  "We compare stores in Germany and Austria and show you where you pay the least.": "Comparăm magazine din Germania și Austria și îți arătăm unde plătești cel mai puțin.",
+  "Choose a photo": "Alege o poză",
+  "From your computer, only if you don't know the name and have no code": "De pe calculator, doar dacă nu știi numele și nu ai codul",
 };

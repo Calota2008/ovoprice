@@ -12,8 +12,8 @@ tmp = os.path.join(tempfile.mkdtemp(), 'p.png'); open(tmp, 'wb').write(PNG)
 OK = {'objectName': 'Test kettle', 'category': 'Kitchen', 'description': 'd', 'observableCharacteristics': ['c'],
       'retailerSearchQuery': 'kettle', 'alternatives': []}
 
-def run(b, lang, handler, expect):
-    ctx = b.new_context(viewport={'width': 390, 'height': 800}, locale=f'{lang}-{lang.upper()}')
+def run(b, lang, handler, expect, viewport=None):
+    ctx = b.new_context(viewport=viewport or {'width': 390, 'height': 800}, locale=f'{lang}-{lang.upper()}')
     pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.add_init_script(f"localStorage.setItem('ovoprice_lang_v1','{lang}')")
@@ -168,5 +168,15 @@ with sync_playwright() as p:
     check('visitor: photo search asks for a free account', pg.get_by_test_id('photo-needs-account').count() == 1 and pg.get_by_test_id('photo-take').count() == 0)
     pg.get_by_test_id('photo-tip').get_by_role('button', name="I'll type the name").click(); pg.wait_for_timeout(400)
     check('visitor: "I\'ll type the name" opens search', pg.get_by_role('searchbox').count() == 1 and not calls)
+    ctx.close()
+    # Computer: nobody photographs a product with the webcam -> only "Choose a photo" (Home and the photo tab).
+    ctx, pg, errs = run(b, 'en', lambda r: r.abort(), '', {'width': 1366, 'height': 860})
+    pg.get_by_role('button', name='Close').first.click() if pg.get_by_role('dialog').count() else None
+    pg.wait_for_timeout(200)
+    opts = pg.get_by_test_id('home-find-options')
+    check('PC Home: "Choose a photo" instead of "Take a photo"', opts.get_by_text('Choose a photo').count() == 1 and opts.get_by_text('Take a photo').count() == 0)
+    opts.get_by_text('Choose a photo').click(); pg.wait_for_timeout(400)
+    check('PC photo tab: no camera button, one "Choose a photo" button', pg.get_by_test_id('photo-take').count() == 0 and pg.get_by_test_id('photo-gallery').inner_text().strip() == 'Choose a photo')
+    check('PC: no page errors', not errs)
     ctx.close(); b.close()
 print('\nFAILED: %d' % len(fails) if fails else '\nALL PASS'); sys.exit(1 if fails else 0)

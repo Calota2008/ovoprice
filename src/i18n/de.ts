@@ -220,8 +220,6 @@ export const de: Record<string, string> = {
   ". OvoPrice does not process payments or take orders. Check the final price and delivery on the merchant's website.": ". OvoPrice wickelt keine Zahlungen ab und nimmt keine Bestellungen an. Prüfe Endpreis und Lieferung auf der Website des Händlers.",
   "The clipboard is empty. Copy a product link first.": "Die Zwischenablage ist leer. Kopiere zuerst einen Produktlink.",
   "Cannot read the clipboard (permission denied). Open \"Paste link\" in the scanner and paste manually.": "Die Zwischenablage kann nicht gelesen werden (Zugriff verweigert). Öffne im Scanner „Link einfügen“ und füge ihn manuell ein.",
-  "TOTAL LANDED COST": "GESAMTKOSTEN INKL. VERSAND",
-  "Find & compare best total prices across all stores.": "Finde und vergleiche die besten Gesamtpreise in allen Shops.",
   "What are you looking for?": "Wonach suchst du?",
   "Voice search": "Sprachsuche",
   "Scan / Find Product": "Produkt scannen / finden",
@@ -891,4 +889,8 @@ export const de: Record<string, string> = {
   "Iri will tell you when the price drops.": "Iri sagt dir Bescheid, wenn der Preis fällt.",
   "Saved!": "Gespeichert!",
   "Iri keeps an eye on it for you.": "Iri behält es für dich im Auge.",
+  "The real price, delivery included.": "Der echte Preis, inklusive Versand.",
+  "We compare stores in Germany and Austria and show you where you pay the least.": "Wir vergleichen Shops in Deutschland und Österreich und zeigen dir, wo du am wenigsten bezahlst.",
+  "Choose a photo": "Foto auswählen",
+  "From your computer, only if you don't know the name and have no code": "Vom Computer, nur wenn du den Namen nicht kennst und keinen Code hast",
 };

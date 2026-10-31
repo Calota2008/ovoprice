@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, Mic, Camera, Link2, Barcode, CheckCircle2, Sparkles, Clipboard, Coins, ChevronRight } from 'lucide-react';
+import { Search, Mic, Camera, Link2, Barcode, Sparkles, Clipboard, Coins, ChevronRight, ImageIcon } from 'lucide-react';
 import { priceProvider } from '../../services/priceProvider';
 import { usePriceData } from '../../services/usePriceData';
 import { PopularSearchItem, ReelItem } from '../../types';
@@ -198,19 +198,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <div className="space-y-4 lg:col-span-7 lg:self-center lg:space-y-5">
       {/* LANDED COST TRUTH Pill & Main Headline */}
       <div className="pt-1">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold rounded-md uppercase tracking-wider mb-2">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-          <span>{t("TOTAL LANDED COST")}</span>
-        </div>
-
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
-            {t("Find & compare best total prices across all stores.")}
+            {t("The real price, delivery included.")}
           </h1>
           <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-1">
             <Coins className="w-4 h-4 text-emerald-700" />
           </div>
         </div>
+        <p className="text-sm lg:text-base text-slate-600 mt-1.5 leading-snug">
+          {t("We compare stores in Germany and Austria and show you where you pay the least.")}
+        </p>
       </div>
 
       {/* Main Search Input */}
@@ -323,7 +321,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               [
                 ['link', Link2, 'bg-blue-100 text-blue-700', t("Paste Link"), t("From Amazon, MediaMarkt, OTTO…"), 'free'],
                 ['barcode', Barcode, 'bg-purple-100 text-purple-700', t("Scan barcode"), t("The code with lines on the box or the store label"), 'free'],
-                ['photo', Camera, 'bg-emerald-100 text-emerald-700', t("Take a photo"), t("Only if you don't know the name and have no code"), 'limited'],
+                isDesktop
+                  ? ['photo', ImageIcon, 'bg-emerald-100 text-emerald-700', t("Choose a photo"), t("From your computer, only if you don't know the name and have no code"), 'limited'] as const
+                  : ['photo', Camera, 'bg-emerald-100 text-emerald-700', t("Take a photo"), t("Only if you don't know the name and have no code"), 'limited'] as const,
               ] as const
             ).map(([tab, Icon, iconClass, title, sub, kind]) => (
               <button

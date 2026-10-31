@@ -428,3 +428,10 @@ Only below 1024 px (`max-lg:`); the PC three-column Reels stay as they were.
 - Unde nu apare Iri: tabelul de oferte, detaliile de preț, istoricul prețului, setările, paginile legale, Reels.
 - Texte noi în DE și RO.
 - Test nou: `tests/e2e_iri.py`. Rulează pe serverul offline de dezvoltare.
+
+## Titlu Acasă și „Alege o poză” pe PC (fix18)
+
+- Am scos eticheta „COST TOTAL CU LIVRARE”.
+- Titlul nou e „Prețul real, cu livrare inclusă.”, cu rândul de sub el „Comparăm magazine din Germania și Austria și îți arătăm unde plătești cel mai puțin.”. Titlul vechi spunea „din toate magazinele”, ceea ce nu e adevărat.
+- Pe PC: pe Acasă, „Fă o poză” devine „Alege o poză”, cu textul „De pe calculator…”. În fereastra pentru poze nu mai apare butonul de cameră, rămâne un singur buton, „Alege o poză”. Pe telefon nu se schimbă nimic.
+- Teste: `e2e_photo_errors` are 3 verificări noi pentru PC. `e2e_wide_layout` caută titlul nou.

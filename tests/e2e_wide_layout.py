@@ -22,7 +22,7 @@ with sync_playwright() as p:
     check('wide: Home is marked as the current page', nav.get_by_role('button', name='Home', exact=True).get_attribute('aria-current') == 'page')
     box = pg.locator('main').bounding_box()
     check('wide: page is wide (more than a phone column)', box and box['width'] > 900)
-    hero = pg.get_by_text('Scan / Find Product').first.bounding_box(); head = pg.get_by_role('heading', name=re.compile('Find & compare')).bounding_box()
+    hero = pg.get_by_text('Scan / Find Product').first.bounding_box(); head = pg.get_by_role('heading', name=re.compile('The real price')).bounding_box()
     check('wide: headline and scan card sit side by side', hero and head and hero['x'] > head['x'] + head['width'] - 40 and abs(hero['y'] - head['y']) < 200)
     cards = pg.get_by_test_id('home-price-drops').locator('li')
     ys = [cards.nth(i).bounding_box()['y'] for i in range(cards.count())]

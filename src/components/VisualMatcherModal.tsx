@@ -10,6 +10,7 @@ import { DemoBadge } from './DemoBadge';
 import { t, tr } from '../i18n';
 import { countPhotoUsed, photosUsedToday } from '../utils/photoQuota';
 import { ACCOUNT_LIMITS } from '../utils/limits';
+import { useIsDesktop } from '../hooks/useIsDesktop';
 const CAMERA_MESSAGES: Record<CameraProblem, string> = {
   denied: tr('Camera access was denied. Allow the camera in your browser settings or enter the code manually.'),
   'no-camera': tr('No camera was found on this device. Enter the code manually.'),
@@ -49,6 +50,7 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
 }) => {
   const [photosUsed, setPhotosUsed] = useState(() => photosUsedToday());
   const photosLeft = Math.max(0, photosPerDay - photosUsed);
+  const isDesktop = useIsDesktop();
   const [activeTab, setActiveTab] = useState<'link' | 'photo' | 'barcode'>(initialTab);
   const [inputUrl, setInputUrl] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -630,7 +632,9 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                       </div>
                     ) : !previewBase64 ? (
                       <>
-                      <div className="grid grid-cols-2 gap-2">
+                      {/* On a computer nobody photographs a product with the webcam: only "Choose a photo". */}
+                      <div className={`grid gap-2 ${isDesktop ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {!isDesktop && (
                         <button
                           type="button"
                           data-testid="photo-take"
@@ -640,14 +644,17 @@ export const VisualMatcherModal: React.FC<VisualMatcherModalProps> = ({
                           <Camera className="w-4 h-4" />
                           {t("Take a photo")}
                         </button>
+                        )}
                         <button
                           type="button"
                           data-testid="photo-gallery"
                           onClick={() => fileInputRef.current?.click()}
-                          className="py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                          className={`py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer ${
+                            isDesktop ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-800'
+                          }`}
                         >
-                          <ImageIcon className="w-4 h-4 text-emerald-700" />
-                          {t("Choose from gallery")}
+                          <ImageIcon className={`w-4 h-4 ${isDesktop ? '' : 'text-emerald-700'}`} />
+                          {isDesktop ? t("Choose a photo") : t("Choose from gallery")}
                         </button>
                       </div>
                       <p className="text-[11px] text-slate-500 text-center" data-testid="photo-left">
